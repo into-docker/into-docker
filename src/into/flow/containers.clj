@@ -18,13 +18,17 @@
   data)
 
 (defn run
-  [{:keys [client] :as data} k]
+  [{:keys [client]
+    {:keys [source-directory artifact-directory]} :paths
+    :as data} k]
   (let [name  (random-container-name k)
         image (get-in data [k :image])]
     (log/debugf "[into]   Running container [%s] ..." image)
-    (->> {:container (docker/run-container client name image)
-          :name      name}
-         (update data k merge))))
+    (let [container (docker/run-container client name image)]
+      (docker/mkdir client container source-directory artifact-directory)
+      (->> {:container container
+            :name      name}
+           (update data k merge)))))
 
 (defn cleanup
   [{:keys [client] :as data} k]

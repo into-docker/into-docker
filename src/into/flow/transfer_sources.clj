@@ -28,16 +28,17 @@
 
 (defn- copy-to-container!
   [{{:keys [tar]} :sources
+    {:keys [source-directory]} :paths
     :keys [client]
     :as data}
-   container-key
-   path]
-  (with-open [in (io/input-stream tar)]
-    (docker/copy-into-container!
-      client
-      in
-      (get-in data [container-key :container])
-      path))
+   container-key]
+  (let [container (get-in data [container-key :container])]
+    (with-open [in (io/input-stream tar)]
+      (docker/copy-into-container!
+        client
+        in
+        container
+        source-directory)))
   data)
 
 ;; ## Cleanup
@@ -51,8 +52,8 @@
 ;; ## Transfer
 
 (defn transfer-sources
-  [data container-key path]
+  [data container-key]
   (-> data
       (compress-sources)
-      (copy-to-container! container-key path)
+      (copy-to-container! container-key)
       (cleanup-sources)))

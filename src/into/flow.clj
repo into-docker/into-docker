@@ -1,25 +1,12 @@
 (ns into.flow
-  (:require [into.docker :as docker]
-            [into.flow
+  (:require [into.flow
              [collect-sources :as collect-sources]
+             [commit :as commit]
              [containers :as containers]
              [exec :as exec]
              [log :as log]
              [pull-image :as pull-image]
-             [transfer-sources :as transfer-sources]])
-  (:import [java.util UUID]))
-
-;; ## Constants
-
-(def ^:private BUILD_SCRIPT    "/into/build")
-(def ^:private ASSEMBLE_SCRIPT "/into/assemble")
-(def ^:private INTO_SOURCE_DIR "/tmp/src")
-(def ^:private INTO_ARTIFACT_DIR "/tmp/target")
-(def ^:private RUNNER_WORKDIR  "/tmp")
-
-(def ^:private ENV
-  [(str "INTO_SOURCE_DIR=" INTO_SOURCE_DIR)
-   (str "INTO_ARTIFACT_DIR=" INTO_ARTIFACT_DIR)])
+             [transfer-sources :as transfer-sources]]))
 
 ;; ## Helper
 
@@ -29,29 +16,43 @@
     data
     (assoc data :error (IllegalStateException. error-message))))
 
+(defmacro with-flow->
+  [form nxt & rst]
+  (if (empty? rst)
+    `(let [value# ~form]
+       (if-not (:error value#)
+         (try
+           (-> value# ~nxt)
+           (catch Exception e#
+             (assoc value# :error e#)))
+         value#))
+    `(with-flow->
+       (with-flow-> ~form ~nxt)
+       ~@rst)))
+
 ;; ## Pull
 
 (defn- pull-builder-image!
   [data]
-  (-> data
-      (pull-image/pull-image :builder)
-      (validate [:builder] "Builder image not found.")))
+  (with-flow-> data
+    (pull-image/pull-image :builder)
+    (validate [:builder] "Builder image not found.")))
 
 (defn- pull-runner-image!
   [data]
-  (-> data
-      (pull-image/pull-image :runner)
-      (validate [:runner] "Runner image not found.")))
+  (with-flow-> data
+    (pull-image/pull-image :runner)
+    (validate [:runner] "Runner image not found.")))
 
 ;; ## Runner Selection
 
 (defn- select-runner-image
   [{:keys [builder] :as data}]
-  (-> data
-      (update-in
-        [:spec :runner]
-        #(or % (get-in builder [:labels :into.v1.runner])))
-      (validate [:spec :runner] "No runner image given.")))
+  (with-flow-> data
+    (update-in
+      [:spec :runner]
+      #(or % (get-in builder [:labels :into.v1.runner])))
+    (validate [:spec :runner] "No runner image given.")))
 
 ;; ## Start
 
@@ -67,35 +68,47 @@
 
 (defn- copy-source-directory!
   [{:keys [builder] :as data}]
-  (-> data
-      (exec/exec :builder "mkdir \"$INTO_SOURCE_DIR\" && mkdir \"$INTO_ARTIFACT_DIR\"")
-      (collect-sources/collect-sources)
-      (transfer-sources/transfer-sources :builder INTO_SOURCE_DIR)))
+  (with-flow-> data
+    (collect-sources/collect-sources)
+    (transfer-sources/transfer-sources :builder)))
 
 (defn- copy-artifacts!
-  [data]
-  (-> data
-      (containers/cp [:builder ASSEMBLE_SCRIPT] [:runner RUNNER_WORKDIR])
-      (containers/cp [:builder INTO_ARTIFACT_DIR] [:runner RUNNER_WORKDIR])))
+  [{{:keys [assemble-script
+            artifact-directory
+            working-directory]} :paths
+    :as data}]
+  (with-flow-> data
+    (containers/cp
+      [:builder assemble-script]
+      [:runner working-directory])
+    (containers/cp
+      [:builder artifact-directory]
+      [:runner working-directory])))
 
 ;; ## Execute
 
 (defn- execute-build!
-  [{:keys [builder] :as data}]
-  (exec/exec data :builder BUILD_SCRIPT))
+  [{{:keys [build-script
+            source-directory
+            artifact-directory]} :paths
+    :as data}]
+  (->> {"INTO_SOURCE_DIR"   source-directory
+        "INTO_ARTIFACT_DIR" artifact-directory}
+       (exec/exec data :builder [build-script])))
 
 (defn- execute-assemble!
-  [{:keys [client runner] :as data}]
-  (exec/exec data :runner (str RUNNER_WORKDIR "/assemble")))
+  [{{:keys [working-directory artifact-directory]} :paths,
+    :as data}]
+  (->> {"INTO_ARTIFACT_DIR" artifact-directory}
+       (exec/exec data :runner [(str working-directory "/assemble")])))
 
 ;; ## Commit
 
 (defn- commit!
-  [{:keys [client spec runner] :as data}]
-  (let [{:keys [container cmd]} runner
-        {:keys [target]}  spec]
-    (docker/commit-container client container target cmd)
-    data))
+  [data]
+  (with-flow-> data
+      (commit/commit-container :builder "-builder")
+      (commit/commit-container :runner "")))
 
 ;; ## Cleanup
 
@@ -112,20 +125,6 @@
 
 ;; ## Flow
 
-(defmacro with-flow->
-  [form nxt & rst]
-  (if (empty? rst)
-    `(let [value# ~form]
-       (if-not (:error value#)
-         (try
-           (-> value# ~nxt)
-           (catch Exception e#
-             (assoc value# :error e#)))
-         value#))
-    `(with-flow->
-       (with-flow-> ~form ~nxt)
-       ~@rst)))
-
 (defn- finalize!
   [data]
   (-> data
@@ -139,7 +138,12 @@
   (finalize!
     (with-flow-> {:client client
                   :spec   spec
-                  :env    ENV}
+                  :paths {:source-directory   "/tmp/src"
+                          :artifact-directory "/tmp/artifacts"
+                          :working-directory  "/tmp"
+                          :ignore-file        "/into/ignore"
+                          :build-script       "/into/build"
+                          :assemble-script    "/into/assemble"}}
       (log/emph "Building image [%s] ..." :target)
 
       (log/info "Pulling images ...")
