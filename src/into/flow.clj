@@ -6,15 +6,18 @@
              [exec :as exec]
              [log :as log]
              [pull-image :as pull-image]
-             [transfer-sources :as transfer-sources]]))
+             [transfer-sources :as transfer-sources]]
+            [clojure.java.io :as io]))
 
 ;; ## Helper
 
 (defn- validate
-  [data path error-message]
-  (if (get-in data path)
-    data
-    (assoc data :error (IllegalStateException. error-message))))
+  ([data path error-message]
+   (validate data path some? error-message))
+  ([data path pred error-message]
+   (if (pred (get-in data path))
+     data
+     (assoc data :error (IllegalStateException. error-message)))))
 
 (defmacro with-flow->
   [form nxt & rst]
@@ -125,6 +128,13 @@
 
 ;; ## Flow
 
+(defn- verify-spec
+  [data]
+  (-> data
+      (validate [:spec :sources]
+                #(-> % io/file .isDirectory)
+                "Path does not point at a directory.")))
+
 (defn- finalize!
   [data]
   (-> data
@@ -144,7 +154,8 @@
                           :ignore-file        "/into/ignore"
                           :build-script       "/into/build"
                           :assemble-script    "/into/assemble"}}
-      (log/emph "Building image [%s] ..." :target)
+      (log/emph "Building image [%s] from '.' ..." :target :sources)
+      (verify-spec)
 
       (log/info "Pulling images ...")
       (pull-builder-image!)

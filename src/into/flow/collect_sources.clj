@@ -80,6 +80,13 @@
     (:container builder)
     "/into/ignore"))
 
+(defn- maybe-file
+  [& args]
+  (let [f (apply io/file args)]
+    (if (.isFile f)
+      f
+      (byte-array 0))))
+
 (defn collect-sources
   "Collect and attach all sources, taking into account the files that should
    be ignored via:
@@ -91,7 +98,7 @@
   [{{:keys [sources ignore-file]
      :or {ignore-file ".dockerignore"}} :spec
     :as data}]
-  (->> [(io/file sources ignore-file)
+  (->> [(maybe-file sources ignore-file)
         (read-container-ignore-file! data)]
        (ignore-file-matcher)
        (collect-matching-files (->path sources))
