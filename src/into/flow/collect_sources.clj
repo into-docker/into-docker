@@ -1,6 +1,7 @@
 (ns into.flow.collect-sources
   "Implement collection of files and matching against .dockerignore"
-  (:require [clojure.string :as string]
+  (:require [into.docker :as docker]
+            [clojure.string :as string]
             [clojure.java.io :as io]
             [clojure.tools.logging :as log])
   (:import [com.github.dockerjava.core
@@ -25,7 +26,7 @@
 (defn- log-patterns
   [patterns]
   (->> patterns
-       (map #(str ">  " %))
+       (map #(str "[into]   " %))
        (string/join "\n")
        (log/debugf "[into] Ignoring the following patterns:%n%s"))
   patterns)
@@ -40,7 +41,7 @@
   "Create a function that takes a _relative_ path and returns a boolean value
    indicating whether the given file should be included."
   [ignore-files]
-  (->> (mapcat patterns-from-file ignore-files)
+  (->> (mapcat patterns-from ignore-files)
        (log-patterns)
        (golang-file-matcher)))
 
@@ -72,6 +73,13 @@
 
 ;; ## Collect Sources
 
+(defn- read-container-ignore-file!
+  [{:keys [client builder]}]
+  (docker/read-container-file!
+    client
+    (:container builder)
+    "/into/ignore"))
+
 (defn collect-sources
   "Collect and attach all sources, taking into account the files that should
    be ignored via:
@@ -83,7 +91,8 @@
   [{{:keys [sources ignore-file]
      :or {ignore-file ".dockerignore"}} :spec
     :as data}]
-  (->> [(io/file sources ignore-file)]
+  (->> [(io/file sources ignore-file)
+        (read-container-ignore-file! data)]
        (ignore-file-matcher)
        (collect-matching-files (->path sources))
        (assoc-in data [:sources :files])))

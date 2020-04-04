@@ -100,10 +100,12 @@
 ;; ## Cleanup
 
 (defn- cleanup!
-  [{:keys [client] :as data}]
+  [data]
   (try
-    (containers/cleanup data :runner)
-    (containers/cleanup data :builder)
+    (-> data
+        (log/info "Cleaning up resources ...")
+        (containers/cleanup :runner)
+        (containers/cleanup :builder))
     data
     (catch Exception e
       (assoc data :cleanup-error e))))

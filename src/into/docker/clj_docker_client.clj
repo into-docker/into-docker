@@ -1,26 +1,90 @@
 (ns into.docker.clj-docker-client
   "Docker client implementation based on clj-docker-client"
   (:require [into.docker :as proto]
+            [into.docker
+             [streams :as streams]]
             [peripheral.core :refer [defcomponent]]
             [clj-docker-client.core :as docker]
             [jsonista.core :as json]
             [clojure.string :as string]
             [clojure.java.io :as io])
-  (:import [java.util UUID]
-           [java.io BufferedReader]))
+  (:import [java.util UUID]))
+
+;; ## Helpers
+
+(defn- stream-into
+  [{:keys [containers]} {:keys [id]} stream path]
+  (->> {:op :PutContainerArchive
+        :params {:id id
+                 :path path
+                 :inputStream stream}}
+       (docker/invoke containers)))
+
+(defn- stream-from
+  [{:keys [containers]} {:keys [id]} path]
+  ;; Unfortunately, we seem to have to load the full data into memory since
+  ;; the stream returned by `ContainerArchive` does not set the stream length
+  ;; that is used in `PutContainerArchive` to set the `Content-Length`
+  ;; header.
+  (with-open [source (->> {:op :ContainerArchive
+                           :params {:id id
+                                    :path path}
+                           :as :stream}
+                          (docker/invoke containers))]
+    (streams/cached-stream source)))
+
+(defn- invoke-exec
+  [{:keys [containers exec]} {:keys [id]} command env]
+  (let [{:keys [Id]} (->> {:op :ContainerExec
+                           :params {:id id
+                                    :execConfig {:AttachStderr true
+                                                 :AttachStdout true
+                                                 :Cmd command
+                                                 :Env env}}}
+                          (docker/invoke containers))]
+    (->> {:op :ExecStart
+          :params {:id Id
+                   :execStartConfig {:Detach false}}
+          :as :stream}
+         (docker/invoke exec))))
+
+(defn- invoke-commit-container
+  [{:keys [commit]} {:keys [id]} ^String image cmd]
+  (let [[repo tag] (.split image ":" 2)]
+    (->> {:op :ImageCommit
+          :params {:container id
+                   :repo repo
+                   :tag  (or tag "latest")
+                   :containerConfig {:Cmd cmd}}}
+         (docker/invoke commit))))
+
+(defn- invoke-run-container
+  [{:keys [containers]} container-name image]
+  (let [{:keys [Id] :as created}
+          (->> {:op :ContainerCreate
+                :params {:name  container-name
+                         :body {:Image image
+                                :Cmd   ["tail" "-f" "/dev/null"]
+                                :Tty   true
+                                :Init  true}}}
+               (docker/invoke containers))
+          result (->> {:op :ContainerStart
+                       :params {:id Id}}
+                      (docker/invoke containers))]
+      {:name container-name
+       :id   Id}))
+
+(defn- invoke-stop-container
+  [{:keys [containers]} {:keys [id]}]
+  (doto containers
+    (docker/invoke
+      {:op :ContainerStop
+       :params {:id id}})
+    (docker/invoke
+      {:op :ContainerDelete
+       :params {:id id}})))
 
 ;; ## Component
-
-(defn- consume-stream
-  [log-fn ^java.io.InputStream stream]
-  (with-open [stream stream
-              r      (io/reader stream)]
-    (doseq [line (line-seq r)
-            :let [first-byte (if-not (empty? line)
-                               (byte (.charAt line 0)))]]
-      (cond-> line
-        (= first-byte 1) (subs 8)
-        :always log-fn))))
 
 (defcomponent DockerClient [uri]
   :assert/uri (seq uri)
@@ -48,88 +112,35 @@
 
   (run-container
     [this container-name image]
-    (let [{:keys [Id] :as created}
-          (->> {:op :ContainerCreate
-                :params {:name  container-name
-                         :body {:Image image
-                                :Cmd   ["tail" "-f" "/dev/null"]
-                                :Tty   true
-                                :Init  true}}}
-               (docker/invoke containers))
-          result (->> {:op :ContainerStart
-                       :params {:id Id}}
-                      (docker/invoke containers))]
-      {:name container-name
-       :id   Id}))
+    (invoke-run-container this container-name image))
 
   (commit-container
-    [this {:keys [id] :as container} image cmd]
-    (->> {:op :ImageCommit
-          :params {:container id
-                   :repo image
-                   :tag  "latest"
-                   :containerConfig {:Cmd cmd}}}
-         (docker/invoke commit)))
+    [this container image cmd]
+    (invoke-commit-container this container image cmd))
 
   (cleanup-container
-    [this {:keys [id]}]
-    (doto containers
-      (docker/invoke
-        {:op :ContainerStop
-         :params {:id id}})
-      (docker/invoke
-        {:op :ContainerDelete
-         :params {:id id}})))
+    [this container]
+    (invoke-stop-container this container))
+
+  (read-container-file!
+    [this container path]
+    (with-open [stream (invoke-exec this container ["cat" path] [])]
+      (streams/exec-bytes stream :stdout)))
 
   (copy-into-container!
-    [this tar-stream container path]
-    (->> {:op :PutContainerArchive
-          :params {:id (:id container)
-                   :path path
-                   :inputStream tar-stream}}
-         (docker/invoke containers)))
+    [this stream container path]
+    (stream-into this container stream path))
 
   (copy-between-containers!
     [this source-container target-container from-path to-path]
-    ;; Unfortunately, we seem to have to load the full data into memory since
-    ;; copying from one stream to the other seems to send a zero
-    ;; 'Content-Length' header.
-    (let [byte-data  (with-open [source (->> {:op :ContainerArchive
-                                              :params {:id (:id source-container)
-                                                       :path from-path}
-                                              :as :stream}
-                                             (docker/invoke containers))
-                                 buffer (java.io.ByteArrayOutputStream.)]
-                       (io/copy source buffer)
-                       (.toByteArray buffer))]
-      (with-open [in (io/input-stream byte-data)]
-        (proto/copy-into-container! this in target-container to-path))
-      {:from-path from-path
-       :to-path   to-path
-       :tar-size  (count byte-data)}))
+    (with-open [in (stream-from this source-container from-path)]
+      (stream-into this target-container in to-path)))
 
   (execute-command!
-    [this {:keys [id]} command env log-fn]
-    (let [{:keys [Id]} (->> {:op :ContainerExec
-                             :params {:id id
-                                      :execConfig {:AttachStdin false
-                                                   :AttachStdout true
-                                                   :AttachStderr true
-                                                   :Tty false
-                                                   :Env env
-                                                   :Cmd command}}}
-                            (docker/invoke containers))
-          _ (->> {:op :ExecStart
-                  :params {:id Id
-                           :execStartConfig {:Detach false
-                                             :Tty    false}}
-                  :as :stream}
-                 (docker/invoke exec)
-                 (consume-stream log-fn))
-          {:keys [ExitCode ProcessConfig]} (->> {:op :ExecInspect
-                                                 :params {:id Id}}
-                                                (docker/invoke exec))]
-      {:exit-code ExitCode, :cmd ProcessConfig})))
+    [this container command env log-fn]
+    (with-open [stream (invoke-exec this container command env)]
+      (doseq [{:keys [line]} (streams/log-seq stream)]
+        (log-fn line)))))
 
 ;; ## Constructor
 

@@ -24,6 +24,6 @@
                         {:docker (impl/make {:uri (get-docker-uri)})})]
     (-> (flow/run (:docker system)
                   {:builder "into-yarn"
-                   :target "test"
+                   :target "test:v1"
                    :sources "."})
         (dissoc :client))))

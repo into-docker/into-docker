@@ -17,7 +17,7 @@
     (doseq [{:keys [file path]} files
             :let [size  (.length file)
                   entry (doto (TarArchiveEntry. path) (.setSize size))]]
-      (log/debugf "[into]  Adding %s (%s bytes) ..." path size)
+      (log/debugf "[into]   Adding %s (%s bytes) ..." path size)
       (.putArchiveEntry tar entry)
       (io/copy file tar)
       (.closeArchiveEntry tar))

@@ -9,6 +9,7 @@
   (commit-container [this container image cmd])
   (cleanup-container [this container])
 
+  (read-container-file! [this container path])
   (copy-into-container! [this tar-stream container path])
   (copy-between-containers! [this from to from-path to-path])
   (execute-command! [this container command env log-fn]))
