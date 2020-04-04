@@ -7,7 +7,6 @@
             :key "mit"}
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [lispyclouds/clj-docker-client "0.5.3"]
-                 [metosin/jsonista "0.2.5"]
                  [org.apache.commons/commons-compress "1.20"]
                  [commons-lang "2.6"]
                  [peripheral "0.5.3"]

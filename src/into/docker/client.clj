@@ -4,10 +4,7 @@
             [into.docker
              [streams :as streams]]
             [peripheral.core :refer [defcomponent]]
-            [clj-docker-client.core :as docker]
-            [jsonista.core :as json]
-            [clojure.string :as string]
-            [clojure.java.io :as io])
+            [clj-docker-client.core :as docker])
   (:import [java.util UUID]))
 
 ;; ## Helpers
