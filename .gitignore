@@ -1,0 +1,15 @@
+# Prettier Dependencies
+node_modules
+
+# Java/Clojure
+/target
+/classes
+/checkouts
+pom.xml
+pom.xml.asc
+*.jar
+*.class
+/.lein-*
+/.nrepl-port
+.hgignore
+.hg/
