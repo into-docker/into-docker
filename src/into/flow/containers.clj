@@ -9,6 +9,11 @@
 
 (defn cp
   [{:keys [client] :as data} [from from-path] [to to-path]]
+  (log/debugf "[into]   Copying [%s:%s] to [%s:%s] ..."
+              (name from)
+              from-path
+              (name to)
+              to-path)
   (docker/copy-between-containers!
     client
     (get-in data [from :container])
