@@ -9,7 +9,7 @@ or build tools without ever having to write another Dockerfile.
 into -t <repository:tag> <builder> <directory>
 ```
 
-## Creating reusable images
+## Overview
 
 Like [`s2i`][s2i], `into` utilises images that already contain all the
 dependencies needed to build an application. It will make your source directory
