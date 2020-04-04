@@ -15,6 +15,8 @@
     :as data} container-key suffix]
   (let [{:keys [container cmd]} (get data container-key)
         target-with-suffix (add-target-suffix target suffix)]
-    (log/debugf "[into]   Committing image [%s]"
-                target-with-suffix)
+    (log/debugf "[into]   Committing image [%s] with CMD: %s"
+                target-with-suffix
+                cmd)
+    (docker/commit-container client container target-with-suffix cmd)
     data))

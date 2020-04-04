@@ -107,11 +107,18 @@
 
 ;; ## Commit
 
+(defn- overwrite-runner-cmd
+  [data]
+  (if-let [runner-cmd (get-in data [:builder :labels :into.v1.runner.cmd])]
+    (assoc-in data [:runner :cmd] ["sh" "-c" runner-cmd])
+    data))
+
 (defn- commit!
   [data]
   (with-flow-> data
-      (commit/commit-container :builder "-builder")
-      (commit/commit-container :runner "")))
+    (overwrite-runner-cmd)
+    (commit/commit-container :builder "-builder")
+    (commit/commit-container :runner "")))
 
 ;; ## Cleanup
 

@@ -22,8 +22,15 @@ When running `into`, the following will happen:
 
 ### `Dockerfile`
 
-The builder image indicates the runner image using the docker label
-`into.v1.runner`.
+The builder image needs to provide build dependencies, the `/into/*` files, as
+well as the following labels:
+
+| Label                | Required | Description                            | Example Value            |
+| -------------------- | -------- | -------------------------------------- | ------------------------ |
+| `into.v1.runner`     | Yes      | Runner image to inject artifacts into. | `openjdk:11-jre`         |
+| `into.v1.runner.cmd` | No       | `CMD` override for the runner image.   | `java -jar /opt/app.jar` |
+
+**Example**
 
 ```dockerfile
 FROM node:alpine
@@ -38,6 +45,8 @@ RUN chmod -R a+rw /into
 This is a file that, like `.dockerignore`, prevents files from being injected
 into the builder container. In additon, you can have an actual `.dockerignore`
 file in your source folder to add more exclusions.
+
+**Example**
 
 ```dockerignore
 node_modules
@@ -56,6 +65,8 @@ environment variables available:
 As you can intuit, the build script's purpose is taking the sources from
 `$INTO_SOURCE_DIR` and run the build logic before pushing any resulting
 artifacts to `$INTO_ARTIFACT_DIR`.
+
+**Example**
 
 ```sh
 #!/bin/sh
@@ -78,6 +89,8 @@ with the following environment variables available:
 
 The assemble script's purpose is to move artifacts to well-known paths for the
 runner image to pick them up.
+
+**Example**
 
 ```sh
 #!/bin/sh
