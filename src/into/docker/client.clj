@@ -1,4 +1,4 @@
-(ns into.docker.clj-docker-client
+(ns into.docker.client
   "Docker client implementation based on clj-docker-client"
   (:require [into.docker :as proto]
             [into.docker
@@ -12,13 +12,22 @@
 
 ;; ## Helpers
 
+(defn- throw-on-error
+  [{:keys [message] :as result}]
+  (if message
+    (throw
+      (IllegalStateException.
+        (format "Operation failed: %s" message)))
+    result))
+
 (defn- stream-into
   [{:keys [containers]} {:keys [id]} stream path]
   (->> {:op :PutContainerArchive
         :params {:id id
                  :path path
                  :inputStream stream}}
-       (docker/invoke containers)))
+       (docker/invoke containers)
+       (throw-on-error)))
 
 (defn- stream-from
   [{:keys [containers]} {:keys [id]} path]
@@ -41,7 +50,8 @@
                                                  :AttachStdout true
                                                  :Cmd command
                                                  :Env env}}}
-                          (docker/invoke containers))]
+                          (docker/invoke containers)
+                          (throw-on-error))]
     (->> {:op :ExecStart
           :params {:id Id
                    :execStartConfig {:Detach false}}
@@ -56,7 +66,8 @@
                    :repo repo
                    :tag  (or tag "latest")
                    :containerConfig {:Cmd cmd}}}
-         (docker/invoke commit))))
+         (docker/invoke commit)
+         (throw-on-error))))
 
 (defn- invoke-run-container
   [{:keys [containers]} container-name image]
@@ -67,22 +78,43 @@
                                 :Cmd   ["tail" "-f" "/dev/null"]
                                 :Tty   true
                                 :Init  true}}}
-               (docker/invoke containers))
+               (docker/invoke containers)
+               (throw-on-error))
           result (->> {:op :ContainerStart
                        :params {:id Id}}
-                      (docker/invoke containers))]
+                      (docker/invoke containers)
+                      (throw-on-error))]
       {:name container-name
        :id   Id}))
 
 (defn- invoke-stop-container
   [{:keys [containers]} {:keys [id]}]
-  (doto containers
+  (throw-on-error
     (docker/invoke
+      containers
       {:op :ContainerStop
-       :params {:id id}})
+       :params {:id id}}))
+  (throw-on-error
     (docker/invoke
+      containers
       {:op :ContainerDelete
        :params {:id id}})))
+
+(defn- invoke-pull-image
+  [{:keys [images]} image]
+  (->> {:op :ImageCreate
+        :params {:fromImage image}}
+       (docker/invoke images)
+       (throw-on-error))
+  {:image image})
+
+(defn- invoke-inspect-image
+  [{:keys [images]} image]
+  (let [result (->> {:op :ImageInspect
+                     :params {:name image}}
+                    (docker/invoke images))]
+    (when-not (:message result)
+      result)))
 
 ;; ## Component
 
@@ -97,18 +129,11 @@
   proto/DockerClient
   (pull-image
     [this image]
-    (->> {:op :ImageCreate
-          :params {:fromImage image}}
-         (docker/invoke images))
-    {:image image})
+    (invoke-pull-image this image))
 
   (inspect-image
     [this image]
-    (let [result (->> {:op :ImageInspect
-                       :params {:name image}}
-                      (docker/invoke images))]
-      (when-not (:message result)
-        result)))
+    (invoke-inspect-image this image))
 
   (run-container
     [this container-name image]

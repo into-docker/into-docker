@@ -4,7 +4,7 @@
             [into
              [docker :as docker]
              [flow :as flow]]
-            [into.docker.clj-docker-client :as impl]))
+            [into.docker.client :as impl]))
 
 ;; ## System
 
