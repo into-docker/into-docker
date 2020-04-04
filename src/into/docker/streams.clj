@@ -38,7 +38,7 @@
       (with-open [out (ByteArrayOutputStream.)]
         (loop [len (read-length stream)]
           (when (> len 0)
-            (let [read-len (.read stream buffer)]
+            (let [read-len (.read stream buffer 0 (min 512 len))]
               (when (pos? read-len)
                 (.write out buffer 0 read-len))
               (recur (- len read-len)))))
