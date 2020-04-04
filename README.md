@@ -16,8 +16,11 @@ dependencies needed to build an application. It will make your source directory
 available to those images and call scripts in well-known locations to perform
 the task at hand.
 
+Builder images reference a runner image that their artifacts will be supplied
+to. Effectively, `into` thus achieves the same as a multi-stage Docker build.
+
 Please check out the [builder image walkthrough](doc/BUILDER_IMAGES.md) for
-details and how to create your own.
+details and how to create your own builder images.
 
 [s2i]: https://github.com/openshift/source-to-image
 
