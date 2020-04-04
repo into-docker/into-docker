@@ -99,8 +99,8 @@
   [{{:keys [sources ignore-file]
      :or {ignore-file ".dockerignore"}} :spec
     :as data}]
-  (->> [(maybe-file sources ignore-file)
-        (read-container-ignore-file! data)]
+  (->> [(read-container-ignore-file! data)
+        (maybe-file sources ignore-file)]
        (ignore-file-matcher)
        (collect-matching-files (->path sources))
        (assoc-in data [:sources :files])))
