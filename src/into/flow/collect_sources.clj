@@ -42,6 +42,7 @@
    indicating whether the given file should be included."
   [ignore-files]
   (->> (mapcat patterns-from ignore-files)
+       (distinct)
        (log-patterns)
        (golang-file-matcher)))
 
