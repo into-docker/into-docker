@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -eu
+
+SELF=$(which "$0" 2>/dev/null || echo "./$0")
+DIR=$(dirname "$SELF")
+
+pushd "$DIR/.." >& /dev/null
+lein do clean, uberjar
+cat "$DIR/into.prefix" target/*-standalone.jar > "$DIR/into"
+chmod +x "$DIR/into"
+popd >& /dev/null
+exit 1
