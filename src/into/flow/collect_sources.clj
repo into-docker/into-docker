@@ -1,7 +1,7 @@
 (ns into.flow.collect-sources
   "Implement collection of files and matching against .dockerignore"
   (:require [into.docker :as docker]
-            [into.flow.pattern :as pattern]
+            [into.utils.pattern :as pattern]
             [clojure.string :as string]
             [clojure.java.io :as io]
             [clojure.tools.logging :as log])

@@ -1,8 +1,7 @@
-(ns into.flow.pattern
+(ns into.utils.pattern
   (:require [clojure.string :as string])
   (:import [com.github.dockerjava.core GoLangFileMatch]
-           [org.apache.commons.io FilenameUtils]
-           [java.nio.file Path Paths Files]))
+           [java.nio.file Path]))
 
 ;; ## .dockerignore matching
 ;;
@@ -17,8 +16,17 @@
 ;; in all directories, including the root of the build context.
 ;;
 ;; Lines starting with ! (exclamation mark) can be used to make exceptions to
-;; exclusions. The following is an example .dockerignore file that uses this
-;; mechanism:
+;; exclusions.
+
+(defn- compile-pattern
+  [{:keys [pattern] :as data}]
+  (when-let [re (some-> pattern
+                        (Path/of (into-array String []))
+                        (.normalize)
+                        (str)
+                        (cond-> (string/starts-with? pattern "/") (subs 1))
+                        (GoLangFileMatch/compilePattern))]
+    (assoc data :pattern re)))
 
 (defn- as-pattern
   [pattern]
@@ -29,21 +37,20 @@
              :pattern  (subs pattern 1)}
             {:selector :exclude
              :pattern   pattern})
-          (update :pattern #(FilenameUtils/normalize %))
-          (update :pattern #(cond-> % (string/starts-with? % "/") (subs 1)))
-          (update :pattern #(GoLangFileMatch/compilePattern %))))))
+          (compile-pattern)))))
 
 (defn matcher
   "Create a function that checks all `.dockerignore` patterns against a given
    string, return the last matching pattern's result."
-  [pattern-strings]
-  (let [patterns (vec (keep as-pattern pattern-strings))]
+  [exclude-patterns]
+  (let [patterns (vec (keep as-pattern exclude-patterns))]
     (fn [name]
-      (->> patterns
-           (keep
-             (fn [{:keys [selector pattern]}]
-               (when (re-find pattern name)
-                 selector)))
-           (cons :include)
-           (last)
-           (= :include)))))
+      (-> (some
+            (fn [{:keys [selector pattern]}]
+              (when (re-find pattern name)
+                selector))
+            patterns)
+          (or :include)
+          (= :include)))))
+
+((matcher ["//*.0"]) "0.0")
