@@ -5,7 +5,8 @@
              [streams :as streams]]
             [peripheral.core :refer [defcomponent]]
             [clj-docker-client.core :as docker])
-  (:import [java.util UUID]))
+  (:import [java.util UUID]
+           [java.io InputStream]))
 
 ;; ## Helpers
 
@@ -32,11 +33,11 @@
   ;; the stream returned by `ContainerArchive` does not set the stream length
   ;; that is used in `PutContainerArchive` to set the `Content-Length`
   ;; header.
-  (with-open [source (->> {:op :ContainerArchive
-                           :params {:id id
-                                    :path path}
-                           :as :stream}
-                          (docker/invoke containers))]
+  (with-open [^InputStream source (->> {:op :ContainerArchive
+                                        :params {:id id
+                                                 :path path}
+                                        :as :stream}
+                                       (docker/invoke containers))]
     (streams/cached-stream source)))
 
 (defn- invoke-exec
@@ -146,7 +147,7 @@
 
   (read-container-file!
     [this container path]
-    (with-open [stream (invoke-exec this container ["cat" path] [])]
+    (with-open [^InputStream stream (invoke-exec this container ["cat" path] [])]
       (streams/exec-bytes stream :stdout)))
 
   (copy-into-container!
@@ -155,12 +156,12 @@
 
   (copy-between-containers!
     [this source-container target-container from-path to-path]
-    (with-open [in (stream-from this source-container from-path)]
+    (with-open [^InputStream in (stream-from this source-container from-path)]
       (stream-into this target-container in to-path)))
 
   (execute-command!
     [this container command env log-fn]
-    (with-open [stream (invoke-exec this container command env)]
+    (with-open [^InputStream stream (invoke-exec this container command env)]
       (doseq [{:keys [line]} (streams/log-seq stream)]
         (log-fn line)))))
 

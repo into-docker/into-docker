@@ -3,7 +3,7 @@
             [clojure.tools.logging :as log]))
 
 (defn- add-target-suffix
-  [target suffix]
+  [^String target suffix]
   (let [index (.lastIndexOf target ":")]
     (if (neg? index)
       (str target ":latest" suffix)

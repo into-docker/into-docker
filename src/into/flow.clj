@@ -14,7 +14,7 @@
 (defn- validate
   ([data path error-message]
    (validate data path some? error-message))
-  ([data path pred error-message]
+  ([data path pred ^String error-message]
    (if (pred (get-in data path))
      data
      (assoc data :error (IllegalStateException. error-message)))))

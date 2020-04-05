@@ -27,7 +27,7 @@
 
 (defmacro report-error
   [error message]
-  `(let [error# ~error]
+  `(let [^Exception error# ~error]
      (when error#
        (log/errorf
          ~(jansi/red "[into] " message " [%s] %s")

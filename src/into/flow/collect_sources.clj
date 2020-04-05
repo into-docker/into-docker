@@ -88,7 +88,7 @@
 (defn- maybe-file
   [& args]
   (let [f (apply io/file args)]
-    (if (.isFile f)
+    (if (.isFile ^File f)
       f
       (byte-array 0))))
 

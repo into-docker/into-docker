@@ -5,7 +5,7 @@
   (:import [org.apache.commons.compress.archivers.tar
             TarArchiveEntry
             TarArchiveOutputStream]
-           [java.io ByteArrayOutputStream]))
+           [java.io ByteArrayOutputStream File]))
 
 ;; ## Compress
 
@@ -14,7 +14,7 @@
   (log/debugf "[into] Creating TAR archive from %d files ..." (count files))
   (with-open [out (ByteArrayOutputStream.)
               tar (TarArchiveOutputStream. out)]
-    (doseq [{:keys [file path]} files
+    (doseq [{:keys [^File file ^String path]} files
             :let [size  (.length file)
                   entry (doto (TarArchiveEntry. path) (.setSize size))]]
       (log/debugf "[into]   Adding %s (%s bytes) ..." path size)
