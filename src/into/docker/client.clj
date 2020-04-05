@@ -57,13 +57,15 @@
          (docker/invoke exec))))
 
 (defn- invoke-commit-container
-  [{:keys [commit]} {:keys [id]} ^String image cmd]
+  [{:keys [commit]} {:keys [id]} {:keys [^String image cmd env labels]}]
   (let [[repo tag] (.split image ":" 2)]
     (->> {:op :ImageCommit
           :params {:container id
                    :repo repo
                    :tag  (or tag "latest")
-                   :containerConfig {:Cmd cmd}}}
+                   :containerConfig {:Cmd cmd
+                                     :Env (into [] env)
+                                     :Labels (into {} labels)}}}
          (docker/invoke commit)
          (throw-on-error))))
 
@@ -138,8 +140,8 @@
     (invoke-run-container this container-name image))
 
   (commit-container
-    [this container image cmd]
-    (invoke-commit-container this container image cmd))
+    [this container data]
+    (invoke-commit-container this container data))
 
   (cleanup-container
     [this container]

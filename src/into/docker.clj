@@ -8,7 +8,7 @@
   (inspect-image [this image])
 
   (run-container [this container-name image])
-  (commit-container [this container image cmd])
+  (commit-container [this container data])
   (cleanup-container [this container])
 
   (read-container-file! [this container path])
