@@ -25,20 +25,25 @@
         (gen/fmap #(string/join "/" %))
         (gen/fmap #(str % "." extension)))))
 
-(defspec t-matcher-should-accept-by-default (times 20)
+(defspec t-matcher-should-reject-by-default (times 20)
   (let [matcher (pattern/matcher [])]
     (prop/for-all [path (gen-path)]
+      (not (matcher path)))))
+
+(defspec t-matcher-should-accept-exact-matches (times 20)
+  (prop/for-all [path (gen-path)]
+    (let [matcher (pattern/matcher [path])]
       (matcher path))))
 
-(defspec t-matcher-should-reject-with-wildcard (times 20)
+(defspec t-matcher-should-accept-with-wildcard (times 20)
   (prop/for-all [[pattern path] (gen/let [extension (gen/such-that seq gen/string-alphanumeric)
                                           path      (gen-file extension)
                                           prefix    (gen/elements ["" "/" "//"])]
                                   [(str prefix "*." extension) path])]
     (let [matcher (pattern/matcher [pattern])]
-      (not (matcher path)))))
+      (matcher path))))
 
-(defspec t-matcher-should-explicitly-accept (times 20)
+(defspec t-matcher-should-explicitly-reject (times 20)
   (prop/for-all [path (gen-path)]
     (let [matcher (pattern/matcher ["**" (str "!" path)])]
-      (matcher path))))
+      (not (matcher path)))))

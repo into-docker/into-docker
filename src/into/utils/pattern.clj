@@ -33,22 +33,22 @@
   (let [pattern (string/trim pattern)]
     (when-not (string/starts-with? pattern "#")
       (-> (if (string/starts-with? pattern "!")
-            {:selector :include
-             :pattern  (subs pattern 1)}
             {:selector :exclude
+             :pattern  (subs pattern 1)}
+            {:selector :include
              :pattern   pattern})
           (compile-pattern)))))
 
 (defn matcher
   "Create a function that checks all `.dockerignore` patterns against a given
-   string, return the last matching pattern's result."
-  [exclude-patterns]
-  (let [patterns (reverse (keep as-pattern exclude-patterns))]
+   string, return the last matching pattern's result. This function will return
+   true if there is at least one match and no explicit exclude."
+  [patterns]
+  (let [patterns (reverse (keep as-pattern patterns))]
     (fn [name]
       (-> (some
            (fn [{:keys [selector pattern]}]
              (when (re-find pattern name)
                selector))
            patterns)
-          (or :include)
           (= :include)))))

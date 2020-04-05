@@ -3,27 +3,32 @@
             [jansi-clj.core :as jansi]))
 
 (defmacro log*
-  [data color fmt & spec-keys]
+  [log-fn data color fmt & args]
   (let [sym (gensym "data")]
     `(let [~sym ~data]
-       (log/infof ~(jansi/fg color (str "[into] " fmt))
-                  ~@(map
-                     (fn [spec-key]
-                       `(get-in ~sym [:spec ~spec-key]))
-                     spec-keys))
+       (~log-fn ~(jansi/fg color (str "[into] " fmt))
+                ~@args)
        ~sym)))
 
 (defmacro info
   [data fmt & spec-keys]
-  `(log* ~data :default ~fmt ~@spec-keys))
+  `(log* log/infof ~data :default ~fmt ~@spec-keys))
+
+(defmacro debug
+  [data fmt & spec-keys]
+  `(log* log/debugf ~data :default ~fmt ~@spec-keys))
+
+(defmacro trace
+  [data fmt & spec-keys]
+  `(log* log/debugf ~data :default ~fmt ~@spec-keys))
 
 (defmacro emph
   [data fmt & spec-keys]
-  `(log* ~data :yellow ~fmt ~@spec-keys))
+  `(log* log/infof ~data :yellow ~fmt ~@spec-keys))
 
 (defmacro success
   [data fmt & spec-keys]
-  `(log* ~data :green ~fmt ~@spec-keys))
+  `(log* log/infof ~data :green ~fmt ~@spec-keys))
 
 (defmacro report-error
   [error message]

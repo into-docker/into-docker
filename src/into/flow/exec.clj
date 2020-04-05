@@ -15,9 +15,9 @@
     (format "%s=%s" (str k) (str v))))
 
 (defn exec
-  [{:keys [client] :as data} k cmd env]
-  (let [{:keys [container image]} (get data k)]
-    (log/debugf "[into] Running in (%s): %s" image cmd)
+  [{:keys [client] :as data} instance-key cmd env]
+  (let [{:keys [container image]} (get-in data [:instances instance-key])]
+    (log/debugf "[into] Running in (%s): %s" (:full-name image) cmd)
     (docker/execute-command!
      client
      container

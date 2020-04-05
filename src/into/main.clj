@@ -2,6 +2,9 @@
   (:gen-class)
   (:require [into.flow :as flow]
             [into.docker.client :as client]
+            [into.utils
+             [data :as data]
+             [signal :as signal]]
             [jansi-clj.core :as jansi]
             [peripheral.core :as p]
             [clojure.string :as string]
@@ -9,6 +12,17 @@
             [clojure.tools.cli :as cli])
   (:import [org.slf4j LoggerFactory]
            [ch.qos.logback.classic Level Logger]))
+
+;; ## Constants
+
+(let [working-directory "/tmp"]
+  (def ^:private +paths+
+    {:source-directory   (str working-directory "/src")
+     :artifact-directory (str working-directory "/artifacts")
+     :working-directory  working-directory
+     :build-script       "/into/bin/build"
+     :assemble-script    "/into/bin/assemble"
+     :ignore-file        "/into/ignore"}))
 
 ;; ## Log Level
 
@@ -85,13 +99,15 @@
   [opts]
   (let [{:keys [options arguments]} opts
         {:keys [target]} options
-        [builder sources] arguments]
+        [builder-image source-path] arguments]
     (set-verbosity! options)
     (p/with-start [client (client/make {:uri (get-docker-uri)})]
-      (-> (flow/run client
-                    {:builder builder
-                     :target  target
-                     :sources sources})
+      (-> (flow/run
+           {:client client
+            :spec   {:builder-image (data/->image builder-image)
+                     :target-image  (data/->image target)
+                     :source-path   source-path}
+            :paths  +paths+})
           (dissoc :client)))))
 
 (defn run
@@ -103,6 +119,7 @@
 
 (defn -main
   [& args]
+  (signal/register-sigint-handler!)
   (let [result (run args)]
     (System/exit
      (if (or (= result :help)
