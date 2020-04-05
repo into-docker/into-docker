@@ -117,7 +117,10 @@
   [data]
   (with-flow-> data
     (overwrite-runner-cmd)
-    (commit/commit-container :builder "-builder")
+    ;; TODO: Uncomment once we have a good concept on how to cache intermediate
+    ;;       build results. My initial idea would be a file `.cache` that
+    ;;       describes declaratively which paths to cache.
+    ;; (commit/commit-container :builder "-builder")
     (commit/commit-container :runner "")))
 
 ;; ## Cleanup
@@ -159,8 +162,8 @@
                           :artifact-directory "/tmp/artifacts"
                           :working-directory  "/tmp"
                           :ignore-file        "/into/ignore"
-                          :build-script       "/into/build"
-                          :assemble-script    "/into/assemble"}}
+                          :build-script       "/into/bin/build"
+                          :assemble-script    "/into/bin/assemble"}}
       (log/emph "Building image [%s] from '.' ..." :target :sources)
       (verify-spec)
 

@@ -4,18 +4,19 @@
 
 A builder image supplies a few files:
 
-- `/into/build` to build artifacts,
-- `/into/assemble` to move artifacts to places they can be run from,
-- `/into/ignore` to supply exclusions to source files.
+- `/into/bin/build` to build artifacts,
+- `/into/bin/assemble` to move artifacts to places they can be run from,
+- `/into/ignore` _(optional)_ to supply exclusions to source files.
+- `/into/cache` _(optional)_ to supply cacheable builder paths.
 
 When running `into`, the following will happen:
 
 1. Start the builder image.
 2. Copy sources into the builder container (heed `/into/ignore`).
-3. Run `/into/build` to build the sources and create artifacts.
+3. Run `/into/bin/build` to build the sources and create artifacts.
 4. Start the runner image.
-5. Copy artifacts and `/into/assemble` to the runner container.
-6. Run `/into/assemble` to prepare the runner.
+5. Copy artifacts and `/into/bin/assemble` to the runner container.
+6. Run `/into/bin/assemble` to prepare the runner.
 7. Commit the runner container.
 
 ## Files
@@ -52,7 +53,7 @@ file in your source folder to add more exclusions.
 node_modules
 ```
 
-### `/into/build`
+### `/into/bin/build`
 
 The build script gets called without parameters, but with the following
 environment variables available:
@@ -75,10 +76,10 @@ set -eu
 cd "$INTO_SOURCE_DIR"
 yarn
 yarn build
-mv -r ./build/* "$INTO_ARTIFACT_DIR"
+mv -r build/* "$INTO_ARTIFACT_DIR"
 ```
 
-### `/into/assemble`
+### `/into/bin/assemble`
 
 The assemble script gets called without parameters **inside the runner image**,
 with the following environment variables available:
