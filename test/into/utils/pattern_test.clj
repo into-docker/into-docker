@@ -40,3 +40,9 @@
        [(str prefix "*." extension) path])]
     (let [matcher (pattern/matcher [pattern])]
       (not (matcher path)))))
+
+(defspec t-matcher-should-explicitly-accept (times 20)
+  (prop/for-all
+    [path (gen-path)]
+    (let [matcher (pattern/matcher ["**" (str "!" path)])]
+      (matcher path))))

@@ -43,7 +43,7 @@
   "Create a function that checks all `.dockerignore` patterns against a given
    string, return the last matching pattern's result."
   [exclude-patterns]
-  (let [patterns (vec (keep as-pattern exclude-patterns))]
+  (let [patterns (reverse (keep as-pattern exclude-patterns))]
     (fn [name]
       (-> (some
             (fn [{:keys [selector pattern]}]
@@ -52,5 +52,3 @@
             patterns)
           (or :include)
           (= :include)))))
-
-((matcher ["//*.0"]) "0.0")
