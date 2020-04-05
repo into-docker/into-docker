@@ -18,7 +18,7 @@ into -t <repository:tag> <builder> <directory>
 
 - **Reproducible Builds**: By packaging your build environment as a Docker
   image, it can be versioned just like your source code. The same builder image
-  should, given a set of inputs, always produce the same output.
+  should, given a specific set of inputs, always produce the same output.
 - **Promote best practices**: Instead of creating a multitude of Docker images
   of varying quality, developers can benefit from the work of the community in
   a non-copy/paste fashion.
@@ -35,7 +35,7 @@ into -t <repository:tag> <builder> <directory>
 
 ## Creating a Builder Image
 
-Please refer to the [builder image walkthrough][builder-image] on how to create
+Please refer to the [builder image walkthrough][builder-images] on how to create
 a builder image. Effectively, `into` will not do a lot more than running
 well-known scripts that your builder image provides and transferring files
 between your host, the builder and the runner image.
