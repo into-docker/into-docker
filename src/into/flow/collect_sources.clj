@@ -1,20 +1,28 @@
 (ns into.flow.collect-sources
   "Implement collection of files and matching against .dockerignore"
   (:require [into.docker :as docker]
+            [into.flow.pattern :as pattern]
             [clojure.string :as string]
             [clojure.java.io :as io]
             [clojure.tools.logging :as log])
-  (:import [com.github.dockerjava.core
-            GoLangFileMatch]
-           [java.io File]
+  (:import [java.io File]
            [java.nio.file Path Paths Files]))
 
 ;; ## File Matcher
+
+(def ^:private default-patterns
+  [".git/"
+   ".gitignore"
+   ".hg/"
+   ".hgignore"
+   "Dockerfile"
+   ".dockerignore"])
 
 (defn- patterns-from
   [source]
   (with-open [in (io/reader source)]
     (->> (line-seq in)
+         (map string/trim)
          (remove string/blank?)
          (vec))))
 
@@ -28,23 +36,19 @@
   (->> patterns
        (map #(str "[into]   " %))
        (string/join "\n")
-       (log/debugf "[into] Ignoring the following patterns:%n%s"))
+       (log/tracef "[into] Ignoring the following %d patterns:%n%s" (count patterns)))
   patterns)
-
-(defn- golang-file-matcher
-  "The GoLangFileMatch class returns a list of matching patterns. This means
-   that we only include a file if there is no matching pattern."
-  [patterns]
-  (comp empty?  #(GoLangFileMatch/match patterns ^String %)))
 
 (defn- ignore-file-matcher
   "Create a function that takes a _relative_ path and returns a boolean value
    indicating whether the given file should be included."
   [ignore-files]
+  ;; DO NOT deduplicate. .dockerignore should allow explicitly including files
+  ;; that were previously excluded.
   (->> (mapcat patterns-from ignore-files)
-       (distinct)
+       (concat default-patterns)
        (log-patterns)
-       (golang-file-matcher)))
+       (pattern/matcher)))
 
 ;; ## Collect Files
 

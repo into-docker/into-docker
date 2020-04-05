@@ -38,7 +38,7 @@ import com.github.dockerjava.core.exception.GoLangFileMatchException;
  *  is malformed.
  *
  * On Windows, escaping is disabled. Instead, '\\' is treated as
- AuthConfigTest *  path separator.
+ * path separator.
  * </pre>
  *
  * @author tedo
@@ -52,32 +52,7 @@ public class GoLangFileMatch {
 
     private static final String PATTERN_CHARS_TO_ESCAPE = "\\.[]{}()*+-?^$|";
 
-    public static boolean match(List<String> patterns, File file) {
-        return !match(patterns, file.getPath()).isEmpty();
-    }
-
-    public static boolean match(String pattern, File file) {
-        return match(pattern, file.getPath());
-    }
-
-    /**
-     * Returns the matching patterns for the given string
-     */
-    public static List<String> match(List<String> patterns, String name) {
-        List<String> matches = new ArrayList<>();
-        for (String pattern : patterns) {
-            if (match(pattern, name)) {
-                matches.add(pattern);
-            }
-        }
-        return matches;
-    }
-
-    public static boolean match(String pattern, String name) {
-        return buildPattern(pattern).matcher(name).matches();
-    }
-
-    private static Pattern buildPattern(String pattern) {
+    public static Pattern compilePattern(String pattern) {
         StringBuilder patternStringBuilder = new StringBuilder("^");
         while (!pattern.isEmpty()) {
             pattern = appendChunkPattern(patternStringBuilder, pattern);

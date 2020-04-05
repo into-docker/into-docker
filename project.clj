@@ -10,6 +10,7 @@
                  [org.clojure/tools.logging "1.0.0"]
                  [lispyclouds/clj-docker-client "0.5.3"]
                  [org.apache.commons/commons-compress "1.20"]
+                 [commons-io "2.6"]
                  [commons-lang "2.6"]
                  [peripheral "0.5.3"]
                  [jansi-clj "0.1.1"]
