@@ -27,6 +27,7 @@
              {:global-vars {*assert* false}
               :jvm-opts ["-Dclojure.compiler.direct-linking=true"
                          "-Dclojure.spec.skip-macros=true"]
+              :uberjar-name "into.jar"
               :main into.main
               :aot :all}}
   :pedantic? :abort)
