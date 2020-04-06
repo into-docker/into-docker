@@ -13,7 +13,8 @@
   [{{:keys [files]} :sources, :as data}]
   (log/debugf "[into] Creating TAR archive from %d files ..." (count files))
   (with-open [out (ByteArrayOutputStream.)
-              tar (TarArchiveOutputStream. out)]
+              tar (doto (TarArchiveOutputStream. out)
+                    (.setLongFileMode TarArchiveOutputStream/LONGFILE_POSIX))]
     (doseq [{:keys [^File file ^String path]} files
             :let [size  (.length file)
                   entry (doto (TarArchiveEntry. path) (.setSize size))]]
