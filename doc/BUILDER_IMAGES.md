@@ -37,8 +37,7 @@ well as the following labels:
 FROM node:alpine
 LABEL into.v1.runner=nginx:alpine
 WORKDIR /into
-COPY build assemble ignore .
-RUN chmod -R a+rw /into
+COPY into/ .
 ```
 
 ### `/into/ignore`
