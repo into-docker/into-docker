@@ -30,4 +30,7 @@
               :uberjar-name "into.jar"
               :main into.main
               :aot :all}}
+  :plugins [[lein-cljfmt "0.6.7"]]
+  :cljfmt {:indents {prop/for-all [[:block 1]]
+                     defcomponent [[:block 2] [:inner 1]]}}
   :pedantic? :abort)
