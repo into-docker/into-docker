@@ -55,17 +55,30 @@
     (log-help opts)
     :help))
 
-(defn -main
-  [& args]
+(defn- run-flow
+  [opts]
+  (let [{:keys [options arguments]} opts
+        {:keys [target]} options
+        [builder sources] arguments]
+    (p/with-start [client (client/make {:uri (get-docker-uri)})]
+      (-> (flow/run client
+                    {:builder builder
+                     :target  target
+                     :sources sources})
+          (dissoc :client)))))
+
+(defn run
+  [args]
   (let [opts (cli/parse-opts args cli-options)]
     (or (print-errors opts)
         (print-help opts)
-        (let [{:keys [options arguments]} opts
-              {:keys [target]} options
-              [builder sources] arguments]
-          (p/with-start [client (client/make {:uri (get-docker-uri)})]
-            (-> (flow/run client
-                          {:builder builder
-                           :target  target
-                           :sources sources})
-                (dissoc :client)))))))
+        (run-flow opts))))
+
+(defn -main
+  [& args]
+  (let [result (run args)]
+    (System/exit
+     (if (or (= result :help)
+             (not (:error result)))
+       0
+       1))))

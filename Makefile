@@ -31,7 +31,7 @@ $(OUT)/into: $(OUT)/into.jar
 	chmod +x $(OUT)/into
 
 $(OUT)/into.jar: project.clj $(SRC) $(RES)
-	lein uberjar
+	lein do clean, uberjar
 
 # Install
 install: /usr/local/bin/into
