@@ -55,8 +55,8 @@
   (for [{:keys [bytes stream]} (exec-seq stream)
         line (with-open [in (io/reader (io/input-stream bytes))]
                (doall
-                 (map #(hash-map :stream stream :line %)
-                      (line-seq in))))]
+                (map #(hash-map :stream stream :line %)
+                     (line-seq in))))]
     line))
 
 (defn exec-bytes

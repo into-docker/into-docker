@@ -46,9 +46,9 @@
   (let [patterns (reverse (keep as-pattern exclude-patterns))]
     (fn [name]
       (-> (some
-            (fn [{:keys [selector pattern]}]
-              (when (re-find pattern name)
-                selector))
-            patterns)
+           (fn [{:keys [selector pattern]}]
+             (when (re-find pattern name)
+               selector))
+           patterns)
           (or :include)
           (= :include)))))

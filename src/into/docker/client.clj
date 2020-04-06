@@ -14,8 +14,8 @@
   [{:keys [message] :as result}]
   (if message
     (throw
-      (IllegalStateException.
-        (format "Operation failed: %s" message)))
+     (IllegalStateException.
+      (format "Operation failed: %s" message)))
     result))
 
 (defn- stream-into
@@ -72,33 +72,33 @@
 (defn- invoke-run-container
   [{:keys [containers]} container-name image]
   (let [{:keys [Id] :as created}
-          (->> {:op :ContainerCreate
-                :params {:name  container-name
-                         :body {:Image image
-                                :Cmd   ["tail" "-f" "/dev/null"]
-                                :Tty   true
-                                :Init  true}}}
-               (docker/invoke containers)
-               (throw-on-error))
-          result (->> {:op :ContainerStart
-                       :params {:id Id}}
-                      (docker/invoke containers)
-                      (throw-on-error))]
-      {:name container-name
-       :id   Id}))
+        (->> {:op :ContainerCreate
+              :params {:name  container-name
+                       :body {:Image image
+                              :Cmd   ["tail" "-f" "/dev/null"]
+                              :Tty   true
+                              :Init  true}}}
+             (docker/invoke containers)
+             (throw-on-error))
+        result (->> {:op :ContainerStart
+                     :params {:id Id}}
+                    (docker/invoke containers)
+                    (throw-on-error))]
+    {:name container-name
+     :id   Id}))
 
 (defn- invoke-stop-container
   [{:keys [containers]} {:keys [id]}]
   (throw-on-error
-    (docker/invoke
-      containers
-      {:op :ContainerStop
-       :params {:id id}}))
+   (docker/invoke
+    containers
+    {:op :ContainerStop
+     :params {:id id}}))
   (throw-on-error
-    (docker/invoke
-      containers
-      {:op :ContainerDelete
-       :params {:id id}})))
+   (docker/invoke
+    containers
+    {:op :ContainerDelete
+     :params {:id id}})))
 
 (defn- invoke-pull-image
   [{:keys [images]} image]
@@ -127,42 +127,37 @@
   :exec       (docker/client {:conn conn, :category :exec})
 
   proto/DockerClient
-  (pull-image
-    [this image]
+  (pull-image [this image]
     (invoke-pull-image this image))
 
-  (inspect-image
-    [this image]
+  (inspect-image [this image]
     (invoke-inspect-image this image))
 
-  (run-container
-    [this container-name image]
+  (run-container [this container-name image]
     (invoke-run-container this container-name image))
 
   (commit-container
     [this container data]
     (invoke-commit-container this container data))
 
-  (cleanup-container
-    [this container]
+  (cleanup-container [this container]
     (invoke-stop-container this container))
 
-  (read-container-file!
-    [this container path]
+  (read-container-file! [this container path]
     (with-open [^InputStream stream (invoke-exec this container ["cat" path] [])]
       (streams/exec-bytes stream :stdout)))
 
-  (copy-into-container!
-    [this stream container path]
+  (copy-into-container! [this stream container path]
     (stream-into this container stream path))
 
-  (copy-between-containers!
-    [this source-container target-container from-path to-path]
+  (copy-between-containers! [this
+                             source-container
+                             target-container
+                             from-path to-path]
     (with-open [^InputStream in (stream-from this source-container from-path)]
       (stream-into this target-container in to-path)))
 
-  (execute-command!
-    [this container command env log-fn]
+  (execute-command!  [this container command env log-fn]
     (with-open [^InputStream stream (invoke-exec this container command env)]
       (doseq [{:keys [line]} (streams/log-seq stream)]
         (log-fn line)))))

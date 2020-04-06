@@ -35,10 +35,10 @@
   (let [container (get-in data [container-key :container])]
     (with-open [in (io/input-stream tar)]
       (docker/copy-into-container!
-        client
-        in
-        container
-        source-directory)))
+       client
+       in
+       container
+       source-directory)))
   data)
 
 ;; ## Cleanup

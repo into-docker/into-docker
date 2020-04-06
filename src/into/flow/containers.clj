@@ -15,11 +15,11 @@
               (name to)
               to-path)
   (docker/copy-between-containers!
-    client
-    (get-in data [from :container])
-    (get-in data [to :container])
-    from-path
-    to-path)
+   client
+   (get-in data [from :container])
+   (get-in data [to :container])
+   from-path
+   to-path)
   data)
 
 (defn run

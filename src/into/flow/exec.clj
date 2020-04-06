@@ -16,9 +16,9 @@
   (let [{:keys [container image]} (get data k)]
     (log/debugf "[into] Running in (%s): %s" image cmd)
     (docker/execute-command!
-      client
-      container
-      cmd
-      (env->seq env)
-      log))
+     client
+     container
+     cmd
+     (env->seq env)
+     log))
   data)

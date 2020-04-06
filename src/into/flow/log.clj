@@ -8,9 +8,9 @@
     `(let [~sym ~data]
        (log/infof ~(jansi/fg color (str "[into] " fmt))
                   ~@(map
-                      (fn [spec-key]
-                        `(get-in ~sym [:spec ~spec-key]))
-                      spec-keys))
+                     (fn [spec-key]
+                       `(get-in ~sym [:spec ~spec-key]))
+                     spec-keys))
        ~sym)))
 
 (defmacro info
@@ -30,9 +30,9 @@
   `(let [^Exception error# ~error]
      (when error#
        (log/errorf
-         ~(jansi/red "[into] " message " [%s] %s")
-         (.getSimpleName (class error#))
-         (.getMessage error#))
+        ~(jansi/red "[into] " message " [%s] %s")
+        (.getSimpleName (class error#))
+        (.getMessage error#))
        (log/debugf error# "[into] Stacktrace"))))
 
 (defmacro report-errors

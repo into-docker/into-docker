@@ -53,8 +53,8 @@
   [{:keys [builder] :as data}]
   (with-flow-> data
     (update-in
-      [:spec :runner]
-      #(or % (get-in builder [:labels :into.v1.runner])))
+     [:spec :runner]
+     #(or % (get-in builder [:labels :into.v1.runner])))
     (validate [:spec :runner] "No runner image given.")))
 
 ;; ## Start
@@ -82,11 +82,11 @@
     :as data}]
   (with-flow-> data
     (containers/cp
-      [:builder assemble-script]
-      [:runner working-directory])
+     [:builder assemble-script]
+     [:runner working-directory])
     (containers/cp
-      [:builder artifact-directory]
-      [:runner working-directory])))
+     [:builder artifact-directory]
+     [:runner working-directory])))
 
 ;; ## Execute
 
@@ -156,33 +156,33 @@
 (defn run
   [client spec]
   (finalize!
-    (with-flow-> {:client client
-                  :spec   spec
-                  :paths {:source-directory   "/tmp/src"
-                          :artifact-directory "/tmp/artifacts"
-                          :working-directory  "/tmp"
-                          :ignore-file        "/into/ignore"
-                          :build-script       "/into/bin/build"
-                          :assemble-script    "/into/bin/assemble"}}
-      (log/emph "Building image [%s] from '.' ..." :target :sources)
-      (verify-spec)
+   (with-flow-> {:client client
+                 :spec   spec
+                 :paths {:source-directory   "/tmp/src"
+                         :artifact-directory "/tmp/artifacts"
+                         :working-directory  "/tmp"
+                         :ignore-file        "/into/ignore"
+                         :build-script       "/into/bin/build"
+                         :assemble-script    "/into/bin/assemble"}}
+     (log/emph "Building image [%s] from '.' ..." :target :sources)
+     (verify-spec)
 
-      (log/info "Pulling images ...")
-      (pull-builder-image!)
-      (select-runner-image)
-      (pull-runner-image!)
+     (log/info "Pulling images ...")
+     (pull-builder-image!)
+     (select-runner-image)
+     (pull-runner-image!)
 
-      (log/info "Starting environment [%s -> %s] ..." :builder :runner)
-      (start-builder!)
-      (start-runner!)
+     (log/info "Starting environment [%s -> %s] ..." :builder :runner)
+     (start-builder!)
+     (start-runner!)
 
-      (log/emph "Building artifacts in [%s] ..." :builder)
-      (copy-source-directory!)
-      (execute-build!)
+     (log/emph "Building artifacts in [%s] ..." :builder)
+     (copy-source-directory!)
+     (execute-build!)
 
-      (log/emph "Assembling application in [%s] ..." :runner)
-      (copy-artifacts!)
-      (execute-assemble!)
+     (log/emph "Assembling application in [%s] ..." :runner)
+     (copy-artifacts!)
+     (execute-assemble!)
 
-      (log/emph "Saving image [%s] ..." :target)
-      (commit!))))
+     (log/emph "Saving image [%s] ..." :target)
+     (commit!))))

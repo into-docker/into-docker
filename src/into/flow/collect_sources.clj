@@ -81,9 +81,9 @@
 (defn- read-container-ignore-file!
   [{:keys [client builder]}]
   (docker/read-container-file!
-    client
-    (:container builder)
-    "/into/ignore"))
+   client
+   (:container builder)
+   "/into/ignore"))
 
 (defn- maybe-file
   [& args]

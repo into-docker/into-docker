@@ -21,7 +21,7 @@
       "")))
 
 (let [fmt (-> (DateTimeFormatter/ofPattern
-                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+               "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
               (.withZone (ZoneId/of "UTC")))]
   (defn- build-date
     []
@@ -32,14 +32,14 @@
   (let [[_ _ name version] (re-find #"^(.+/)?([^/]+):([^/:]+)$" image)
         vcs-ref (create-vcs-ref)]
     (merge
-      {:labels {"org.label-schema.schema-version" "1.0"
-                "org.label-schema.vcs-ref"        vcs-ref
-                "org.label-schema.vcs-url"        ""
-                "org.label-schema.build-date"     (build-date)
-                "org.label-schema.name"           name
-                "org.label-schema.version"        version}
-       :env    []}
-      commit-spec)))
+     {:labels {"org.label-schema.schema-version" "1.0"
+               "org.label-schema.vcs-ref"        vcs-ref
+               "org.label-schema.vcs-url"        ""
+               "org.label-schema.build-date"     (build-date)
+               "org.label-schema.name"           name
+               "org.label-schema.version"        version}
+      :env    []}
+     commit-spec)))
 
 (defn commit-container
   [{{:keys [target]} :spec

@@ -21,8 +21,8 @@
 (defn mkdir
   [client container path & more]
   (execute-command!
-    client
-    container
-    (concat ["mkdir" path] more)
-    []
-    (constantly nil)))
+   client
+   container
+   (concat ["mkdir" path] more)
+   []
+   (constantly nil)))
