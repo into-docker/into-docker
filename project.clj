@@ -11,7 +11,7 @@
                  [lispyclouds/clj-docker-client "0.5.3"]
                  [org.apache.commons/commons-compress "1.20"]
                  [commons-lang "2.6"]
-                 [peripheral "0.5.3"]
+                 [peripheral "0.5.4"]
                  [jansi-clj "0.1.1"]
                  [ch.qos.logback/logback-classic "1.2.3"]
 
