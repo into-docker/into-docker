@@ -1,7 +1,7 @@
 (ns into.utils.pattern
   (:require [clojure.string :as string])
   (:import [com.github.dockerjava.core GoLangFileMatch]
-           [java.nio.file Path]))
+           [java.nio.file Paths Path]))
 
 ;; ## .dockerignore matching
 ;;
@@ -21,7 +21,7 @@
 (defn- compile-pattern
   [{:keys [pattern] :as data}]
   (when-let [re (some-> pattern
-                        (Path/of (into-array String []))
+                        (Paths/get (into-array String []))
                         (.normalize)
                         (str)
                         (cond-> (string/starts-with? pattern "/") (subs 1))
