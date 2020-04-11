@@ -7,7 +7,9 @@
              [log :as log]
              [pull-image :as pull-image]
              [transfer-sources :as transfer-sources]]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io])
+  (:import [java.io InterruptedIOException]
+           [sun.misc Signal SignalHandler]))
 
 ;; ## Helper
 
@@ -19,13 +21,32 @@
      data
      (assoc data :error (IllegalStateException. error-message)))))
 
+(defn- register-shutdown-handler!
+  [data]
+  (let [^Thread t (Thread/currentThread)] (Signal/handle
+    (Signal. "INT")
+    (reify SignalHandler
+      (handle [this signal]
+        (.interrupt t)))))
+  data)
+
+(defn- handle-interrupt
+  [data e]
+  (if (Thread/interrupted)
+    (assoc data ::interrupt? true)
+    (assoc data :error e)))
+
 (defmacro with-flow->
   [form nxt & rst]
   (if (empty? rst)
     `(let [value# ~form]
-       (if-not (:error value#)
+       (if-not (or (:error value#) (::interrupt? value#))
          (try
            (-> value# ~nxt)
+           (catch InterruptedException e#
+             (handle-interrupt value# e#))
+           (catch InterruptedIOException e#
+             (handle-interrupt value# e#))
            (catch Exception e#
              (assoc value# :error e#)))
          value#))
@@ -166,6 +187,7 @@
                          :assemble-script    "/into/bin/assemble"}}
      (log/emph "Building image [%s] from '.' ..." :target :sources)
      (verify-spec)
+     (register-shutdown-handler!)
 
      (log/info "Pulling images ...")
      (pull-builder-image!)
