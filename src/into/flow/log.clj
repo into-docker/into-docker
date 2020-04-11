@@ -41,4 +41,6 @@
          {error# :error, cleanup-error# :cleanup-error} data#]
      (report-error cleanup-error# "An error occured during cleanup:")
      (report-error error#         "An error occured:")
+     (when (or error# cleanup-error#)
+       (log/info "[into] See the full stacktrace using '-v'."))
      data#))
