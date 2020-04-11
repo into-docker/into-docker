@@ -19,10 +19,8 @@ $GRAALVM_HOME/bin/native-image \
       --allow-incomplete-classpath \
       --report-unsupported-elements-at-runtime \
       -H:EnableURLProtocols=http,https \
-      -H:ResourceConfigurationFiles=.graalvm/resource-config.json \
-      -H:ResourceConfigurationResources=unixsocket/graalvm/resource-config.json \
-      -H:ReflectionConfigurationFiles=.graalvm/reflect-config.json \
-      -H:ReflectionConfigurationResources=unixsocket/graalvm/reflect-config.json \
+      -H:ResourceConfigurationResources=unixsocket/graalvm/resource-config.json,graalvm/resource-config.json \
+      -H:ReflectionConfigurationResources=unixsocket/graalvm/reflect-config.json,graalvm/reflect-config.json \
       -H:JNIConfigurationResources=unixsocket/graalvm/jni-config.json \
       -H:+ReportExceptionStackTraces \
       -H:+JNI \
