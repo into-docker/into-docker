@@ -6,7 +6,29 @@
             [peripheral.core :as p]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [clojure.tools.cli :as cli]))
+            [clojure.tools.cli :as cli])
+  (:import [org.slf4j LoggerFactory]
+           [ch.qos.logback.classic Level Logger]))
+
+;; ## Log Level
+
+(defn- root-logger
+  ^Logger []
+  (LoggerFactory/getLogger "root"))
+
+(defn- set-log-level!
+  [^String value]
+  (let [^Level level (-> value
+                         (.toUpperCase)
+                         (Level/valueOf))]
+    (.setLevel (root-logger) level)))
+
+(defn set-verbosity!
+  [{:keys [^long verbosity]}]
+  (->> (if (> verbosity 2)
+         "TRACE"
+         (get ["INFO" "DEBUG" "TRACE"] verbosity))
+       (set-log-level!)))
 
 ;; ## Helper
 
@@ -28,6 +50,10 @@
                       value))
                   value))
     :validate [#(not (string/blank? %)) "Cannot be blank."]]
+   ["-v" nil "Increase verbosity (can be used multiple times)"
+    :id :verbosity
+    :default 0
+    :update-fn inc]
    ["-h" "--help" "Show help"]])
 
 ;; ## Main
@@ -60,6 +86,7 @@
   (let [{:keys [options arguments]} opts
         {:keys [target]} options
         [builder sources] arguments]
+    (set-verbosity! options)
     (p/with-start [client (client/make {:uri (get-docker-uri)})]
       (-> (flow/run client
                     {:builder builder
