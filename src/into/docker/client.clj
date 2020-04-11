@@ -159,8 +159,8 @@
 
   (execute-command!  [this container command env log-fn]
     (with-open [^InputStream stream (invoke-exec this container command env)]
-      (doseq [{:keys [line]} (streams/log-seq stream)]
-        (log-fn line)))))
+      (doseq [e (streams/log-seq stream)]
+        (log-fn e)))))
 
 ;; ## Constructor
 

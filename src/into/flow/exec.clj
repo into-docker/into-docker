@@ -1,10 +1,13 @@
 (ns into.flow.exec
   (:require [into.docker :as docker]
+            [jansi-clj.core :as jansi]
             [clojure.tools.logging :as log]))
 
 (defn- log
-  [line]
-  (log/infof "[into] |   %s" line))
+  [{:keys [stream line]}]
+  (log/infof "[into] |   %s" (case stream
+                               :stderr (jansi/fg-bright :red line)
+                               line)))
 
 (defn- env->seq
   [env]
