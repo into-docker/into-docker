@@ -23,11 +23,13 @@
 
 (defn- register-shutdown-handler!
   [data]
-  (let [^Thread t (Thread/currentThread)] (Signal/handle
-    (Signal. "INT")
-    (reify SignalHandler
-      (handle [this signal]
-        (.interrupt t)))))
+  (let [^Thread t (Thread/currentThread)]
+    (Signal/handle
+     (Signal. "INT")
+     (reify SignalHandler
+       (handle [this signal]
+         (log/emph data "SIGINT received.")
+         (.interrupt t)))))
   data)
 
 (defn- handle-interrupt
