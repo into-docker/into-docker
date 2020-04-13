@@ -41,20 +41,32 @@
     (streams/cached-stream source)))
 
 (defn- invoke-exec
-  [{:keys [containers exec]} {:keys [id]} command env]
+  [{:keys [containers exec]} {:keys [id]} {:keys [cmd env]}]
   (let [{:keys [Id]} (->> {:op :ContainerExec
                            :params {:id id
                                     :execConfig {:AttachStderr true
                                                  :AttachStdout true
-                                                 :Cmd command
-                                                 :Env env}}}
+                                                 :Cmd (into [] cmd)
+                                                 :Env (into [] env)}}}
                           (docker/invoke containers)
-                          (throw-on-error))]
-    (->> {:op :ExecStart
-          :params {:id Id
-                   :execStartConfig {:Detach false}}
-          :as :stream}
-         (docker/invoke exec))))
+                          (throw-on-error))
+        stream
+        (->> {:op :ExecStart
+              :params {:id Id
+                       :execStartConfig {:Detach false}}
+              :as :stream}
+             (docker/invoke exec))
+        inspect
+        (delay
+         (let [{:keys [ExitCode]} (->> {:op :ExecInspect
+                                        :params {:id Id}}
+                                       (docker/invoke exec)
+                                       (throw-on-error))]
+           {:exit ExitCode
+            :cmd  cmd
+            :env  env}))]
+    {:stream  stream
+     :inspect inspect}))
 
 (defn- invoke-commit-container
   [{:keys [commit]} {:keys [id]} {:keys [^String image cmd env labels]}]
@@ -144,7 +156,9 @@
     (invoke-stop-container this container))
 
   (read-container-file! [this container path]
-    (with-open [^InputStream stream (invoke-exec this container ["cat" path] [])]
+    (with-open [^InputStream stream (->> {:cmd ["cat" path]}
+                                         (invoke-exec this container)
+                                         (:stream))]
       (streams/exec-bytes stream :stdout)))
 
   (copy-into-container! [this stream container path]
@@ -157,10 +171,13 @@
     (with-open [^InputStream in (stream-from this source-container from-path)]
       (stream-into this target-container in to-path)))
 
-  (execute-command!  [this container command env log-fn]
-    (with-open [^InputStream stream (invoke-exec this container command env)]
-      (doseq [e (streams/log-seq stream)]
-        (log-fn e)))))
+  (execute-command!  [this container data log-fn]
+    (let [{:keys [^InputStream stream inspect]}
+          (invoke-exec this container data)]
+      (with-open [stream stream]
+        (doseq [e (streams/log-seq stream)]
+          (log-fn e)))
+      @inspect)))
 
 ;; ## Constructor
 

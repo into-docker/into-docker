@@ -14,7 +14,7 @@
   (read-container-file! [this container path])
   (copy-into-container! [this tar-stream container path])
   (copy-between-containers! [this from to from-path to-path])
-  (execute-command! [this container command env log-fn]))
+  (execute-command! [this container data log-fn]))
 
 ;; ## Derived Functionality
 
@@ -23,6 +23,5 @@
   (execute-command!
    client
    container
-   (concat ["mkdir" path] more)
-   []
+   {:cmd (concat ["mkdir" path] more)}
    (constantly nil)))

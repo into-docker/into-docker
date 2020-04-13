@@ -12,7 +12,7 @@
    (if (pred (get-in data path))
      data
      (assoc data
-            :into/error
+            :error
             (IllegalStateException. error-message)))))
 
 ;; ## Flow Macro
@@ -20,14 +20,14 @@
 (defn- handle-interrupt
   [data e]
   (if (Thread/interrupted)
-    (assoc data :into/interrupted? true)
-    (assoc data :into/error e)))
+    (assoc data :interrupted? true)
+    (assoc data :error e)))
 
 (defn ^:internal run-step
   [next-fn data]
   (try
-    (if-not (or (:into/error data)
-                (:into/interrupted? data))
+    (if-not (or (:error data)
+                (:interrupted? data))
       (next-fn data)
       data)
     (catch InterruptedException e
@@ -35,7 +35,7 @@
     (catch InterruptedIOException e
       (handle-interrupt data e))
     (catch Exception e
-      (assoc data :into/error e))))
+      (assoc data :error e))))
 
 (defmacro with-flow->
   "Run the given pipeline, and short-circuit the moment either `:into/error` or

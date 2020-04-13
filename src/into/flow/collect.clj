@@ -83,12 +83,12 @@
 
    Matching will be done on the path relative to the source directory."
   [data]
-  (log/info data
-            "Collecting sources in '%s' ..."
-            (get-in data [:spec :source-path]))
+  (log/debug data
+             "Collecting sources in '%s' ..."
+             (get-in data [:spec :source-path]))
   (flow/with-flow-> data
     (assoc :sources
            (collect-matching-files
-            (source-directory-as-path data)
-            (build-file-matcher data)))
+             (source-directory-as-path data)
+             (build-file-matcher data)))
     (flow/validate [:sources] seq "No source files found.")))

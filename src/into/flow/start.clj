@@ -35,7 +35,7 @@
 (defn run
   [data]
   (flow/with-flow-> data
-    (log/emph "Starting environment [%s -> %s] ..."
+    (log/info "Starting environment [%s -> %s] ..."
               (data/instance-image-name data :builder)
               (data/instance-image-name data :runner))
     (start-image-instance! :builder)
