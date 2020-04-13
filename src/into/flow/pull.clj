@@ -38,6 +38,7 @@
   [data]
   (-> (or (some->> (data/instance data :builder)
                    (labels/get-runner-image)
+                   (data/->image)
                    (update-in data [:spec :runner-image] #(or %1 %2)))
           data)
       (flow/validate [:spec :runner-image] "No runner image given.")))
