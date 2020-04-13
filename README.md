@@ -23,7 +23,8 @@ into -t <repository:tag> <builder> <directory>
   should, given a specific set of inputs, always produce the same output.
 - **Promote best practices**: Instead of creating a multitude of Docker images
   of varying quality, developers can benefit from the work of the community in
-  a non-copy/paste fashion.
+  a non-copy/paste fashion. This includes, for example, [`.dockerignore`][di]
+  files and [image labels][oci].
 - **Small Footprint**: Images created by this tool will only differ in one layer
   from the base image, reducing bandwidth usage when pushing and pulling similar
   images.
@@ -34,6 +35,9 @@ into -t <repository:tag> <builder> <directory>
 - **Control the execution environment**: Everything above also applies to runner
   images, allowing platform users to benefit from improvements to the execution
   environment while complying with regulations and best practices.
+
+[di]: https://codefresh.io/docker-tutorial/not-ignore-dockerignore-2/
+[oci]: https://github.com/opencontainers/image-spec/blob/master/annotations.md
 
 ## Creating a Builder Image
 
