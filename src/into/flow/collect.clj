@@ -89,6 +89,6 @@
   (flow/with-flow-> data
     (assoc :sources
            (collect-matching-files
-             (source-directory-as-path data)
-             (build-file-matcher data)))
+            (source-directory-as-path data)
+            (build-file-matcher data)))
     (flow/validate [:sources] seq "No source files found.")))
