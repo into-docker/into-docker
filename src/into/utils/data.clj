@@ -19,9 +19,9 @@
   [data path-key]
   (get-in data [:paths path-key]))
 
-(defn instance-label
-  [data instance-key label]
-  (get-in data [:instances instance-key :labels label]))
+(defn instance
+  [data instance-key]
+  (get-in data [:instances instance-key]))
 
 (defn instance-image
   [data instance-key]

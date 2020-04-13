@@ -3,7 +3,9 @@
              [core :as flow]
              [log :as log]]
             [into.docker :as docker]
-            [into.utils.data :as data]))
+            [into.utils
+             [data :as data]
+             [labels :as labels]]))
 
 ;; ## Pull Logic
 
@@ -40,16 +42,19 @@
 
 (defn- select-runner-image
   [data]
-  (-> (if-let [image (find-runner-image data)]
-        (update-in data [:spec :runner-image] #(or % image))
-        data)
+  (-> (or (some->> (data/instance data :builder)
+                   (labels/get-runner-image)
+                   (update-in data [:spec :runner-image] #(or %1 %2)))
+          data)
       (flow/validate [:spec :runner-image] "No runner image given.")))
 
 (defn- overwrite-runner-cmd
   [data]
-  (if-let [runner-cmd (data/instance-label data :builder :into.v1.runner.cmd)]
-    (assoc-in data [:instances :runner :cmd] ["sh" "-c" runner-cmd])
-    data))
+  (or (some->> (data/instance data :builder)
+               (labels/get-runner-cmd)
+               (vector "sh" "-c")
+               (assoc-in data [:instances :runner :cmd]))
+      data))
 
 ;; ## Flow
 

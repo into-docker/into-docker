@@ -88,3 +88,13 @@
    (image-labels spec)
    (oci-labels spec)
    (clear-labels spec)))
+
+(defn get-runner-image
+  "Read the runner image from the given builder image instance"
+  [instance]
+  (get-in instance [:labels :org.into-docker.runner-image]))
+
+(defn get-runner-cmd
+  "Read the runner CMD from the given builder image instance"
+  [instance]
+  (get-in instance [:labels :org.into-docker.runner-cmd]))
