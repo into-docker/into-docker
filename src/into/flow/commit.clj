@@ -11,9 +11,11 @@
 ;; ## Labels
 
 (defn- create-vcs-ref
-  []
+  [{:keys [spec]}]
   (try
-    (let [{:keys [exit out]} (sh/sh "git" "rev-parse" "--short" "HEAD")]
+    (let [path               (:source-path spec)
+          {:keys [exit out]} (sh/sh "git" "rev-parse" "--short" "HEAD"
+                                    :dir path)]
       (if (= exit 0)
         (string/trim out)
         ""))
@@ -27,19 +29,25 @@
     []
     (.format fmt (Instant/now))))
 
+(defn- create-opencontainer-labels
+  "See https://github.com/opencontainers/image-spec/blob/master/annotations.md"
+  [data]
+  (let [target (get-in data [:spec :target-image])]
+    (->> {:created  (build-date)
+          :revision (create-vcs-ref data)
+          :title    (:name target)
+          :version  (:tag target)}
+         (map
+           (fn [[k v]]
+             [(str "org.opencontainers.image." (name k)) v]))
+         (into {}))))
+
 (defn- add-labels-and-env
-  [_ {:keys [image cmd] :as commit-spec}]
-  (let [[_ _ name version] (re-find #"^(.+/)?([^/]+):([^/:]+)$" image)
-        vcs-ref (create-vcs-ref)]
-    (merge
-     {:labels {"org.label-schema.schema-version" "1.0"
-               "org.label-schema.vcs-ref"        vcs-ref
-               "org.label-schema.vcs-url"        ""
-               "org.label-schema.build-date"     (build-date)
-               "org.label-schema.name"           name
-               "org.label-schema.version"        version}
-      :env    []}
-     commit-spec)))
+  [data commit-spec]
+  (merge
+    {:labels (create-opencontainer-labels data)
+     :env    []}
+    commit-spec))
 
 ;; ## Commit
 
