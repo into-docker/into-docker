@@ -9,6 +9,7 @@
                  [org.clojure/tools.cli "1.0.194"]
                  [org.clojure/tools.logging "1.0.0"]
                  [into-docker/clj-docker-client "1.0.3-SNAPSHOT"]
+                 [unixsocket-http "1.0.3"]
                  [org.apache.commons/commons-compress "1.20"]
                  [commons-lang "2.6"]
                  [peripheral "0.5.4"]
@@ -28,7 +29,6 @@
              {:global-vars {*assert* false}
               :jvm-opts ["-Dclojure.compiler.direct-linking=true"
                          "-Dclojure.spec.skip-macros=true"]
-              :uberjar-name "into.jar"
               :main into.main
               :aot :all}}
   :cljfmt {:indents {prop/for-all [[:block 1]]
