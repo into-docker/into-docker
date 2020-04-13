@@ -34,12 +34,6 @@
 
 ;; ## Select Logic
 
-(defn- find-runner-image
-  [data]
-  (-> data
-      (data/instance-label :builder :into.v1.runner)
-      (data/->image)))
-
 (defn- select-runner-image
   [data]
   (-> (or (some->> (data/instance data :builder)
