@@ -4,7 +4,8 @@
             [into.docker.client :as client]
             [into.utils
              [data :as data]
-             [signal :as signal]]
+             [signal :as signal]
+             [version :as version]]
             [jansi-clj.core :as jansi]
             [peripheral.core :as p]
             [clojure.string :as string]
@@ -68,6 +69,7 @@
     :id :verbosity
     :default 0
     :update-fn inc]
+   [nil "--version" "Show version information"]
    ["-h" "--help" "Show help"]])
 
 ;; ## Main
@@ -95,6 +97,14 @@
     (log-help opts)
     :help))
 
+(defn- print-version
+  [{{:keys [version]} :options}]
+  (when version
+    (log/infof "into %s (revision %s)"
+               (version/current-version)
+               (version/current-revision))
+    :version))
+
 (defn- run-flow
   [opts]
   (let [{:keys [options arguments]} opts
@@ -113,8 +123,9 @@
 (defn run
   [args]
   (let [opts (cli/parse-opts args cli-options)]
-    (or (print-errors opts)
-        (print-help opts)
+    (or (print-help opts)
+        (print-version opts)
+        (print-errors opts)
         (run-flow opts))))
 
 (defn -main

@@ -1,7 +1,6 @@
 (ns into.utils.labels
-  (:require [clojure.java.shell :refer [sh]]
-            [clojure.string :as string]
-            [clojure.tools.logging :as log])
+  (:require [into.utils.version :as v]
+            [clojure.string :as string])
   (:import [java.time.format DateTimeFormatter]
            [java.time Instant ZoneId]))
 
@@ -14,35 +13,11 @@
     []
     (.format fmt (Instant/now))))
 
-(defn- read-revision
-  [{:keys [source-path] :or {source-path "."}}]
-  (try
-    (let [{:keys [exit out]} (sh "git" "rev-parse" "--short" "HEAD"
-                                 :dir source-path)]
-      (if (= exit 0)
-        (string/trim out)
-        ""))
-    (catch Exception _
-      (log/tracef "Failed to read revision from '%s'." source-path)
-      "")))
-
 ;; ## Default Labels
 
-(defmacro ^:private current-version
-  "If built with Leiningen, this will resolve to a literal string containing
-   the project version."
-  []
-  (System/getProperty "into.version"))
-
-(defmacro ^:private current-revision
-  "This will resolve to the current commit as a literal string that will
-   persist after AOT compilation."
-  []
-  (read-revision {}))
-
 (def ^:private default-labels
-  {"org.into-docker.version"  (current-version)
-   "org.into-docker.revision" (current-revision)
+  {"org.into-docker.version"  (v/current-version)
+   "org.into-docker.revision" (v/current-revision)
    "org.into-docker.url"      "https://github.com/into-docker/into-docker"})
 
 ;; ## Dynamic Labels
@@ -63,7 +38,7 @@
   "See https://github.com/opencontainers/image-spec/blob/master/annotations.md"
   [spec]
   (->> {:created (rfc-3999-date)
-        :revision (read-revision spec)}
+        :revision (v/read-revision spec)}
        (keep
         (fn [[k v]]
           (when-not (string/blank? v)
