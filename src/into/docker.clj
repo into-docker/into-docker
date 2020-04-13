@@ -23,5 +23,5 @@
   (execute-command!
    client
    container
-   {:cmd (concat ["mkdir" path] more)}
+   {:cmd (concat ["mkdir" "-p" path] more)}
    (constantly nil)))
