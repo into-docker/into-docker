@@ -9,33 +9,47 @@ jobs:
   uberjar:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: install-dependencies
-      run: lein deps
-    - name: Run tests
-      run: lein test
-    - name: build-uberjar
-      run: lein uberjar && mv target/*-standalone.jar target/app.jar
-    - name: upload-uberjar
-      uses: actions/upload-artifact@v1
-      with:
-        name: uberjar
-        path: target/app.jar
+      - uses: actions/checkout@v2
+      - name: install-dependencies
+        run: lein deps
+      - name: Run tests
+        run: lein test
+      - name: build-uberjar
+        run: lein uberjar && mv target/*-standalone.jar target/app.jar
+      - name: upload-uberjar
+        uses: actions/upload-artifact@v1
+        with:
+          name: uberjar
+          path: target/app.jar
+      - name: build-standalone-jar
+        run: |
+          echo '#!/bin/sh' > into
+          echo 'SELF=`which "$0" 2>/dev/null`' >> into
+          echo '[ $? -gt 0 -a -f "$0" ] && SELF="./$0"' >> into
+          echo 'exec java -jar "$SELF" "$@"' >> into
+          echo 'exit 1' >> into
+          cat target/app.jar >> into
+          chmod +x into
+          zip app.zip into
+      - name: upload-standalone-jar
+        with:
+          name: standalone
+          path: app.zip
 
   create-native-image:
     strategy:
       matrix:
-        build: ['linux-amd64', 'linux-amd64-static', 'macos-amd64']
+        build: ["linux-amd64", "linux-amd64-static", "macos-amd64"]
         include:
-          - build: 'linux-amd64'
-            os: 'ubuntu-latest'
-            flags: ''
-          - build: 'linux-amd64-static'
-            os: 'ubuntu-latest'
-            flags: '--static'
-          - build: 'macos-amd64'
-            os: 'macos-latest'
-            flags: ''
+          - build: "linux-amd64"
+            os: "ubuntu-latest"
+            flags: ""
+          - build: "linux-amd64-static"
+            os: "ubuntu-latest"
+            flags: "--static"
+          - build: "macos-amd64"
+            os: "macos-latest"
+            flags: ""
     needs: uberjar
     runs-on: ${{ matrix.os }}
     steps:
@@ -68,56 +82,56 @@ jobs:
     needs: create-native-image
     runs-on: ubuntu-latest
     steps:
-    - name: export-version
-      id: version
-      run: echo ::set-output name=value::${GITHUB_REF/refs\/tags\/v/}
-    - name: create-release
-      id: create_release
-      uses: actions/create-release@latest
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Version ${{ steps.version.outputs.value }}
-        body: |
-          Version ${{ steps.version.outputs.value }}
-        draft: true
-        prerelease: false
-    - name: store-upload-url
-      run: echo "${{ steps.create_release.outputs.upload_url }}" > upload_url.txt
-    - name: upload-release-data
-      uses: actions/upload-artifact@v1
-      with:
-        name: release
-        path: upload_url.txt
+      - name: export-version
+        id: version
+        run: echo ::set-output name=value::${GITHUB_REF/refs\/tags\/v/}
+      - name: create-release
+        id: create_release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Version ${{ steps.version.outputs.value }}
+          body: |
+            Version ${{ steps.version.outputs.value }}
+          draft: true
+          prerelease: false
+      - name: store-upload-url
+        run: echo "${{ steps.create_release.outputs.upload_url }}" > upload_url.txt
+      - name: upload-release-data
+        uses: actions/upload-artifact@v1
+        with:
+          name: release
+          path: upload_url.txt
 
-  upload-release-artifact:
+  upload-native-release-artifact:
     strategy:
       matrix:
-        build: ['linux-amd64', 'linux-amd64-static', 'macos-amd64']
+        build: ["linux-amd64", "linux-amd64-static", "macos-amd64", "standalone"]
     needs: create-release
     runs-on: ubuntu-latest
     steps:
-    - name: fetch-release-data
-      uses: actions/download-artifact@v1
-      with:
-        name: release
-    - name: export-version
-      id: version
-      run: echo ::set-output name=value::${GITHUB_REF/refs\/tags\/v/}
-    - name: export-upload-url
-      id: upload_url
-      run: echo ::set-output name=value::$(cat release/upload_url.txt)
-    - name: download-native-image-zip
-      uses: actions/download-artifact@v1
-      with:
-        name: ${{ matrix.build }}
-    - name: upload-release-asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.upload_url.outputs.value }}
-        asset_path: ./${{ matrix.build }}/app.zip
-        asset_name: into-${{ steps.version.outputs.value}}-${{ matrix.build }}.zip
-        asset_content_type: application/zip
+      - name: fetch-release-data
+        uses: actions/download-artifact@v1
+        with:
+          name: release
+      - name: export-version
+        id: version
+        run: echo ::set-output name=value::${GITHUB_REF/refs\/tags\/v/}
+      - name: export-upload-url
+        id: upload_url
+        run: echo ::set-output name=value::$(cat release/upload_url.txt)
+      - name: download-native-image-zip
+        uses: actions/download-artifact@v1
+        with:
+          name: ${{ matrix.build }}
+      - name: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.upload_url.outputs.value }}
+          asset_path: ./${{ matrix.build }}/app.zip
+          asset_name: into-${{ steps.version.outputs.value}}-${{ matrix.build }}.zip
+          asset_content_type: application/zip
