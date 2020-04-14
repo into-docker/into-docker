@@ -18,7 +18,7 @@
                cmd)
     (->> {:image  full-name
           :cmd    cmd
-          :labels (labels/create-labels spec)}
+          :labels (labels/create-labels data)}
          (docker/commit-container client container))
     data))
 

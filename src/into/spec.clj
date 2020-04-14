@@ -29,6 +29,7 @@
                    :into/paths
                    :into/client]
           :opt-un [:into/instances
+                   :into/vcs
                    :into/sources
                    :into/cleanup-error
                    :into/error
@@ -47,6 +48,12 @@
 (s/def :into/runner-image :into/image)
 (s/def :into/source-path :into/path)
 (s/def :into/client #(satisfies? docker/DockerClient %))
+
+;; ## VCS
+
+(s/def :into/vcs
+  (s/keys :req-un [:into/vcs-revision]))
+(s/def :into/vcs-revision string?)
 
 ;; ## Paths
 

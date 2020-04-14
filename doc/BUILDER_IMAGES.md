@@ -61,6 +61,7 @@ environment variables available:
 | -------------------- | --------------------------------------------- | ------------- |
 | `$INTO_SOURCE_DIR`   | Directory containing the sources to build.    | `/tmp/src`    |
 | `$INTO_ARTIFACT_DIR` | Directory that artifacts should be copied to. | `/tmp/target` |
+| `$INTO_REVISION`     | VCS revision (short) of the source directory. | `12345678`    |
 
 As you can intuit, the build script's purpose is taking the sources from
 `$INTO_SOURCE_DIR` and run the build logic before pushing any resulting

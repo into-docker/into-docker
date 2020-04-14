@@ -48,9 +48,10 @@
 ;; ## Execute
 
 (defn- execute-build!
-  [data]
+  [{:keys [vcs] :as data}]
   (->> {"INTO_SOURCE_DIR"   (data/path-for data :source-directory)
-        "INTO_ARTIFACT_DIR" (data/path-for data :artifact-directory)}
+        "INTO_ARTIFACT_DIR" (data/path-for data :artifact-directory)
+        "INTO_REVISION"     (:vcs-revision vcs "")}
        (exec/exec data :builder [(data/path-for data :build-script)])))
 
 ;; ## Flow

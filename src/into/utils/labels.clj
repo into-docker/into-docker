@@ -23,7 +23,7 @@
 ;; ## Dynamic Labels
 
 (defn- image-labels
-  [{:keys [builder-image runner-image]}]
+  [{{:keys [builder-image runner-image]} :spec}]
   {"org.into-docker.builder-image" (:full-name builder-image)
    "org.into-docker.runner-image"  (:full-name runner-image)})
 
@@ -36,9 +36,9 @@
 
 (defn- oci-labels
   "See https://github.com/opencontainers/image-spec/blob/master/annotations.md"
-  [spec]
-  (->> {:created (rfc-3999-date)
-        :revision (v/read-revision spec)}
+  [data]
+  (->> {:created  (rfc-3999-date)
+        :revision (get-in data [:vcs :vcs-revision] "")}
        (keep
         (fn [[k v]]
           (when-not (string/blank? v)
@@ -50,19 +50,19 @@
 (defn- clear-labels
   "Sets those labels that should be cleared. For example, the maintainer of the
    runner image is not the one of the created image."
-  [spec]
+  [data]
   {"maintainer" ""})
 
 ;; ## API
 
 (defn create-labels
   "Create labels for the target image based on the given :into/spec."
-  [spec]
+  [data]
   (merge
    default-labels
-   (image-labels spec)
-   (oci-labels spec)
-   (clear-labels spec)))
+   (image-labels data)
+   (oci-labels data)
+   (clear-labels data)))
 
 (defn get-runner-image
   "Read the runner image from the given builder image instance"
