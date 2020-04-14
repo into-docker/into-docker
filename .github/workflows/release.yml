@@ -84,7 +84,7 @@ jobs:
         draft: true
         prerelease: false
     - name: store-upload-url
-      run: echo ${{ steps.create_release.outputs.upload_url }} > upload_url.txt
+      run: echo "${{ steps.create_release.outputs.upload_url }}" > upload_url.txt
     - name: upload-release-data
       uses: actions/upload-artifact@v1
       with:
