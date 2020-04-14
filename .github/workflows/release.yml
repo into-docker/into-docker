@@ -32,6 +32,7 @@ jobs:
           chmod +x into.jar
           zip app.zip into.jar
       - name: upload-standalone-jar
+        uses: actions/upload-artifact@v1
         with:
           name: standalone-jar
           path: app.zip
