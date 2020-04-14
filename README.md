@@ -1,6 +1,6 @@
 # into-docker
 
-[![CircleCI](https://circleci.com/gh/into-docker/into-docker.svg?style=shield)](https://circleci.com/gh/into-docker/into-docker)
+![CI](https://github.com/into-docker/into-docker/workflows/CI/badge.svg)
 
 **into-docker** lets you build and run applications relying on common frameworks
 or build tools without ever having to write another Dockerfile.
