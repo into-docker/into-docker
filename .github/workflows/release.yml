@@ -23,17 +23,17 @@ jobs:
           path: target/app.jar
       - name: build-standalone-jar
         run: |
-          echo '#!/bin/sh' > into
-          echo 'SELF=`which "$0" 2>/dev/null`' >> into
-          echo '[ $? -gt 0 -a -f "$0" ] && SELF="./$0"' >> into
-          echo 'exec java -jar "$SELF" "$@"' >> into
-          echo 'exit 1' >> into
-          cat target/app.jar >> into
-          chmod +x into
-          zip app.zip into
+          echo '#!/bin/sh' > into.jar
+          echo 'SELF=`which "$0" 2>/dev/null`' >> into.jar
+          echo '[ $? -gt 0 -a -f "$0" ] && SELF="./$0"' >> into.jar
+          echo 'exec java -jar "$SELF" "$@"' >> into.jar
+          echo 'exit 1' >> into.jar
+          cat target/app.jar >> into.jar
+          chmod +x into.jar
+          zip app.zip into.jar
       - name: upload-standalone-jar
         with:
-          name: standalone
+          name: standalone-jar
           path: app.zip
 
   create-native-image:
@@ -108,7 +108,7 @@ jobs:
   upload-native-release-artifact:
     strategy:
       matrix:
-        build: ["linux-amd64", "linux-amd64-static", "macos-amd64", "standalone"]
+        build: ["linux-amd64", "linux-amd64-static", "macos-amd64", "standalone-jar"]
     needs: create-release
     runs-on: ubuntu-latest
     steps:
