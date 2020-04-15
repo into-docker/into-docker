@@ -9,9 +9,12 @@
 ;; ## Startup Logic
 
 (defn- create-working-directories!
-  [{:keys [client paths]} container]
-  (let [{:keys [source-directory artifact-directory]} paths]
-    (docker/mkdir client container source-directory artifact-directory)))
+  [{:keys [client] :as data} container]
+  (docker/mkdir
+    client
+    container
+    (data/path-for data :source-directory)
+    (data/path-for data :artifact-directory)))
 
 (defn- random-container-name
   []

@@ -1,15 +1,16 @@
 (ns into.flow.assemble
   (:require [into.flow
              [exec :as exec]
-             [log :as log]]))
+             [log :as log]]
+            [into.utils.data :as data]))
 
 ;; ## Execute
 
 (defn- execute-assemble!
-  [{{:keys [working-directory artifact-directory]} :paths,
-    :as data}]
-  (->> {"INTO_ARTIFACT_DIR" artifact-directory}
-       (exec/exec data :runner [(str working-directory "/assemble")])))
+  [data]
+  (->> {"INTO_ARTIFACT_DIR" (data/path-for data :artifact-directory)}
+       (exec/exec data :runner [(str (data/path-for data :working-directory)
+                                     "/assemble")])))
 
 ;; ## Flow
 
@@ -17,5 +18,5 @@
   [data]
   (-> data
       (log/emph "Assembling application in [%s] ..."
-                (get-in data [:instances :runner :image :full-name]))
+                (data/instance-image-name data :runner))
       (execute-assemble!)))

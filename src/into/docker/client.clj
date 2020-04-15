@@ -4,6 +4,7 @@
             [into.docker
              [streams :as streams]]
             [peripheral.core :refer [defcomponent]]
+            [clojure.java.io :as io]
             [clj-docker-client.core :as docker])
   (:import [java.util UUID]
            [java.io InputStream]))
@@ -29,16 +30,11 @@
 
 (defn- stream-from
   [{:keys [containers]} {:keys [id]} path]
-  ;; Unfortunately, we seem to have to load the full data into memory since
-  ;; the stream returned by `ContainerArchive` does not set the stream length
-  ;; that is used in `PutContainerArchive` to set the `Content-Length`
-  ;; header.
-  (with-open [^InputStream source (->> {:op :ContainerArchive
-                                        :params {:id id
-                                                 :path path}
-                                        :as :stream}
-                                       (docker/invoke containers))]
-    (streams/cached-stream source)))
+  (->> {:op :ContainerArchive
+        :params {:id id
+                 :path path}
+        :as :stream}
+       (docker/invoke containers)))
 
 (defn- invoke-exec
   [{:keys [containers exec]} {:keys [id]} {:keys [cmd env]}]
@@ -160,6 +156,10 @@
                                          (invoke-exec this container)
                                          (:stream))]
       (streams/exec-bytes stream :stdout)))
+
+  (copy-from-container! [this stream container path]
+    (with-open [^InputStream in (stream-from this container path)]
+      (io/copy in stream)))
 
   (copy-into-container! [this stream container path]
     (stream-into this container stream path))

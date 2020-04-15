@@ -20,7 +20,7 @@
 
 (defn- log-patterns
   [patterns]
-  (->> patterns
+  (->> (concat patterns ["# ---"])
        (map #(str "[into]   " %))
        (string/join "\n")
        (log/debugf "[into] Using the following ignore patterns:%n%s"))

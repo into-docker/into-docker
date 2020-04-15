@@ -3,6 +3,7 @@
   (:require [into.flow :as flow]
             [into.docker.client :as client]
             [into.utils
+             [cache :as cache]
              [data :as data]
              [signal :as signal]
              [version :as version]]
@@ -17,12 +18,16 @@
 ;; ## Constants
 
 (let [working-directory "/tmp"]
-  (def ^:private +paths+
+  (def ^:private +well-known-paths+
     {:source-directory   (str working-directory "/src")
      :artifact-directory (str working-directory "/artifacts")
+     :cache-directory    (str working-directory "/cache")
      :working-directory  working-directory
+
      :build-script       "/into/bin/build"
      :assemble-script    "/into/bin/assemble"
+
+     :cache-file         "/into/cache"
      :ignore-file        "/into/ignore"}))
 
 ;; ## Log Level
@@ -69,6 +74,11 @@
     :id :verbosity
     :default 0
     :update-fn inc]
+   [nil "--auto-cache" "Use and create a file in `$HOME/.cache/into-docker` for incremental builds."
+    :id :auto-cache
+    :default false]
+   [nil "--cache PATH" "Use and create the specified cache file for incremental builds."
+    :id :cache-file]
    [nil "--version" "Show version information"]
    ["-h" "--help" "Show help"]])
 
@@ -105,19 +115,33 @@
                (version/current-revision))
     :version))
 
+(defn- build-flow-spec
+  [{:keys [target auto-cache cache-file]} [builder-image source-path]]
+  (cond->
+    {:builder-image (data/->image builder-image)
+     :target-image  (data/->image target)
+     :source-path   source-path}
+
+    auto-cache
+    (assoc :cache-spec
+           (let [cache-file (cache/default-cache-file target)]
+             {:cache-from cache-file
+              :cache-to   cache-file}))
+
+    cache-file
+    (assoc :cache-spec
+           {:cache-from cache-file
+            :cache-to   cache-file})))
+
 (defn- run-flow
   [opts]
-  (let [{:keys [options arguments]} opts
-        {:keys [target]} options
-        [builder-image source-path] arguments]
+  (let [{:keys [options arguments]} opts]
     (set-verbosity! options)
     (p/with-start [client (client/make {:uri (get-docker-uri)})]
       (-> (flow/run
-           {:client client
-            :spec   {:builder-image (data/->image builder-image)
-                     :target-image  (data/->image target)
-                     :source-path   source-path}
-            :paths  +paths+})
+           {:client           client
+            :spec             (build-flow-spec options arguments)
+            :well-known-paths +well-known-paths+})
           (dissoc :client)))))
 
 (defn run

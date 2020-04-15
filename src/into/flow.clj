@@ -6,8 +6,11 @@
              [core :as flow]
              [collect :as collect]
              [commit :as commit]
+             [create-cache :as create-cache]
              [init :as init]
              [pull :as pull]
+             [read-cache-paths :as read-cache-paths]
+             [restore-cache :as restore-cache]
              [start :as start]
              [transfer :as transfer]]))
 
@@ -17,9 +20,12 @@
         (init/run)
         (pull/run)
         (start/run)
+        (read-cache-paths/run)
+        (restore-cache/run)
         (collect/run)
         (build/run)
         (transfer/run)
         (assemble/run)
-        (commit/run))
+        (commit/run)
+        (create-cache/run))
       (cleanup/run)))

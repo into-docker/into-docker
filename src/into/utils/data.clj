@@ -17,7 +17,7 @@
 
 (defn path-for
   [data path-key]
-  (get-in data [:paths path-key]))
+  (get-in data [:well-known-paths path-key]))
 
 (defn instance
   [data instance-key]
