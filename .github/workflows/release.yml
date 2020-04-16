@@ -37,10 +37,10 @@ jobs:
           name: standalone-jar
           path: app.zip
 
-  create-native-image:
+  create-native-image-linux:
     strategy:
       matrix:
-        build: ["linux-amd64", "linux-amd64-static", "macos-amd64"]
+        build: ["linux-amd64", "linux-amd64-static"]
         include:
           - build: "linux-amd64"
             os: "ubuntu-latest"
@@ -48,16 +48,10 @@ jobs:
           - build: "linux-amd64-static"
             os: "ubuntu-latest"
             flags: "--static"
-          - build: "macos-amd64"
-            os: "macos-latest"
-            flags: ""
     needs: uberjar
     runs-on: ${{ matrix.os }}
+    container: 'oracle/graalvm-ce:20.0.0-java11'
     steps:
-      - name: setup-graalvm-ce
-        uses: DeLaGuardo/setup-graalvm@3
-        with:
-          graalvm-version: "20.0.0.java11"
       - name: setup-native-image
         run: gu install native-image
       - name: download-uberjar
@@ -79,8 +73,42 @@ jobs:
           name: ${{ matrix.build }}
           path: app.zip
 
+  create-native-image-macos:
+    strategy:
+      matrix:
+        build: ["macos-amd64"]
+        include:
+          - build: "macos-amd64"
+            os: "macos-latest"
+    needs: uberjar
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: setup-graalvm-ce
+        uses: DeLaGuardo/setup-graalvm@3
+        with:
+          graalvm-version: "20.0.0.java11"
+      - name: setup-native-image
+        run: gu install native-image
+      - name: download-uberjar
+        uses: actions/download-artifact@v1
+        with:
+          name: uberjar
+      - name: native-image
+        run: |
+          native-image -jar uberjar/app.jar \
+            -H:Name=into \
+            --no-fallback \
+            --no-server
+      - name: compress-native-image
+        run: zip app.zip into
+      - name: upload-native-image-zip
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ matrix.build }}
+          path: app.zip
+
   create-release:
-    needs: create-native-image
+    needs: [ create-native-image-linux, create-native-image-macos ]
     runs-on: ubuntu-latest
     steps:
       - name: export-version
