@@ -2,6 +2,8 @@ name: Release
 
 on:
   push:
+    branches:
+      - "ci/*"
     tags:
       - "v*"
 
@@ -30,12 +32,11 @@ jobs:
           echo 'exit 1' >> into.jar
           cat target/app.jar >> into.jar
           chmod +x into.jar
-          zip app.zip into.jar
       - name: upload-standalone-jar
         uses: actions/upload-artifact@v1
         with:
           name: standalone-jar
-          path: app.zip
+          path: into.jar
 
   create-native-image-linux:
     strategy:
@@ -43,14 +44,12 @@ jobs:
         build: ["linux-amd64", "linux-amd64-static"]
         include:
           - build: "linux-amd64"
-            os: "ubuntu-latest"
             flags: ""
           - build: "linux-amd64-static"
-            os: "ubuntu-latest"
             flags: "--static"
     needs: uberjar
-    runs-on: ${{ matrix.os }}
-    container: 'oracle/graalvm-ce:20.0.0-java11'
+    runs-on: "ubuntu-latest"
+    container: "oracle/graalvm-ce:20.0.0-java11"
     steps:
       - name: setup-native-image
         run: gu install native-image
@@ -65,13 +64,11 @@ jobs:
             --no-fallback \
             --no-server \
             ${{ matrix.flags }}
-      - name: compress-native-image
-        run: zip app.zip into
-      - name: upload-native-image-zip
+      - name: upload-native-image
         uses: actions/upload-artifact@v1
         with:
           name: ${{ matrix.build }}
-          path: app.zip
+          path: into
 
   create-native-image-macos:
     strategy:
@@ -99,17 +96,16 @@ jobs:
             -H:Name=into \
             --no-fallback \
             --no-server
-      - name: compress-native-image
-        run: zip app.zip into
-      - name: upload-native-image-zip
+      - name: upload-native-image
         uses: actions/upload-artifact@v1
         with:
           name: ${{ matrix.build }}
-          path: app.zip
+          path: into
 
   create-release:
-    needs: [ create-native-image-linux, create-native-image-macos ]
+    needs: [create-native-image-linux, create-native-image-macos]
     runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'v')
     steps:
       - name: export-version
         id: version
@@ -137,9 +133,11 @@ jobs:
   upload-native-release-artifact:
     strategy:
       matrix:
-        build: ["linux-amd64", "linux-amd64-static", "macos-amd64", "standalone-jar"]
+        build:
+          ["linux-amd64", "linux-amd64-static", "macos-amd64", "standalone-jar"]
     needs: create-release
     runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'v')
     steps:
       - name: fetch-release-data
         uses: actions/download-artifact@v1
@@ -151,16 +149,18 @@ jobs:
       - name: export-upload-url
         id: upload_url
         run: echo ::set-output name=value::$(cat release/upload_url.txt)
-      - name: download-native-image-zip
+      - name: download-native-image
         uses: actions/download-artifact@v1
         with:
           name: ${{ matrix.build }}
+      - name: zip-native-image
+        run: cd ${{ matrix.build }} && zip into.zip *
       - name: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.upload_url.outputs.value }}
-          asset_path: ./${{ matrix.build }}/app.zip
+          asset_path: ./${{ matrix.build }}/into.zip
           asset_name: into-${{ steps.version.outputs.value}}-${{ matrix.build }}.zip
           asset_content_type: application/zip

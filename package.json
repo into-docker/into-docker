@@ -6,7 +6,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "pretty-quick --staged 'src/**/*.java' --pattern '**/*.json' --pattern '**/*.md' --pattersn '**/*.yml'"
+      "pre-commit": "pretty-quick --staged 'src/**/*.java' --pattern '**/*.json' --pattern '**/*.md' --pattern '**/*.yml'"
     }
   }
 }
