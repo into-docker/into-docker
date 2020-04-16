@@ -28,17 +28,28 @@
                      (sha1 %)))
        (string/join "; ")
        (format "mkdir -p '%s'; %s" cache-directory)
+       (format "%s; true")
        (vector "sh" "-c")))
+
+(defn- ->restore-command
+  [cache-directory path]
+  (let [cache-path (.getPath (io/file cache-directory (sha1 path)))]
+    (format
+      (str "_CPTH_='%s'; _PTH_='%s';"
+           "[ -e \"$_CPTH_\" ] && ("
+           "rm -rf \"$_PTH_\";"
+           "mv \"$_CPTH_\" \"$_PTH_\";"
+           "echo \"$_PTH_\";"
+           ")")
+      cache-path
+      path)))
 
 (defn restore-cache-command
   [cache-directory paths]
   (->> paths
-       (map #(format "rm -rf '%s' && mv -f '%s/%s' '%s'"
-                     %
-                     cache-directory
-                     (sha1 %)
-                     %))
+       (map #(->restore-command cache-directory %))
        (string/join "; ")
+       (format "%s; true")
        (vector "sh" "-c")))
 
 (defn default-cache-file
