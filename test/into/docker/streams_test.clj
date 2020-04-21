@@ -96,7 +96,7 @@
 
 (defspec t-log-seq (times 20)
   (prop/for-all
-    [blocks (gen/vector gen-block 5)
+    [blocks (gen/vector gen-block)
      stream (gen/elements [:stdout :stderr])]
     (with-open [in (block-stream blocks)]
       (let [sq (streams/log-seq in)]

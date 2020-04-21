@@ -77,8 +77,8 @@
       (or (if-not (has-linebreak? line)
             (if-let [[other & rst] rst]
               (if (same-stream? line other)
-                (cons (merge-lines line other)
-                      (group-lines rst)))))
+                (group-lines
+                  (cons (merge-lines line other) rst)))))
           (cons line (group-lines rst))))))
 
 (defn log-seq
