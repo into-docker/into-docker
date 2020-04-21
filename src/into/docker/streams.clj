@@ -1,5 +1,6 @@
 (ns into.docker.streams
-  (:require [clojure.java.io :as io])
+  (:require [clojure.java.io :as io]
+            [clojure.string :as string])
   (:import [java.io
             InputStream
             ByteArrayInputStream
@@ -50,14 +51,42 @@
   (->> (repeatedly #(read-next-block stream))
        (take-while some?)))
 
+(defn- block->lines
+  [{:keys [^bytes bytes stream]}]
+  (->> (string/split (String. bytes "UTF-8") #"(?<=\n)")
+       (map #(hash-map :stream stream :line %))))
+
+(defn- merge-lines
+  [a {:keys [line]}]
+  (update a :line str line))
+
+(defn- has-linebreak?
+  [{:keys [^String line]}]
+  (.endsWith line "\n"))
+
+(defn- same-stream?
+  [a b]
+  (= (:stream a) (:stream b)))
+
+(defn- group-lines
+  "Lines that get transmitted in multiple pieces need to be combined as to
+   not have awkward linebreaks in logs."
+  [sq]
+  (when-let [[line & rst] (seq sq)]
+    (lazy-seq
+      (or (if-not (has-linebreak? line)
+            (if-let [[other & rst] rst]
+              (if (same-stream? line other)
+                (cons (merge-lines line other)
+                      (group-lines rst)))))
+          (cons line (group-lines rst))))))
+
 (defn log-seq
   [^InputStream stream]
-  (for [{:keys [bytes stream]} (exec-seq stream)
-        line (with-open [in (io/reader (io/input-stream bytes))]
-               (doall
-                (map #(hash-map :stream stream :line %)
-                     (line-seq in))))]
-    line))
+  (->> (for [block (exec-seq stream)
+             line (block->lines block)]
+         line)
+       (group-lines)))
 
 (defn exec-bytes
   ^bytes [stream stream-key]

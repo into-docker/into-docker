@@ -5,6 +5,7 @@
              [streams :as streams]]
             [peripheral.core :refer [defcomponent]]
             [clojure.java.io :as io]
+            [clojure.string :as string]
             [clj-docker-client.core :as docker])
   (:import [java.util UUID]
            [java.io InputStream]))
@@ -176,7 +177,7 @@
           (invoke-exec this container data)]
       (with-open [stream stream]
         (doseq [e (streams/log-seq stream)]
-          (log-fn e)))
+          (log-fn (update e :line string/trimr))))
       @inspect)))
 
 ;; ## Constructor
