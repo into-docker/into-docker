@@ -60,7 +60,7 @@
     line))
 
 (defn exec-bytes
-  [stream stream-key]
+  ^bytes [stream stream-key]
   (with-open [out (ByteArrayOutputStream.)]
     (doseq [{:keys [^"[B" bytes stream]} (exec-seq stream)
             :when (= stream stream-key)]
