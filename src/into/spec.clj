@@ -92,10 +92,11 @@
                    :into/cmd]
           :opt-un [:into/container]))
 
-(s/def :into/builder :into/instance)
-(s/def :into/runner  :into/instance)
-(s/def :into/labels  (s/map-of keyword? string?))
-(s/def :into/cmd     (s/nilable (s/coll-of string?)))
+(s/def :into/builder    :into/instance)
+(s/def :into/runner     :into/instance)
+(s/def :into/labels     (s/map-of  keyword?   string?))
+(s/def :into/cmd        (s/nilable (s/coll-of string?)))
+(s/def :into/entrypoint (s/nilable (s/coll-of string?)))
 
 ;; ## Sources
 

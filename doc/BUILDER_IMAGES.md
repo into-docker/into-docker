@@ -26,10 +26,11 @@ When running `into`, the following will happen:
 The builder image needs to provide build dependencies, the `/into/*` files, as
 well as the following labels:
 
-| Label                          | Required | Description                            | Example Value            |
-| ------------------------------ | -------- | -------------------------------------- | ------------------------ |
-| `org.into-docker.runner-image` | Yes      | Runner image to inject artifacts into. | `openjdk:11-jre`         |
-| `org.into-docker.runner-cmd`   | No       | `CMD` override for the runner image.   | `java -jar /opt/app.jar` |
+| Label                               | Required | Description                                 | Example Value            |
+| ----------------------------------- | -------- | ------------------------------------------- | ------------------------ |
+| `org.into-docker.runner-image`      | Yes      | Runner image to inject artifacts into.      | `openjdk:11-jre`         |
+| `org.into-docker.runner-cmd`        | No       | `CMD` override for the runner image.        | `java -jar /opt/app.jar` |
+| `org.into-docker.runner-entrypoint` | No       | `ENTRYPOINT` override for the runner image. | `java -jar /opt/app.jar` |
 
 **Example**
 

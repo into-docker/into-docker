@@ -73,3 +73,8 @@
   "Read the runner CMD from the given builder image instance"
   [instance]
   (get-in instance [:labels :org.into-docker.runner-cmd]))
+
+(defn get-runner-entrypoint
+  "Read the runner ENTRYPOINT from the given builder image instance"
+  [instance]
+  (get-in instance [:labels :org.into-docker.runner-entrypoint]))

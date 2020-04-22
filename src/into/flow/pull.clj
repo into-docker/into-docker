@@ -21,7 +21,8 @@
   (when-let [{:keys [Config]} (pull-image-if-not-exists! data image)]
     {:image       (assoc image :hash (:Image Config))
      :labels      (into {} (:Labels Config))
-     :cmd         (into [] (:Cmd Config))}))
+     :cmd         (into [] (:Cmd Config))
+     :entrypoint  (into [] (:Entrypoint Config))}))
 
 (defn- pull-image-instance!
   [data spec-key instance-key]
@@ -43,13 +44,17 @@
           data)
       (flow/validate [:spec :runner-image] "No runner image given.")))
 
-(defn- overwrite-runner-cmd
+(defn- overwrite-runner-data
   [data]
-  (or (some->> (data/instance data :builder)
-               (labels/get-runner-cmd)
-               (vector "sh" "-c")
-               (assoc-in data [:instances :runner :cmd]))
-      data))
+  (let [builder (data/instance data :builder)
+        cmd     (labels/get-runner-cmd builder)
+        entryp  (labels/get-runner-entrypoint builder)]
+    (cond-> data
+      entryp (assoc-in [:instances :runner :entrypoint]
+                       ["sh" "-c" (str entryp " $@") "--"])
+      entryp (assoc-in [:instances :runner :cmd] [])
+      cmd    (assoc-in [:instances :runner :cmd]
+                       ["sh" "-c" cmd]))))
 
 ;; ## Flow
 
@@ -60,4 +65,4 @@
     (pull-image-instance! :builder-image :builder)
     (select-runner-image)
     (pull-image-instance! :runner-image :runner)
-    (overwrite-runner-cmd)))
+    (overwrite-runner-data)))

@@ -66,13 +66,16 @@
      :inspect inspect}))
 
 (defn- invoke-commit-container
-  [{:keys [commit]} {:keys [id]} {:keys [^String image cmd env labels]}]
+  [{:keys [commit]}
+   {:keys [id]}
+   {:keys [^String image cmd entrypoint env labels]}]
   (let [[repo tag] (.split image ":" 2)]
     (->> {:op :ImageCommit
           :params {:container id
                    :repo repo
                    :tag  (or tag "latest")
                    :containerConfig {:Cmd cmd
+                                     :Entrypoint entrypoint
                                      :Env (into [] env)
                                      :Labels (into {} labels)}}}
          (docker/invoke commit)
