@@ -70,15 +70,18 @@
                       value))
                   value))
     :validate [#(not (string/blank? %)) "Cannot be blank."]]
-   ["-v" nil "Increase verbosity (can be used multiple times)"
-    :id :verbosity
-    :default 0
-    :update-fn inc]
+   [nil "--build-as USER" "Use the given user to run the build container."
+    :id :build-user
+    :default "1001"]
    [nil "--auto-cache" "Use and create a file in `$HOME/.cache/into-docker` for incremental builds."
     :id :auto-cache
     :default false]
    [nil "--cache PATH" "Use and create the specified cache file for incremental builds."
     :id :cache-file]
+   ["-v" nil "Increase verbosity (can be used multiple times)"
+    :id :verbosity
+    :default 0
+    :update-fn inc]
    [nil "--version" "Show version information"]
    ["-h" "--help" "Show help"]])
 
@@ -116,11 +119,15 @@
     :version))
 
 (defn- build-flow-spec
-  [{:keys [target auto-cache cache-file]} [builder-image source-path]]
+  [{:keys [target build-user auto-cache cache-file]}
+   [builder-image source-path]]
   (cond->
     {:builder-image (data/->image builder-image)
      :target-image  (data/->image target)
      :source-path   source-path}
+
+    build-user
+    (assoc-in [:builder-image :user] build-user)
 
     auto-cache
     (assoc :cache-spec

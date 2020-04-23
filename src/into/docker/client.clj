@@ -82,11 +82,12 @@
          (throw-on-error))))
 
 (defn- invoke-run-container
-  [{:keys [containers]} container-name image]
+  [{:keys [containers]} container-name {:keys [full-name user]}]
   (let [{:keys [Id] :as created}
         (->> {:op :ContainerCreate
               :params {:name  container-name
-                       :body {:Image image
+                       :body {:Image full-name
+                              :User  user
                               :Cmd   ["tail" "-f" "/dev/null"]
                               :Tty   true
                               :Init  true}}}

@@ -9,7 +9,8 @@
   (s/keys :req-un [:into/name
                    :into/tag
                    :into/full-name]
-          :opt-un [:into/hash]))
+          :opt-un [:into/hash
+                   :into/user]))
 
 (s/def :into/name string?)
 (s/def :into/tag string?)
@@ -22,6 +23,7 @@
 (s/def :into/container some?)
 (s/def :into/interrupted? boolean?)
 (s/def :into/paths (s/coll-of :into/path))
+(s/def :into/user string?)
 
 ;; ## Flow
 

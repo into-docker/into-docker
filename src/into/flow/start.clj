@@ -21,10 +21,10 @@
   (str "into-docker-" (UUID/randomUUID)))
 
 (defn- run-container!
-  [{:keys [client] :as data} {:keys [full-name]}]
+  [{:keys [client] :as data} {:keys [full-name] :as image}]
   (let [name  (random-container-name)]
     (log/debug data "  Running container [%s] ..." full-name)
-    (docker/run-container client name full-name)))
+    (docker/run-container client name image)))
 
 (defn- start-image-instance!
   [data instance-key]
