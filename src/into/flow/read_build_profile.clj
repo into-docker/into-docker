@@ -10,8 +10,8 @@
   [{:keys [client] :as data}]
   (when-let [profile (get-in data [:spec :profile])]
     (let [path (.getPath
-                 (io/file (data/path-for data :profile-directory)
-                          profile))
+                (io/file (data/path-for data :profile-directory)
+                         profile))
           builder (data/instance-container data :builder)
           ^bytes contents (docker/read-container-file! client builder path)]
       (-> contents

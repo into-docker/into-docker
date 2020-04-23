@@ -36,9 +36,9 @@
   (let [{:keys [full-name env]} (data/instance-image data instance-key)]
     (log/debugf "[into] Running in (%s): %s" full-name cmd)
     (->> (docker/execute-command!
-           client
-           (data/instance-container data instance-key)
-           {:cmd cmd
-            :env (concat (env->seq env') env)}
-           log)
+          client
+          (data/instance-container data instance-key)
+          {:cmd cmd
+           :env (concat (env->seq env') env)}
+          log)
          (handle-result data full-name))))
