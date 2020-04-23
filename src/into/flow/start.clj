@@ -21,9 +21,11 @@
   (str "into-docker-" (UUID/randomUUID)))
 
 (defn- run-container!
-  [{:keys [client] :as data} {:keys [full-name] :as image}]
+  [{:keys [client] :as data} {:keys [full-name user] :as image}]
   (let [name  (random-container-name)]
     (log/debug data "  Running container [%s] ..." full-name)
+    (when (#{"root", "0"} user)
+      (log/warn data "Container [%s] is running as root!" full-name))
     (docker/run-container client name image)))
 
 (defn- start-image-instance!

@@ -69,6 +69,12 @@
   [instance]
   (get-in instance [:labels :org.into-docker.runner-image]))
 
+(defn get-builder-user
+  "Read the user that the builder container should run as from the given
+   builder image instance."
+  [instance]
+  (get-in instance [:labels :org.into-docker.builder-user]))
+
 (defn get-runner-cmd
   "Read the runner CMD from the given builder image instance"
   [instance]

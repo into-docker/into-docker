@@ -26,6 +26,10 @@
   [data fmt & spec-keys]
   `(log* log/infof ~data :yellow ~fmt ~@spec-keys))
 
+(defmacro warn
+  [data fmt & spec-keys]
+  `(log* log/warnf ~data :red ~fmt ~@spec-keys))
+
 (defmacro success
   [data fmt & spec-keys]
   `(log* log/infof ~data :green ~fmt ~@spec-keys))

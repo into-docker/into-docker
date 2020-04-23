@@ -26,17 +26,16 @@ When running `into`, the following will happen:
 The builder image needs to provide build dependencies, the `/into/*` files, as
 well as the following labels:
 
-| Label                               | Required | Description                                 | Example Value            |
-| ----------------------------------- | -------- | ------------------------------------------- | ------------------------ |
-| `org.into-docker.runner-image`      | Yes      | Runner image to inject artifacts into.      | `openjdk:11-jre`         |
-| `org.into-docker.runner-cmd`        | No       | `CMD` override for the runner image.        | `java -jar /opt/app.jar` |
-| `org.into-docker.runner-entrypoint` | No       | `ENTRYPOINT` override for the runner image. | `java -jar /opt/app.jar` |
+| Label                               | Required | Description                                  | Example Value            |
+| ----------------------------------- | -------- | -------------------------------------------- | ------------------------ |
+| `org.into-docker.runner-image`      | Yes      | Runner image to inject artifacts into.       | `openjdk:11-jre`         |
+| `org.into-docker.builder-user`      | No       | User to use for running the build container. | `1001`                   |
+| `org.into-docker.runner-cmd`        | No       | `CMD` override for the runner image.         | `java -jar /opt/app.jar` |
+| `org.into-docker.runner-entrypoint` | No       | `ENTRYPOINT` override for the runner image.  | `java -jar /opt/app.jar` |
 
-Please note that builder images are run as user `1001` by default. So, locations
-that are used during the build process need to be writable by this user, as
-well as any locations that should be cached.
-
-You can use the `--build-as` flag to explicitly specify the builder user.
+If you set the `builder-user` (and you should since the default is `root`) make
+sure that all locations that need to be modified during the build are owned by
+the builder user. Same goes for all locations that need to be cached.
 
 **Example**
 

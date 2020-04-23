@@ -44,6 +44,13 @@
           data)
       (flow/validate [:spec :runner-image] "No runner image given.")))
 
+(defn- overwrite-builder-data
+  [data]
+  (let [builder (data/instance data :builder)
+        user    (or (labels/get-builder-user builder) "root")]
+    (cond-> data
+      :always (assoc-in [:instances :builder :image :user] user))))
+
 (defn- overwrite-runner-data
   [data]
   (let [builder (data/instance data :builder)
@@ -65,4 +72,5 @@
     (pull-image-instance! :builder-image :builder)
     (select-runner-image)
     (pull-image-instance! :runner-image :runner)
+    (overwrite-builder-data)
     (overwrite-runner-data)))
