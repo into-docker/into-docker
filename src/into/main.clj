@@ -27,6 +27,7 @@
      :build-script       "/into/bin/build"
      :assemble-script    "/into/bin/assemble"
 
+     :profile-directory  "/into/profiles"
      :cache-file         "/into/cache"
      :ignore-file        "/into/ignore"}))
 
@@ -70,6 +71,9 @@
                       value))
                   value))
     :validate [#(not (string/blank? %)) "Cannot be blank."]]
+   ["-p" "--profile PROFILE" "Build profile to activate"
+    :id :profile
+    :default "default"]
    [nil "--auto-cache" "Use and create a file in `$HOME/.cache/into-docker` for incremental builds."
     :id :auto-cache
     :default false]
@@ -116,12 +120,13 @@
     :version))
 
 (defn- build-flow-spec
-  [{:keys [target auto-cache cache-file]}
+  [{:keys [target profile auto-cache cache-file]}
    [builder-image source-path]]
   (cond->
    {:builder-image (data/->image builder-image)
     :target-image  (data/->image target)
-    :source-path   source-path}
+    :source-path   source-path
+    :profile       profile}
 
     auto-cache
     (assoc :cache-spec

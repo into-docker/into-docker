@@ -8,6 +8,8 @@ A builder image supplies a few files:
 - `/into/bin/assemble` to move artifacts to places they can be run from,
 - `/into/ignore` _(optional)_ to supply exclusions to source files.
 - `/into/cache` _(optional)_ to supply cacheable builder paths.
+- `/into/profiles/*` _(optional)_ to supply build profiles as environment
+  variables.
 
 When running `into`, the following will happen:
 
@@ -58,6 +60,19 @@ file in your source folder to add more exclusions.
 
 ```dockerignore
 node_modules
+```
+
+### `/into/profiles/*`
+
+These files, in the same format as an environment file that can be passed to
+Docker using `--env-file`, can be selected by supplying the `-p`/`--profile`
+flag. For example, `--profile ci` would choose the file `/into/profiles/ci`; the
+default profile is `default`.
+
+**Example**
+
+```dockerignore
+BUILD_COMMAND=npm ci
 ```
 
 ### `/into/bin/build`

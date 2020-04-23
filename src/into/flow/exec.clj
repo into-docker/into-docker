@@ -16,7 +16,7 @@
     (format "%s=%s" (str k) (str v))))
 
 (defn- handle-result
-  [data instance-key {:keys [exit cmd env]}]
+  [data full-image-name {:keys [exit cmd env]}]
   (if (not= exit 0)
     (->> (IllegalStateException.
           (format
@@ -24,7 +24,7 @@
                 "  Exit Code: %d%n"
                 "  Command:   %s%n"
                 "  Env:       %s")
-           (data/instance-image-name data instance-key)
+           full-image-name
            exit
            cmd
            (vec env)))
@@ -32,14 +32,13 @@
     data))
 
 (defn exec
-  [{:keys [client] :as data} instance-key cmd env]
-  (log/debugf "[into] Running in (%s): %s"
-              (data/instance-image-name data instance-key)
-              cmd)
-  (->> (docker/execute-command!
-        client
-        (data/instance-container data instance-key)
-        {:cmd cmd
-         :env (env->seq env)}
-        log)
-       (handle-result data instance-key)))
+  [{:keys [client] :as data} instance-key cmd env']
+  (let [{:keys [full-name env]} (data/instance-image data instance-key)]
+    (log/debugf "[into] Running in (%s): %s" full-name cmd)
+    (->> (docker/execute-command!
+           client
+           (data/instance-container data instance-key)
+           {:cmd cmd
+            :env (concat (env->seq env') env)}
+           log)
+         (handle-result data full-name))))

@@ -9,6 +9,7 @@
              [create-cache :as create-cache]
              [init :as init]
              [pull :as pull]
+             [read-build-profile :as read-build-profile]
              [read-cache-paths :as read-cache-paths]
              [restore-cache :as restore-cache]
              [start :as start]
@@ -20,6 +21,7 @@
         (init/run)
         (pull/run)
         (start/run)
+        (read-build-profile/run)
         (transfer/pre-run)
         (read-cache-paths/run)
         (restore-cache/run)

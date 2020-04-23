@@ -43,7 +43,8 @@
 (s/def :into/spec
   (s/keys :req-un [:into/source-path
                    :into/builder-image
-                   :into/target-image]
+                   :into/target-image
+                   :into/profile]
           :opt-un [:into/runner-image
                    :into/cache-spec]))
 
@@ -51,6 +52,7 @@
 (s/def :into/target-image :into/image)
 (s/def :into/runner-image :into/image)
 (s/def :into/source-path :into/path)
+(s/def :into/profile :into/path)
 (s/def :into/client #(satisfies? docker/DockerClient %))
 
 (s/def :into/cache-spec
@@ -73,12 +75,14 @@
                    :into/working-directory
                    :into/build-script
                    :into/assemble-script
-                   :into/ignore-file]))
+                   :into/ignore-file
+                   :into/profile-directory]))
 
 (s/def :into/source-directory   :into/path)
 (s/def :into/artifact-directory :into/path)
-(s/def :into/working-directory :into/path)
+(s/def :into/working-directory  :into/path)
 (s/def :into/build-script       :into/path)
+(s/def :into/profile-directory  :into/path)
 (s/def :into/assemble-script    :into/path)
 (s/def :into/ignore-file        :into/path)
 
