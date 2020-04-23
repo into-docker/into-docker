@@ -32,12 +32,20 @@ well as the following labels:
 | `org.into-docker.runner-cmd`        | No       | `CMD` override for the runner image.        | `java -jar /opt/app.jar` |
 | `org.into-docker.runner-entrypoint` | No       | `ENTRYPOINT` override for the runner image. | `java -jar /opt/app.jar` |
 
+Please note that builder images are run as user `1001` by default. So, locations
+that are used during the build process need to be writable by this user, as
+well as any locations that should be cached.
+
+You can use the `--build-as` flag to explicitly specify the builder user.
+
 **Example**
 
 ```dockerfile
 FROM node:alpine
 LABEL org.into-docker.runner-image=nginx:alpine
 WORKDIR /into
+ENV HOME="/into/home"
+RUN mdkir home && chmod a+w home
 COPY into/ .
 ```
 
