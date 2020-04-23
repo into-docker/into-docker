@@ -20,6 +20,7 @@
         (init/run)
         (pull/run)
         (start/run)
+        (transfer/pre-run)
         (read-cache-paths/run)
         (restore-cache/run)
         (collect/run)

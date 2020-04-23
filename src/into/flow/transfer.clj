@@ -25,13 +25,21 @@
 
 ;; ## Flow
 
+(defn pre-run
+  "This moves the assemble script. This is done before any user-provided
+   logic is called to prevent changes to the assemble script and thus retain
+   the integrity of running it as root in the runner container."
+  [data]
+  (flow/with-flow-> data
+    (log/debug "Transferring assemble script ...")
+    (copy-between-containers!
+     [:builder (data/path-for data :assemble-script)]
+     [:runner (data/path-for data :working-directory)])))
+
 (defn run
   [data]
   (flow/with-flow-> data
     (log/debug "Transferring sources ...")
-    (copy-between-containers!
-     [:builder (data/path-for data :assemble-script)]
-     [:runner (data/path-for data :working-directory)])
     (copy-between-containers!
      [:builder (data/path-for data :artifact-directory)]
      [:runner (data/path-for data :working-directory)])))
