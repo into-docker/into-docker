@@ -10,9 +10,9 @@
   (let [f (io/file path)
         prefix (io/file (data/path-for data :source-directory))]
     (.getPath
-      (if (.isAbsolute f)
-        f
-        (io/file prefix f)))))
+     (if (.isAbsolute f)
+       f
+       (io/file prefix f)))))
 
 (defn- as-path-seq
   [data ^bytes cache-file-contents]
@@ -25,8 +25,8 @@
 (defn run
   [{:keys [client] :as data}]
   (->> (docker/read-container-file!
-         client
-         (data/instance-container data :builder)
-         (data/path-for data :cache-file))
+        client
+        (data/instance-container data :builder)
+        (data/path-for data :cache-file))
        (as-path-seq data)
        (assoc-in data [:cache :paths])))

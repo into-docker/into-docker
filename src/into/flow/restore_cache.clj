@@ -16,17 +16,17 @@
   [{:keys [client] :as data} cache-from]
   (with-open [in (io/input-stream cache-from)]
     (docker/copy-into-container!
-      client
-      in
-      (data/instance-container data :builder)
-      (data/path-for data :working-directory)))
+     client
+     in
+     (data/instance-container data :builder)
+     (data/path-for data :working-directory)))
   data)
 
 (defn- restore-cache-files!
   [data]
   (let [cmd (cache/restore-cache-command
-              (data/path-for data :cache-directory)
-              (get-in data [:cache :paths]))]
+             (data/path-for data :cache-directory)
+             (get-in data [:cache :paths]))]
     (exec/exec data :builder cmd [])))
 
 ;; ## Flow

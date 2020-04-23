@@ -28,8 +28,8 @@
 
 (def gen-block
   (gen/let [data-string (->> (gen/tuple
-                               gen/string-alphanumeric
-                               (gen/elements ["" "\n"]))
+                              gen/string-alphanumeric
+                              (gen/elements ["" "\n"]))
                              (gen/fmap #(apply str %)))
             stream (gen/elements [:stdout :stderr])]
     {:string data-string
@@ -43,9 +43,9 @@
   ^PipedInputStream [blocks]
   (let [out (PipedOutputStream.)]
     (doto (Thread.
-            #(with-open [out out]
-               (doseq [{:keys [block]} blocks]
-                 (.write out block 0 (count block)))))
+           #(with-open [out out]
+              (doseq [{:keys [block]} blocks]
+                (.write out block 0 (count block)))))
       (.start))
     (PipedInputStream. out)))
 
@@ -78,8 +78,8 @@
 
 (defspec t-exec-seq (times 20)
   (prop/for-all
-    [blocks (gen/vector gen-block)
-     stream (gen/elements [:stdout :stderr])]
+   [blocks (gen/vector gen-block)
+    stream (gen/elements [:stdout :stderr])]
     (with-open [in (block-stream blocks)]
       (let [sq (streams/exec-seq in)]
         (= (collect-data-string stream blocks)
@@ -87,8 +87,8 @@
 
 (defspec t-exec-bytes (times 20)
   (prop/for-all
-    [blocks (gen/vector gen-block)
-     stream (gen/elements [:stdout :stderr])]
+   [blocks (gen/vector gen-block)
+    stream (gen/elements [:stdout :stderr])]
     (with-open [in (block-stream blocks)]
       (let [data (streams/exec-bytes in stream)]
         (= (collect-data-string stream blocks)
@@ -96,8 +96,8 @@
 
 (defspec t-log-seq (times 20)
   (prop/for-all
-    [blocks (gen/vector gen-block)
-     stream (gen/elements [:stdout :stderr])]
+   [blocks (gen/vector gen-block)
+    stream (gen/elements [:stdout :stderr])]
     (with-open [in (block-stream blocks)]
       (let [sq (streams/log-seq in)]
         (= (collect-data-string stream blocks)

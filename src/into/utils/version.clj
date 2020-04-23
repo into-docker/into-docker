@@ -28,8 +28,8 @@
    into-docker itself."
   []
   (str
-    (or (read-revision* {})
-        (System/getenv "INTO_REVISION"))))
+   (or (read-revision* {})
+       (System/getenv "INTO_REVISION"))))
 
 (defmacro ^:private read-current-version
   "If built with Leiningen, this will resolve to a literal string containing

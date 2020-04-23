@@ -119,9 +119,9 @@
   [{:keys [target auto-cache cache-file]}
    [builder-image source-path]]
   (cond->
-    {:builder-image (data/->image builder-image)
-     :target-image  (data/->image target)
-     :source-path   source-path}
+   {:builder-image (data/->image builder-image)
+    :target-image  (data/->image target)
+    :source-path   source-path}
 
     auto-cache
     (assoc :cache-spec

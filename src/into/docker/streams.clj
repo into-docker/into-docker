@@ -74,12 +74,12 @@
   [sq]
   (when-let [[line & rst] (seq sq)]
     (lazy-seq
-      (or (if-not (has-linebreak? line)
-            (if-let [[other & rst] rst]
-              (if (same-stream? line other)
-                (group-lines
-                  (cons (merge-lines line other) rst)))))
-          (cons line (group-lines rst))))))
+     (or (if-not (has-linebreak? line)
+           (if-let [[other & rst] rst]
+             (if (same-stream? line other)
+               (group-lines
+                (cons (merge-lines line other) rst)))))
+         (cons line (group-lines rst))))))
 
 (defn log-seq
   [^InputStream stream]

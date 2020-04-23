@@ -23,13 +23,13 @@
   [cache-directory path]
   (let [cache-path (.getPath (io/file cache-directory (sha1 path)))]
     (format
-      (str "_CPTH_='%s'; _PTH_='%s';"
-           "[ -e \"$_PTH_\" ] && ("
-           "mv \"$_PTH_\" \"$_CPTH_\" && "
-           "echo \"$_PTH_\";"
-           ")")
-      cache-path
-      path)))
+     (str "_CPTH_='%s'; _PTH_='%s';"
+          "[ -e \"$_PTH_\" ] && ("
+          "mv \"$_PTH_\" \"$_CPTH_\" && "
+          "echo \"$_PTH_\";"
+          ")")
+     cache-path
+     path)))
 
 (defn prepare-cache-command
   [cache-directory paths]
@@ -44,15 +44,15 @@
   [cache-directory path]
   (let [cache-path (.getPath (io/file cache-directory (sha1 path)))]
     (format
-      (str "_CPTH_='%s'; _PTH_='%s';"
-           "[ -e \"$_CPTH_\" ] && ("
-           "rm -rf \"$_PTH_\";"
-           "mv \"$_CPTH_\" \"$_PTH_\" && "
-           "echo \"$_PTH_\";"
-           "rm -rf \"$_CPTH_\""
-           ")")
-      cache-path
-      path)))
+     (str "_CPTH_='%s'; _PTH_='%s';"
+          "[ -e \"$_CPTH_\" ] && ("
+          "rm -rf \"$_PTH_\";"
+          "mv \"$_CPTH_\" \"$_PTH_\" && "
+          "echo \"$_PTH_\";"
+          "rm -rf \"$_CPTH_\""
+          ")")
+     cache-path
+     path)))
 
 (defn restore-cache-command
   [cache-directory paths]
@@ -65,13 +65,13 @@
 (defn default-cache-file
   [target-image]
   (let [dir (io/file
-              (or (System/getenv "HOME")
-                  (System/getProperty "user.home")
-                  (throw
-                    (IllegalStateException.
-                      "Could not find HOME directory for cache creation.")))
-              ".cache"
-              "into-docker")]
+             (or (System/getenv "HOME")
+                 (System/getProperty "user.home")
+                 (throw
+                  (IllegalStateException.
+                   "Could not find HOME directory for cache creation.")))
+             ".cache"
+             "into-docker")]
     (.mkdirs dir)
     (io/file dir (-> target-image
                      (data/->image)
