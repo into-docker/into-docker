@@ -105,7 +105,7 @@ jobs:
   create-release:
     needs: [create-native-image-linux, create-native-image-macos]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'v')
+    if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: export-version
         id: version
@@ -137,7 +137,7 @@ jobs:
           ["linux-amd64", "linux-amd64-static", "macos-amd64", "standalone-jar"]
     needs: create-release
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'v')
+    if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: fetch-release-data
         uses: actions/download-artifact@v1
