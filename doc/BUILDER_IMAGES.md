@@ -31,9 +31,9 @@ well as the following labels:
 | Label                               | Required | Description                                  | Example Value            |
 | ----------------------------------- | -------- | -------------------------------------------- | ------------------------ |
 | `org.into-docker.runner-image`      | Yes      | Runner image to inject artifacts into.       | `openjdk:11-jre`         |
-| `org.into-docker.builder-user`      | No       | User to use for running the build container. | `1001`                   |
 | `org.into-docker.runner-cmd`        | No       | `CMD` override for the runner image.         | `java -jar /opt/app.jar` |
 | `org.into-docker.runner-entrypoint` | No       | `ENTRYPOINT` override for the runner image.  | `java -jar /opt/app.jar` |
+| `org.into-docker.builder-user`      | No       | User to use for running the build container. | `builder`                |
 
 If you set the `builder-user` (and you should since the default is `root`) make
 sure that all locations that need to be modified during the build are owned by
@@ -43,10 +43,14 @@ the builder user. Same goes for all locations that need to be cached.
 
 ```dockerfile
 FROM node:alpine
+
+LABEL org.into-docker.builder-user=builder
 LABEL org.into-docker.runner-image=nginx:alpine
+
 WORKDIR /into
 ENV HOME="/into/home"
-RUN mdkir home && chmod a+w home
+RUN useradd -d /into/home -m builder
+
 COPY into/ .
 ```
 
@@ -72,8 +76,13 @@ default profile is `default`.
 **Example**
 
 ```dockerignore
-BUILD_COMMAND=npm ci
+INSTALL_COMMAND=npm ci
+BUILD_COMMAND=npm run build
 ```
+
+Be aware that it's not possible to have multi-line variables and that quotes
+around the variable value will actually show up in the resulting environment
+variable.
 
 ### `/into/bin/build`
 
@@ -97,8 +106,8 @@ artifacts to `$INTO_ARTIFACT_DIR`.
 set -eu
 
 cd "$INTO_SOURCE_DIR"
-yarn
-yarn build
+yarn           # OR (when using build profiles): ${INSTALL_COMMAND}
+yarn build     # OR (when using build profiles): ${BUILD_COMMAND}
 mv -r build/* "$INTO_ARTIFACT_DIR"
 ```
 
