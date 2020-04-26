@@ -57,7 +57,7 @@ image for your React application whether you're relying on `npm` or `yarn`.
 You can choose a build profile using the `-p`/`--profile` command line argument:
 
 ```sh
-into -t <name:tag> -p <profile> <builder>
+into build -t <name:tag> -p <profile> <builder>
 ```
 
 **Caching**
@@ -68,7 +68,7 @@ build each time but by supplying the `--cache` command line argument a cache arc
 (tar) will be created at the desired path.
 
 ```sh
-into -t <name:tag> --cache <path> <builder>
+into build -t <name:tag> --cache <path> <builder>
 ```
 
 Subsequent builds will use the archive (if it exists) to seed the builder container.
