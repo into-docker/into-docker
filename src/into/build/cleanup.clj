@@ -1,4 +1,4 @@
-(ns into.flow.cleanup
+(ns into.build.cleanup
   (:require [into.flow
              [core :as flow]
              [log :as log]]

@@ -1,9 +1,9 @@
-(ns into.flow
-  (:require [into.flow
-             [assemble :as assemble]
-             [build :as build]
+(ns into.build.flow
+  (:require [into.flow.core :as flow]
+            [into.build
+             [assemble-script :as assemble]
+             [build-script :as build]
              [cleanup :as cleanup]
-             [core :as flow]
              [collect :as collect]
              [commit :as commit]
              [create-cache :as create-cache]

@@ -1,4 +1,4 @@
-(ns into.flow.init
+(ns into.build.init
   (:require [into.flow
              [core :as flow]
              [log :as log]]

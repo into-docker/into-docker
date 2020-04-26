@@ -1,4 +1,4 @@
-(ns into.flow.read-build-profile
+(ns into.build.read-build-profile
   (:require [into.docker :as docker]
             [into.utils
              [data :as data]]

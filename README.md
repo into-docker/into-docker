@@ -14,8 +14,15 @@ environment before being injected into a _leaner_ runner environment.
 
 ## Usage
 
+The `into` commandline tool, like `docker` or `s2i`, relies on subtasks to
+achieve the desired results.
+
+### `build`
+
+_Build a Docker image from local sources._
+
 ```sh
-into -t <repository:tag> <builder> <directory>
+into build -t <REPOSITORY:TAG> <BUILDER> [<PATH>]
 ```
 
 ## Features

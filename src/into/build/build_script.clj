@@ -1,4 +1,4 @@
-(ns into.flow.build
+(ns into.build.build-script
   (:require [into.flow
              [core :as flow]
              [exec :as exec]

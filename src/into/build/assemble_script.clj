@@ -1,4 +1,4 @@
-(ns into.flow.assemble
+(ns into.build.assemble-script
   (:require [into.flow
              [exec :as exec]
              [log :as log]]

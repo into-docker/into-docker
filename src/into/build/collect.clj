@@ -1,4 +1,4 @@
-(ns into.flow.collect
+(ns into.build.collect
   (:require [into.flow
              [core :as flow]
              [log :as log]]

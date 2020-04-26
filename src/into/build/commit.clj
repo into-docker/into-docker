@@ -1,4 +1,4 @@
-(ns into.flow.commit
+(ns into.build.commit
   (:require [into.flow
              [core :as flow]
              [log :as log]]
