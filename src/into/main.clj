@@ -23,12 +23,23 @@
                          (Level/valueOf))]
     (.setLevel (root-logger) level)))
 
-(defn set-verbosity!
+(defn- set-verbosity!
   [{:keys [^long verbosity]}]
   (->> (if (> verbosity 2)
          "TRACE"
          (get ["INFO" "DEBUG" "TRACE"] verbosity))
        (set-log-level!)))
+
+(defmacro ^:private with-verbosity
+  [opts & body]
+  `(let [logger# (root-logger)
+         level#  (.getLevel logger#)
+         opts#   ~opts]
+     (set-verbosity! (:options opts#))
+     (try
+       (do ~@body)
+       (finally
+         (.setLevel logger# level#)))))
 
 ;; ## CLI
 
@@ -62,8 +73,9 @@
     {:usage "into [--version] [--help] [-v] build [<args>]"
      :cli   cli-options
      :run   (fn [opts]
-              (or (print-version opts)
-                  (run-subtask opts)))}))
+              (with-verbosity opts
+                (or (print-version opts)
+                    (run-subtask opts))))}))
 
 (defn -main
   [& args]
