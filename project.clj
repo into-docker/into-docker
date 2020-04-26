@@ -1,4 +1,4 @@
-(defproject into "1.0.0-SNAPSHOT"
+(defproject into "1.0.0-RC3"
   :description "Never write another Dockerfile."
   :url "https://github.com/into-docker/into-docker"
   :license {:name "MIT License"
