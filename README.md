@@ -1,9 +1,11 @@
 # into-docker
 
-![CI](https://github.com/into-docker/into-docker/workflows/CI/badge.svg)
+[![CI](https://github.com/into-docker/into-docker/workflows/CI/badge.svg)](https://github.com/into-docker/into-docker/actions?query=workflow%3ACI)
+[![Release](https://img.shields.io/github/v/release/into-docker/into-docker?include_prereleases&sort=semver)](https://github.com/into-docker/into-docker/releases/latest)
 
 **into-docker** lets you build and run applications relying on common frameworks
-or build tools without ever having to write another Dockerfile.
+or build tools without ever having to write another Dockerfile. It allows you to
+bundle up your build environments and processes for others to reuse.
 
 This tool is inspired by [`s2i`][s2i] and shares some concepts, ideas and goals.
 However, it targets one specific use case, the classic
