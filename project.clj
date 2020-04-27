@@ -7,7 +7,7 @@
             :key "mit"}
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [org.clojure/tools.cli "1.0.194"]
-                 [org.clojure/tools.logging "1.0.0"]
+                 [org.clojure/tools.logging "1.1.0"]
                  [lispyclouds/clj-docker-client "1.0.0-RC1"]
                  [org.apache.commons/commons-compress "1.20"]
                  [commons-lang "2.6"]
@@ -16,7 +16,7 @@
                  [ch.qos.logback/logback-classic "1.2.3"]
 
                  ;; cleanup dependency chain
-                 [org.jetbrains.kotlin/kotlin-stdlib-common "1.3.71"]]
+                 [org.jetbrains.kotlin/kotlin-stdlib-common "1.3.72"]]
   :exclusions [org.clojure/clojure]
   :java-source-paths ["src"]
   :profiles {:dev
@@ -24,6 +24,9 @@
                              [com.gfredericks/test.chuck "0.2.10"]]
               :plugins [[lein-cljfmt "0.6.7"]]
               :global-vars {*warn-on-reflection* true}}
+             :kaocha
+             {:dependencies [[lambdaisland/kaocha "1.0-612"
+                              :exclusions [org.clojure/spec.alpha]]]}
              :uberjar
              {:global-vars {*assert* false}
               :jvm-opts ["-Dclojure.compiler.direct-linking=true"
@@ -32,4 +35,5 @@
               :aot :all}}
   :cljfmt {:indents {prop/for-all [[:block 1]]
                      defcomponent [[:block 2] [:inner 1]]}}
+  :aliases {"kaocha" ["with-profile" "+kaocha" "run" "-m" "kaocha.runner"]}
   :pedantic? :abort)
