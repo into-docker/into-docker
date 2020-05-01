@@ -80,7 +80,7 @@ Due to the minimal-configuration approach of into-docker, it can be easily used
 on the CI environment of your choice. Check out the following pre-packaged build
 steps:
 
-- [Github Actions](https://github.com/into-docker/build-action)
+- [Github Actions](https://github.com/marketplace/actions/into-docker)
 
 Use the `--ci` flag to direct the CLI tool to use CI-specific assumptions when
 building images. This allows you, for example, to use environment variables to
