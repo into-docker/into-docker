@@ -41,9 +41,9 @@
                          "GITHUB_REPOSITORY" gen-repository)]
     (let [{:keys [ci]} (ci/run {:spec spec} {:getenv getenv})]
       (and (= (:ci-type ci) "github-actions")
-           (seq (:ci-revision ci))
+           (= (:ci-revision ci) (getenv "GITHUB_SHA"))
            (seq (:ci-version ci))
-           (seq (:ci-source ci))))))
+           (.endsWith ^String (:ci-source ci) (getenv "GITHUB_REPOSITORY"))))))
 
 (defspec t-run-should-fallback-to-local-revision (times 20)
   (prop/for-all [spec (gen/bind (gen/string-alphanumeric) gen-spec-for-ci)

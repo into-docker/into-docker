@@ -33,12 +33,6 @@
     (assoc-in data [:ci k] (f v))
     data))
 
-(defn- shorten-ci-revision
-  [s]
-  (if (> (count s) 8)
-    (subs s 0 8)
-    s))
-
 (defn- extract-ci-version
   [s]
   (if (string/starts-with? s "refs/tags/")
@@ -58,7 +52,7 @@
     (let [add (partial add-ci-env getenv)]
       (-> data
           (assoc-in [:ci :ci-type] type)
-          (add :ci-revision revision-env   shorten-ci-revision)
+          (add :ci-revision revision-env   identity)
           (add :ci-version  ref-env        extract-ci-version)
           (add :ci-source   repository-env #(expand-ci-source base-url %))))
     (assoc-in data [:ci :ci-type] "local")))
