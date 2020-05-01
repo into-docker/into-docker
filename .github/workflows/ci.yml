@@ -17,6 +17,11 @@ jobs:
           node-version: 10
       - name: install-prettier
         run: npm install
+      - name: run-prettier
+        uses: samuelmeuli/lint-action@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          prettier: true
 
   test:
     runs-on: ubuntu-latest
