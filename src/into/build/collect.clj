@@ -9,7 +9,7 @@
             [clojure.string :as string]
             [clojure.java.io :as io])
   (:import [java.io File]
-           [java.nio.file Path Paths Files]))
+           [java.nio.file Path Paths Files LinkOption]))
 
 ;; ## Collect Files
 
@@ -17,6 +17,11 @@
   (defn- ->path
     ^Path [path]
     (Paths/get path rst)))
+
+(let [rst (into-array LinkOption [])]
+  (defn- path-exists?
+    [^Path path]
+    (Files/exists path rst)))
 
 (defn- relative-path
   [^Path path ^File file]
@@ -30,7 +35,7 @@
          files      []]
     (if f
       (let [fp (relative-path path f)]
-        (if (matcher fp)
+        (if (matcher f fp)
           (if (.isDirectory f)
             (recur (concat (.listFiles f) rst) files)
             (recur rst (conj files {:file f, :path fp})))
@@ -38,6 +43,18 @@
       files)))
 
 ;; ## Build File Matcher
+
+(defn- non-cache-file-matcher
+  "Checks if the given file is the cache file. It's probably a common occurence
+   that the cache archive is put into the same directory as the sources during
+   build. We thus have to avoid injecting it into the builder image by removing
+   it from the list of source files."
+  [{:keys [spec]}]
+  (or (when-let [^Path path (some-> spec :cache-spec :cache-from ->path)]
+        (when (path-exists? path)
+          (fn [^File candidate]
+            (not (Files/isSameFile path (.toPath candidate))))))
+      (constantly true)))
 
 (defn- read-container-ignore-file!
   [{:keys [client] :as data}]
@@ -68,9 +85,13 @@
 
 (defn- build-file-matcher
   [data]
-  (->> [(read-container-ignore-file! data)
-        (read-local-ignore-file! data)]
-       (dockerignore/matcher)))
+  (let [ignore-matcher (->> [(read-container-ignore-file! data)
+                             (read-local-ignore-file! data)]
+                            (dockerignore/matcher))
+        non-cache-matcher (non-cache-file-matcher data)]
+    (fn [f fp]
+      (and (ignore-matcher fp)
+           (non-cache-matcher f)))))
 
 ;; ## Flow
 
