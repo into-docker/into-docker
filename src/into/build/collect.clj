@@ -1,11 +1,11 @@
 (ns into.build.collect
   (:require [into.flow
-             [core :as flow]
-             [log :as log]]
+             [core :as flow]]
             [into.docker :as docker]
             [into.utils
              [data :as data]
-             [dockerignore :as dockerignore]]
+             [dockerignore :as dockerignore]
+             [log :as log]]
             [clojure.string :as string]
             [clojure.java.io :as io])
   (:import [java.io File]

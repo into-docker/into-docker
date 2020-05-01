@@ -1,9 +1,10 @@
 (ns into.build.start
   (:require [into.flow
-             [core :as flow]
-             [log :as log]]
+             [core :as flow]]
             [into.docker :as docker]
-            [into.utils.data :as data])
+            [into.utils
+             [data :as data]
+             [log :as log]])
   (:import [java.util UUID]))
 
 ;; ## Startup Logic

@@ -1,12 +1,12 @@
 (ns into.build.create-cache
   (:require [into.flow
              [core :as flow]
-             [exec :as exec]
-             [log :as log]]
+             [exec :as exec]]
             [into.docker :as docker]
             [into.utils
              [cache :as cache]
-             [data :as data]]
+             [data :as data]
+             [log :as log]]
             [clojure.string :as string]
             [clojure.java.io :as io]))
 

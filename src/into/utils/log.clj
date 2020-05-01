@@ -1,4 +1,4 @@
-(ns into.flow.log
+(ns into.utils.log
   (:require [clojure.tools.logging :as log]
             [jansi-clj.core :as jansi]))
 

@@ -1,6 +1,7 @@
 (ns into.build.cleanup
   (:require [into.flow
-             [core :as flow]
+             [core :as flow]]
+            [into.utils
              [log :as log]]
             [into.docker :as docker]))
 

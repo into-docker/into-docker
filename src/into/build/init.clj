@@ -1,8 +1,9 @@
 (ns into.build.init
   (:require [into.flow
-             [core :as flow]
+             [core :as flow]]
+            [into.utils
+             [data :as data]
              [log :as log]]
-            [into.utils.data :as data]
             [clojure.java.io :as io]))
 
 (defn run

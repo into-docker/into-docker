@@ -1,8 +1,9 @@
 (ns into.build.commit
   (:require [into.flow
-             [core :as flow]
+             [core :as flow]]
+            [into.utils
+             [labels :as labels]
              [log :as log]]
-            [into.utils.labels :as labels]
             [into.docker :as docker]
             [clojure.string :as string]))
 

@@ -1,8 +1,9 @@
 (ns into.build.assemble-script
   (:require [into.flow
-             [exec :as exec]
-             [log :as log]]
-            [into.utils.data :as data]))
+             [exec :as exec]]
+            [into.utils
+             [data :as data]
+             [log :as log]]))
 
 ;; ## Execute
 

@@ -1,11 +1,11 @@
 (ns into.build.pull
   (:require [into.flow
-             [core :as flow]
-             [log :as log]]
+             [core :as flow]]
             [into.docker :as docker]
             [into.utils
              [data :as data]
-             [labels :as labels]]))
+             [labels :as labels]
+             [log :as log]]))
 
 ;; ## Pull Logic
 
