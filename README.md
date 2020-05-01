@@ -73,6 +73,20 @@ into build -t <name:tag> --cache <path> <builder>
 
 Subsequent builds will use the archive (if it exists) to seed the builder container.
 
+**Use on CI**
+
+Due to the minimal-configuration approach of into-docker, it can be easily used
+on the CI environment of your choice. Check out the following pre-packaged build
+steps:
+
+- [Github Actions](https://github.com/into-docker/build-action)
+
+Use the `--ci` flag to direct the CLI tool to use CI-specific assumptions when
+building images. This allows you, for example, to use environment variables to
+fill image labels.
+
+Check out the `into.build.ci` namespace if you want to add more environments.
+
 [di]: https://codefresh.io/docker-tutorial/not-ignore-dockerignore-2/
 [oci]: https://github.com/opencontainers/image-spec/blob/master/annotations.md
 [s2i]: https://github.com/openshift/source-to-image

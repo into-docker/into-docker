@@ -37,6 +37,9 @@
    ["-p" "--profile profile" "Build profile to activate"
     :id :profile
     :default "default"]
+   [nil "--ci type" "Run in CI mode, allowed values: 'github-actions'."
+    :id :ci-type
+    :validate [#{"github-actions"} "Unsupported CI type."]]
    [nil "--cache path" "Use and create the specified cache file for incremental builds."
     :id :cache-file]
    ["-h" "--help" "Show help"]])
@@ -44,13 +47,16 @@
 ;; ## Subtask
 
 (defn- build-flow-spec
-  [{:keys [target profile cache-file]}
+  [{:keys [target profile cache-file ci-type]}
    [builder-image source-path]]
   (cond->
    {:builder-image (data/->image builder-image)
     :target-image  (data/->image target)
     :source-path   (or source-path ".")
     :profile       profile}
+
+    ci-type
+    (assoc :ci-type ci-type)
 
     cache-file
     (assoc :cache-spec
@@ -67,14 +73,14 @@
 
         :else
         (-> (flow/run
-              {:client           client
-               :spec             (build-flow-spec options arguments)
-               :well-known-paths +well-known-paths+})
+             {:client           client
+              :spec             (build-flow-spec options arguments)
+              :well-known-paths +well-known-paths+})
             (dissoc :client))))
 
 (def subtask
   (task/make
-    {:usage   "into build -t <name:tag> <builder> [<path>]"
-     :cli     cli-options
-     :docker? true
-     :run     run-build}))
+   {:usage   "into build -t <name:tag> <builder> [<path>]"
+    :cli     cli-options
+    :docker? true
+    :run     run-build}))

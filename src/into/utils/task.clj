@@ -44,9 +44,9 @@
   (fn [args]
     (let [opts (cli/parse-opts args cli :in-order true)
           opts     (merge
-                     {:show-help #(show-help usage opts)
-                      :show-error show-error}
-                     opts)]
+                    {:show-help #(show-help usage opts)
+                     :show-error show-error}
+                    opts)]
       (or (print-help usage opts)
           (print-errors opts)
           (if docker?

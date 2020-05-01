@@ -1,40 +1,39 @@
 (ns into.utils.labels-test
   (:require [into.utils.labels :as labels]
-            [clojure.string :as string]
-            [clojure.test :refer :all]))
+            [into spec]
+            [clojure.test.check
+             [clojure-test :refer [defspec]]
+             [properties :as prop]]
+            [com.gfredericks.test.chuck :refer [times]]
+            [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as gen]
+            [clojure.test :refer :all]
+            [clojure.string :as string]))
 
-(def data
-  {:spec {:target-image  {:full-name "test:latest"
-                          :name      "test"
-                          :tag       "latest"}
-          :builder-image {:full-name "builder:latest"
-                          :name      "builder"
-                          :tag       "latest"}
-          :runner-image  {:full-name "runner:latest"
-                          :name      "runner"
-                          :tag       "latest"}
-          :source-path   "."}
-   :vcs {:vcs-revision "12345678"}})
+(defspec t-default-labels (times 20)
+  (prop/for-all
+   [spec (s/gen :into/spec)]
+    (let [labels (labels/create-labels {:spec spec})]
+      (and (every? #(not (string/blank? (labels %)))
+                   ["org.into-docker.revision"
+                    "org.into-docker.url"
+                    "org.into-docker.version"])
+           (= (labels "org.into-docker.builder-image")
+              (get-in spec [:builder-image :full-name]))
+           (= (labels "org.into-docker.runner-image")
+              (get-in spec [:runner-image :full-name]))
+           (= (labels "maintainer") "")))))
 
-(deftest t-create-labels
-  (testing "with revision"
-    (let [labels (labels/create-labels data)]
-      (testing "OCI labels"
-        (are [k] (not (string/blank? (get labels (str "org.opencontainers.image." k))))
-          "revision"
-          "created"))
-      (testing "basic labels"
-        (are [k] (not (string/blank? (get labels (str "org.into-docker." k))))
-          "version"
-          "revision"
-          "url"))
-      (testing "image labels"
-        (are [k v] (= (get labels (str "org.into-docker." k)) v)
-          "builder-image" "builder:latest"
-          "runner-image"  "runner:latest"))
-      (testing "clear labels"
-        (are [k] (= (get labels k) "")
-          "maintainer"))))
-  (testing "without revision"
-    (let [labels (labels/create-labels (dissoc data :vcs))]
-      (is (not (contains? labels "org.opencontainers.image.revision"))))))
+(defspec t-oci-labels (times 20)
+  (prop/for-all
+   [spec (s/gen :into/spec)
+    ci   (s/gen :into/ci)]
+    (let [data   {:spec spec, :ci ci}
+          labels (labels/create-labels data)]
+      (and (= (labels "org.opencontainers.image.revision")
+              (:ci-revision ci))
+           (= (labels "org.opencontainers.image.version")
+              (:ci-version ci))
+           (= (labels "org.opencontainers.image.source")
+              (:ci-source ci))
+           (labels "org.opencontainers.image.created")))))

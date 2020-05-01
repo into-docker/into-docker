@@ -38,7 +38,7 @@
           (assoc data
                  :error
                  (IllegalStateException.
-                   (format "Build profile [%s] is empty." profile))))
+                  (format "Build profile [%s] is empty." profile))))
     data))
 
 (defn run

@@ -5,7 +5,7 @@
 
 ;; ## VCS Helper
 
-(defn- read-revision*
+(defn read-revision
   [{:keys [source-path] :or {source-path "."}}]
   (try
     (let [{:keys [exit out]} (sh "git" "rev-parse" "--short" "HEAD"
@@ -14,10 +14,6 @@
         (string/trim out)))
     (catch Exception _
       (log/tracef "Failed to read revision from '%s'." source-path))))
-
-(defn read-revision
-  [spec]
-  (str (read-revision* spec)))
 
 ;; ## Build-time constants
 
@@ -28,7 +24,7 @@
    into-docker itself."
   []
   (str
-   (or (read-revision* {})
+   (or (read-revision {})
        (System/getenv "INTO_REVISION"))))
 
 (defmacro ^:private read-current-version

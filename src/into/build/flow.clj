@@ -3,6 +3,7 @@
             [into.build
              [assemble-script :as assemble]
              [build-script :as build]
+             [ci :as ci]
              [cleanup :as cleanup]
              [collect :as collect]
              [commit :as commit]
@@ -19,6 +20,7 @@
   [data]
   (-> (flow/with-flow-> data
         (init/run)
+        (ci/run)
         (pull/run)
         (start/run)
         (read-build-profile/run)

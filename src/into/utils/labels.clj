@@ -38,7 +38,9 @@
   "See https://github.com/opencontainers/image-spec/blob/master/annotations.md"
   [data]
   (->> {:created  (rfc-3999-date)
-        :revision (get-in data [:vcs :vcs-revision] "")}
+        :revision (get-in data [:ci :ci-revision] "")
+        :version  (get-in data [:ci :ci-version] "")
+        :source   (get-in data [:ci :ci-source] "")}
        (keep
         (fn [[k v]]
           (when-not (string/blank? v)

@@ -1,29 +1,41 @@
 (ns into.spec
   (:require [into.docker :as docker]
             [into.flow core]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as gen]))
 
 ;; ## Generic
 
 (s/def :into/image
-  (s/keys :req-un [:into/name
-                   :into/tag
-                   :into/full-name]
-          :opt-un [:into/hash
-                   :into/user]))
+  (-> (s/keys :req-un [:into/name
+                       :into/tag
+                       :into/full-name]
+              :opt-un [:into/hash
+                       :into/user])
+      (s/with-gen
+        (fn []
+          (->> (gen/tuple (s/gen :into/name) (s/gen :into/tag))
+               (gen/fmap
+                (fn [[n t]]
+                  {:name n
+                   :tag  t
+                   :full-name (str n ":" t)})))))))
 
-(s/def :into/name string?)
-(s/def :into/tag string?)
-(s/def :into/full-name string?)
-(s/def :into/hash string?)
-(s/def :into/path string?)
+(s/def :into/non-empty-string
+  (s/and string? seq))
+
+(s/def :into/name :into/non-empty-string)
+(s/def :into/tag :into/non-empty-string)
+(s/def :into/full-name :into/non-empty-string)
+(s/def :into/hash :into/non-empty-string)
+(s/def :into/path :into/non-empty-string)
 (s/def :into/file #(instance? java.io.File %))
 (s/def :into/error #(instance? Exception %))
 (s/def :into/cleanup-error :into/error)
 (s/def :into/container some?)
 (s/def :into/interrupted? boolean?)
 (s/def :into/paths (s/coll-of :into/path))
-(s/def :into/user string?)
+(s/def :into/user :into/non-empty-string)
 
 ;; ## Flow
 
@@ -32,7 +44,7 @@
                    :into/well-known-paths
                    :into/client]
           :opt-un [:into/instances
-                   :into/vcs
+                   :into/ci
                    :into/sources
                    :into/cleanup-error
                    :into/error
@@ -46,7 +58,8 @@
                    :into/target-image
                    :into/profile]
           :opt-un [:into/runner-image
-                   :into/cache-spec]))
+                   :into/cache-spec
+                   :into/ci-type]))
 
 (s/def :into/builder-image :into/image)
 (s/def :into/target-image :into/image)
@@ -63,9 +76,15 @@
 
 ;; ## VCS
 
-(s/def :into/vcs
-  (s/keys :req-un [:into/vcs-revision]))
-(s/def :into/vcs-revision string?)
+(s/def :into/ci
+  (s/keys :opt-un [:into/ci-type
+                   :into/ci-revision
+                   :into/ci-version
+                   :into/ci-source]))
+(s/def :into/ci-type #{"local" "github-actions"})
+(s/def :into/ci-revision :into/non-empty-string)
+(s/def :into/ci-version  :into/non-empty-string)
+(s/def :into/ci-source   :into/non-empty-string)
 
 ;; ## Paths
 

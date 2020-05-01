@@ -70,12 +70,12 @@
 
 (def run
   (task/make
-    {:usage "into [--version] [--help] [-v] build [<args>]"
-     :cli   cli-options
-     :run   (fn [opts]
-              (with-verbosity opts
-                (or (print-version opts)
-                    (run-subtask opts))))}))
+   {:usage "into [--version] [--help] [-v] build [<args>]"
+    :cli   cli-options
+    :run   (fn [opts]
+             (with-verbosity opts
+               (or (print-version opts)
+                   (run-subtask opts))))}))
 
 (defn -main
   [& args]
