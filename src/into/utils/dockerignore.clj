@@ -6,6 +6,11 @@
 
 (def ^:private default-patterns
   ["# --- default patterns"
+   ".git"
+   ".github"
+   ".gitignore"
+   ".hg"
+   ".hgignore"
    "Dockerfile"
    ".dockerignore"])
 
