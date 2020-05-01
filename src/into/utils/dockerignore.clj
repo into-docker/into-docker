@@ -20,10 +20,10 @@
 
 (defn- log-patterns
   [patterns]
-  (->> (concat patterns ["# ---"])
-       (map #(str "[into]   " %))
-       (string/join "\n")
-       (log/debugf "[into] Using the following ignore patterns:%n%s"))
+  (when (seq patterns)
+    (log/debug "[into] Using the following ignore patterns:")
+    (doseq [pattern patterns]
+      (log/debugf "[into] |   %s" pattern)))
   patterns)
 
 (defn matcher
