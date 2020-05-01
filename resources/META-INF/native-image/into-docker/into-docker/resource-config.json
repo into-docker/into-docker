@@ -1,6 +1,6 @@
 {
   "resources": [
-    { "pattern": "api/.+\\.yaml" },
+    { "pattern": "clj_docker_client/api/.+\\.yaml" },
     { "pattern": "\\Qlogback.xml\\E" },
     { "pattern": "\\Qorg/slf4j/impl/StaticLoggerBinder.class\\E" }
   ],

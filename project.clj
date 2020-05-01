@@ -8,7 +8,7 @@
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [org.clojure/tools.cli "1.0.194"]
                  [org.clojure/tools.logging "1.1.0"]
-                 [lispyclouds/clj-docker-client "1.0.0-RC1"]
+                 [lispyclouds/clj-docker-client "1.0.0-RC2"]
                  [org.apache.commons/commons-compress "1.20"]
                  [commons-lang "2.6"]
                  [peripheral "0.5.4"]
