@@ -14,7 +14,7 @@ environment before being injected into a _leaner_ runner environment.
 
 ## Goals
 
-- **Minimal-configuration builds**: Rather than providing infinite ways to
+- **Minimum-configuration builds**: Rather than providing infinite ways to
   configure your builds, we encourage the use of defaults and rely on
   convention over configuration when creating builder images.
 - **Promote best practices**: Instead of creating a multitude of Docker images
