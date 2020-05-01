@@ -37,7 +37,7 @@ environment before being injected into a _leaner_ runner environment.
 
 ## Usage
 
-**Run Build**
+### Run Build
 
 To build local sources using an into-docker builder image use the `build` command
 and supply the desired target image name and tag:
@@ -48,7 +48,7 @@ into build -t <name:tag> <builder> [<path>]
 
 Learn how to [create your own builder image][builder-images].
 
-**Profiles**
+### Build Profiles
 
 Builder images can supply multiple _build profiles_ to allow for fine-tuning of
 the build process. This could, for example, allow you to use the same builder
@@ -60,7 +60,7 @@ You can choose a build profile using the `-p`/`--profile` command line argument:
 into build -t <name:tag> -p <profile> <builder>
 ```
 
-**Caching**
+### Caching
 
 Repeated builds of the same codebase can usually be sped up by caching
 intermediate build results like downloaded dependencies. By default, `into` runs
@@ -74,7 +74,7 @@ into build -t <name:tag> --cache <path> <builder>
 Subsequent builds will use the archive (if it exists) to seed the builder
 container.
 
-**Use on CI**
+### Use on CI
 
 Due to the minimal-configuration approach of into-docker, it can be easily used
 on the CI environment of your choice. Check out the following pre-packaged build
