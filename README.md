@@ -66,7 +66,7 @@ into build -t <name:tag> -p <profile> <builder>
 Repeated builds of the same codebase can usually be sped up by caching
 intermediate build results like downloaded dependencies. By default, `into` runs
 a fresh build each time but by supplying the `--cache` command line argument a
-cache archive (tar) will be created at the desired path.
+cache archive (tar+gzip) will be created at the desired path.
 
 ```sh
 into build -t <name:tag> --cache <path> <builder>

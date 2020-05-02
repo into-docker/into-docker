@@ -8,7 +8,8 @@
              [data :as data]
              [log :as log]]
             [clojure.string :as string]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io])
+  (:import java.util.zip.GZIPOutputStream))
 
 ;; ## Create Cache
 
@@ -21,10 +22,11 @@
 
 (defn- export-cache-directory!
   [{:keys [client] :as data} cache-to]
-  (with-open [out (io/output-stream cache-to)]
+  (with-open [out (io/output-stream cache-to)
+              gz-out (GZIPOutputStream. out)]
     (docker/copy-from-container!
      client
-     out
+     gz-out
      (data/instance-container data :builder)
      (data/path-for data :cache-directory)))
   data)
