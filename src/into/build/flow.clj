@@ -76,6 +76,10 @@
   [{:keys [spec]}]
   (contains? spec :target-image))
 
+(defn- create-artifacts?
+  [{:keys [spec]}]
+  (contains? spec :target-path))
+
 (defn- report-success
   [data]
   (if (create-image? data)
@@ -90,9 +94,11 @@
 
 (defn run
   [data]
-  (-> (if (create-image? data)
-        (run-for-image data)
-        (run-for-artifacts data))
+  (-> (cond (create-image? data)     (run-for-image data)
+            (create-artifacts? data) (run-for-artifacts data)
+            :else (flow/fail
+                    data
+                    "You need to supply either '--tag' or '--write-artifacts'."))
       (cleanup/run)
       (flow/with-flow->
         (report-success))))

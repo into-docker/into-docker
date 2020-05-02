@@ -22,7 +22,7 @@
   [data]
   (-> (try
         (-> data
-            (log/info "Cleaning up resources ...")
+            (log/debug "Cleaning up resources ...")
             (cleanup-container! :runner)
             (cleanup-container! :builder))
         (catch Exception e

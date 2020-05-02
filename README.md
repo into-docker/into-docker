@@ -49,16 +49,6 @@ into build -t <name:tag> <builder> [<path>]
 
 Learn how to [create your own builder image][builder-images].
 
-### Build Artifacts
-
-The `build` task creates a Docker image; if you're only interested in the build
-artifacts, e.g. because you want to apply your own Dockerfile, you can rely on
-`build-artifacts`:
-
-```sh
-into build-artifacts -o <target-path> <builder> [<path>]
-```
-
 ### Build Profiles
 
 Builder images can supply multiple _build profiles_ to allow for fine-tuning of
@@ -84,6 +74,19 @@ into build -t <name:tag> --cache <path> <builder>
 
 Subsequent builds will use the archive (if it exists) to seed the builder
 container.
+
+### Build Artifacts
+
+An into-docker build consists of two stages: build and assemble. To access the
+artifacts created by the build stage you can write them to a path of your
+choice using the `--write-artifacts` flag:
+
+```sh
+into build --write-artifacts <target-path> <builder> [<path>]
+```
+
+If you omit the `-t`/`--tag` flag, only the artifacts will be created, no Docker
+image.
 
 ### Use on CI
 

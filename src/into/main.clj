@@ -27,13 +27,12 @@
   [{[subtask & args] :arguments
     :keys [show-error]}]
   (case subtask
-    "build"           (build/build args)
-    "build-artifacts" (build/build-artifacts args)
+    "build"           (build/run args)
     (show-error (str "Unknown subtask: " subtask))))
 
 (def run
   (task/make
-   {:usage "into [--version] [--help] [build | build-artifacts] [<args>]"
+   {:usage "into [--version] [--help] build [<args>]"
     :cli   cli-options
     :run   (fn [opts]
              (or (print-version opts)

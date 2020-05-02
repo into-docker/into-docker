@@ -3,17 +3,21 @@
 
 ;; ## Validation Helper
 
+(defn fail
+  [data ^String error-message]
+  (assoc data
+         :error
+         (IllegalStateException. error-message)))
+
 (defn validate
   "Verify the given path in the given map against the
    predicate and set `:into/error` on mismatch."
   ([data path error-message]
    (validate data path some? error-message))
-  ([data path pred ^String error-message]
+  ([data path pred error-message]
    (if (pred (get-in data path))
      data
-     (assoc data
-            :error
-            (IllegalStateException. error-message)))))
+     (fail data error-message))))
 
 ;; ## Flow Macro
 

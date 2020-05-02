@@ -37,10 +37,11 @@
       (.mkdirs parent))))
 
 (defn- extract-tar-stream!
-  [^TarArchiveInputStream tar ^File target]
+  [data ^TarArchiveInputStream tar ^File target]
   (doseq [^TarArchiveEntry e (tar-seq tar)
           :when (.isFile e)
           :let [out (target-file target e)]]
+    (log/info data "|   %s" (.getPath out))
     (ensure-parent! out)
     (io/copy tar out)))
 
@@ -54,7 +55,7 @@
                                  (data/instance-container data :builder)
                                  (data/path-for data :artifact-directory))
                 tar (TarArchiveInputStream. in)]
-      (extract-tar-stream! tar target)))
+      (extract-tar-stream! data tar target)))
   data)
 
 ;; ## Flow
