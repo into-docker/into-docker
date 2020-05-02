@@ -55,9 +55,10 @@
 (s/def :into/spec
   (s/keys :req-un [:into/source-path
                    :into/builder-image
-                   :into/target-image
                    :into/profile]
           :opt-un [:into/runner-image
+                   :into/target-image
+                   :into/target-path
                    :into/cache-spec
                    :into/ci-type]))
 
@@ -65,6 +66,7 @@
 (s/def :into/target-image :into/image)
 (s/def :into/runner-image :into/image)
 (s/def :into/source-path :into/path)
+(s/def :into/target-path :into/path)
 (s/def :into/profile :into/path)
 (s/def :into/client #(satisfies? docker/DockerClient %))
 

@@ -27,7 +27,4 @@
             (cleanup-container! :builder))
         (catch Exception e
           (assoc data :cleanup-error e)))
-      (log/report-errors)
-      (flow/with-flow->
-        (log/success "Image [%s] has been build successfully."
-                     (get-in data [:spec :target-image :full-name])))))
+      (log/report-errors)))

@@ -3,84 +3,90 @@
             [into.utils
              [data :as data]
              [task :as task]]
+            [into.constants :as constants]
             [clojure.string :as string]))
-
-;; ## Constants
-
-(let [working-directory "/tmp"]
-  (def ^:private +well-known-paths+
-    {:source-directory   (str working-directory "/src")
-     :artifact-directory (str working-directory "/artifacts")
-     :cache-directory    (str working-directory "/cache")
-     :working-directory  working-directory
-
-     :build-script       "/into/bin/build"
-     :assemble-script    "/into/bin/assemble"
-
-     :profile-directory  "/into/profiles"
-     :cache-file         "/into/cache"
-     :ignore-file        "/into/ignore"}))
 
 ;; ## CLI Options
 
-(def ^:private cli-options
-  [["-t" "--tag name[:tag]" "Output image name and optionally tag"
-    :id :target
-    :parse-fn (fn [^String value]
-                (if-not (string/blank? value)
-                  (let [index (.lastIndexOf value ":")]
-                    (if (neg? index)
-                      (str value ":latest")
-                      value))
-                  value))
-    :validate [#(not (string/blank? %)) "Cannot be blank."]]
-   ["-p" "--profile profile" "Build profile to activate"
+(def ^:private cli-options-base
+  [["-p" "--profile profile" "Build profile to activate"
     :id :profile
     :default "default"]
    [nil "--ci type" "Run in CI mode, allowed values: 'github-actions'."
     :id :ci-type
     :validate [#{"github-actions"} "Unsupported CI type."]]
    [nil "--cache path" "Use and create the specified cache file for incremental builds."
-    :id :cache-file]
-   ["-h" "--help" "Show help"]])
+    :id :cache-file]])
 
-;; ## Subtask
+(def ^:private cli-options-build
+  (concat
+   [["-t" "--tag name[:tag]" "Output image name and optionally tag"
+     :id :target
+     :parse-fn (fn [^String value]
+                 (if-not (string/blank? value)
+                   (let [index (.lastIndexOf value ":")]
+                     (if (neg? index)
+                       (str value ":latest")
+                       value))
+                   value))
+     :validate [#(not (string/blank? %)) "Cannot be blank."]]]
+   cli-options-base))
 
-(defn- build-flow-spec
-  [{:keys [target profile cache-file ci-type]}
-   [builder-image source-path]]
-  (cond->
-   {:builder-image (data/->image builder-image)
-    :target-image  (data/->image target)
-    :source-path   (or source-path ".")
-    :profile       profile}
+(def ^:private cli-options-build-artifacts
+  (concat
+   [["-o" "--output path" "Path to write artifacts to"
+     :id :output-path
+     :validate [#(not (string/blank? %)) "Cannot be blank."]]]
+   cli-options-base))
 
-    ci-type
-    (assoc :ci-type ci-type)
+;; ## Spec
 
-    cache-file
-    (assoc :cache-spec
-           {:cache-from cache-file
-            :cache-to   cache-file})))
+(defn- attach-spec-options
+  [spec {:keys [profile cache-file ci-type]} [builder-image source-path]]
+  (cond-> spec
+    :always    (assoc :builder-image (data/->image builder-image)
+                      :source-path   (or source-path "."))
+    profile    (assoc :profile profile)
+    ci-type    (assoc :ci-type ci-type)
+    cache-file (assoc :cache-spec
+                      {:cache-from cache-file
+                       :cache-to   cache-file})))
 
-(defn- run-build
-  [{:keys [options arguments client show-help show-error]}]
-  (cond (empty? arguments)
-        (show-help)
+(defn- build-spec
+  [{:keys [target] :as options} args]
+  (-> {:target-image (data/->image target)}
+      (attach-spec-options options args)))
 
-        (not (:target options))
-        (show-error "Please supply a target name and tag using '-t'")
+(defn- build-artifacts-spec
+  [{:keys [output-path] :as options} args]
+  (-> {:target-path output-path}
+      (attach-spec-options options args)))
 
-        :else
-        (-> (flow/run
-             {:client           client
-              :spec             (build-flow-spec options arguments)
-              :well-known-paths +well-known-paths+})
-            (dissoc :client))))
+;; ## Run
 
-(def subtask
+(defn- create-builder
+  [spec-fn]
+  (fn [{:keys [options arguments client]}]
+    (-> (flow/run
+         {:client           client
+          :spec             (spec-fn options arguments)
+          :well-known-paths constants/well-known-paths})
+        (dissoc :client))))
+
+;; ## Tasks
+
+(def build
   (task/make
    {:usage   "into build -t <name:tag> <builder> [<path>]"
-    :cli     cli-options
+    :cli     cli-options-build
+    :needs   [:target]
     :docker? true
-    :run     run-build}))
+    :run     (create-builder build-spec)}))
+
+(def build-artifacts
+  (task/make
+   {:usage   "into build-artifacts -o <output-path> <builder> [<path>]"
+    :cli     cli-options-build-artifacts
+    :needs   [:output-path]
+    :docker? true
+    :run     (create-builder build-artifacts-spec)}))

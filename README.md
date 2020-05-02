@@ -49,6 +49,16 @@ into build -t <name:tag> <builder> [<path>]
 
 Learn how to [create your own builder image][builder-images].
 
+### Build Artifacts
+
+The `build` task creates a Docker image; if you're only interested in the build
+artifacts, e.g. because you want to apply your own Dockerfile, you can rely on
+`build-artifacts`:
+
+```sh
+into build-artifacts -o <target-path> <builder> [<path>]
+```
+
 ### Build Profiles
 
 Builder images can supply multiple _build profiles_ to allow for fine-tuning of

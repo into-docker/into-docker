@@ -38,7 +38,7 @@
 
 ;; ## Flow
 
-(defn run
+(defn for-image
   [data]
   (flow/with-flow-> data
     (log/info "Starting environment [%s -> %s] ..."
@@ -46,3 +46,10 @@
               (data/instance-image-name data :runner))
     (start-image-instance! :builder)
     (start-image-instance! :runner)))
+
+(defn for-artifacts
+  [data]
+  (flow/with-flow-> data
+    (log/info "Starting artifact builder [%s] ..."
+              (data/instance-image-name data :builder))
+    (start-image-instance! :builder)))
