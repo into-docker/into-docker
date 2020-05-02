@@ -12,6 +12,7 @@
   (cleanup-container [this container])
 
   (read-container-file! [this container path])
+  (read-container-archive! [this container path])
   (copy-from-container! [this tar-stream container path])
   (copy-into-container! [this tar-stream container path])
   (copy-between-containers! [this from to from-path to-path])

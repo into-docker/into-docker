@@ -162,6 +162,9 @@
                                          (:stream))]
       (streams/exec-bytes stream :stdout)))
 
+  (read-container-archive! [this container path]
+    (stream-from this container path))
+
   (copy-from-container! [this stream container path]
     (with-open [^InputStream in (stream-from this container path)]
       (io/copy in stream)))
