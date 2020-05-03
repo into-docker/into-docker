@@ -13,6 +13,10 @@ However, it targets one specific use case, the classic
 [multi-stage][multi-stage] build where artifacts are created in a _fat_ build
 environment before being injected into a _leaner_ runner environment.
 
+Check out the [whitepaper][] for more details!
+
+[whitepaper]: doc/WHITEPAPER.md
+
 ## Goals
 
 - **Minimum-configuration builds**: Rather than providing infinite ways to
@@ -61,6 +65,8 @@ You can choose a build profile using the `-p`/`--profile` command line argument:
 into build -t <name:tag> -p <profile> <builder>
 ```
 
+Learn how to [add build profiles to your builder image][build-profiles].
+
 ### Caching
 
 Repeated builds of the same codebase can usually be sped up by caching
@@ -73,7 +79,7 @@ into build -t <name:tag> --cache <path> <builder>
 ```
 
 Subsequent builds will use the archive (if it exists) to seed the builder
-container.
+container. Learn how to [add caching to your builder image][builder-caching].
 
 ### Build Artifacts
 
@@ -106,7 +112,9 @@ Check out the `into.build.ci` namespace if you want to add more environments.
 [oci]: https://github.com/opencontainers/image-spec/blob/master/annotations.md
 [s2i]: https://github.com/openshift/source-to-image
 [multi-stage]: https://docs.docker.com/develop/develop-images/multistage-build/
-[builder-images]: doc/BUILDER_IMAGES.md
+[builder-images]: doc/WHITEPAPER.md#builder-images
+[build-profiles]: doc/WHITEPAPER.md#build-profiles
+[builder-caching]: doc/WHITEPAPER.md#caching
 
 ## License
 
