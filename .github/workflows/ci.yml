@@ -7,14 +7,20 @@ on:
     branches: [master]
 
 jobs:
-  lint:
+  lint-clojure:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: DeLaGuardo/clojure-lint-action@master
         with:
-          clj-kondo-args: --lint src --config .github/clj-kondo.edn
+          clj-kondo-args: --lint src
+          check-name: clj-kondo
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  lint-others:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
       - name: Set up Node.js
         uses: actions/setup-node@v1
         with:
