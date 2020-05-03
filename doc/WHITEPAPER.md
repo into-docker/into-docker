@@ -9,7 +9,7 @@
 
 ### Build Process Duplication
 
-Nearly every programming language has a set of well-known build tools and processes. This results in a significant amount of duplication across different projects when it comes to packaging and publishing build artifacts. Furthermore, as with all duplication, it becomes tedious to propagate improvements (be it in functionality, efficiency or security).
+Nearly every programming language has a set of well-known build tools and processes. Running them as part of automation results in a significant amount of duplication across different projects when it comes to packaging and publishing build artifacts. Furthermore, as with all duplication, it becomes tedious to propagate improvements (be it in functionality, efficiency or security).
 
 Containerised environments can address this problem; build containers then provide all the required dependencies, and sometimes even go one step further, offering up scripts to execute the recommended build steps.
 
