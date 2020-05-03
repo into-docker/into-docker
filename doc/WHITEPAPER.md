@@ -15,7 +15,7 @@ Containerised environments can address this problem; build containers then provi
 
 Consider the NodeJS landscape, as one of many, with the `npm` CLI tool as a possible participant in the build process: `npm install` will fetch the dependencies, `npm run build` might compile/transpile the application. All that is needed to make this reusable is a NodeJS based container with `npm` and a script that contains `npm install && npm run build`.
 
-There are many ways to use this container, hardly ever, however as a black box. In CI systems it could be specified as the environment to run commands in, with one of those commands being the call to the build script.
+There are many ways to use this container - hardly ever, however, as a black box. In CI systems it could be specified as the environment to run commands in, with one of those commands being the call to the build script.
 
 ```yaml
 build:
