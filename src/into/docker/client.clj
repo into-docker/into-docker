@@ -7,8 +7,7 @@
             [clojure.java.io :as io]
             [clojure.string :as string]
             [clj-docker-client.core :as docker])
-  (:import [java.util UUID]
-           [java.io InputStream]))
+  (:import [java.io InputStream]))
 
 ;; ## Helpers
 
@@ -83,7 +82,7 @@
 
 (defn- invoke-run-container
   [{:keys [containers]} container-name {:keys [full-name user]}]
-  (let [{:keys [Id] :as created}
+  (let [{:keys [Id]}
         (->> {:op :ContainerCreate
               :params {:name  container-name
                        :body {:Image full-name
@@ -93,10 +92,10 @@
                               :Init  true}}}
              (docker/invoke containers)
              (throw-on-error))
-        result (->> {:op :ContainerStart
-                     :params {:id Id}}
-                    (docker/invoke containers)
-                    (throw-on-error))]
+        _ (->> {:op :ContainerStart
+                :params {:id Id}}
+               (docker/invoke containers)
+               (throw-on-error))]
     {:name container-name
      :id   Id}))
 

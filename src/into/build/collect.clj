@@ -6,7 +6,6 @@
              [data :as data]
              [dockerignore :as dockerignore]
              [log :as log]]
-            [clojure.string :as string]
             [clojure.java.io :as io])
   (:import [java.io File]
            [java.nio.file Path Paths Files LinkOption]))

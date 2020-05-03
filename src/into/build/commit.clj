@@ -4,13 +4,12 @@
             [into.utils
              [labels :as labels]
              [log :as log]]
-            [into.docker :as docker]
-            [clojure.string :as string]))
+            [into.docker :as docker]))
 
 ;; ## Commit
 
 (defn- commit-container!
-  [{:keys [client spec] :as data} container-key suffix]
+  [{:keys [client spec] :as data} container-key]
   (let [{:keys [container cmd entrypoint]}
         (get-in data [:instances container-key])
 
@@ -40,4 +39,4 @@
   (flow/with-flow-> data
     (log/emph "Saving image [%s] ..."
               (get-in data [:spec :target-image :full-name]))
-    (commit-container! :runner "")))
+    (commit-container! :runner)))

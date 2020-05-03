@@ -52,7 +52,7 @@
 (defn- clear-labels
   "Sets those labels that should be cleared. For example, the maintainer of the
    runner image is not the one of the created image."
-  [data]
+  [_]
   {"maintainer" ""})
 
 ;; ## API

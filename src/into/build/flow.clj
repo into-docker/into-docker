@@ -37,7 +37,7 @@
 
 (defn- assemble
   [data]
-  (flow/with-flow->
+  (flow/with-flow-> data
     (transfer/run)
     (assemble/run)
     (commit/run)))

@@ -2,7 +2,6 @@
   (:require [into.flow
              [core :as flow]]
             [into.utils
-             [data :as data]
              [log :as log]]
             [clojure.java.io :as io]))
 

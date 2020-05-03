@@ -5,7 +5,6 @@
              [signal :as signal]
              [task :as task]
              [version :as version]]
-            [jansi-clj.core :as jansi]
             [clojure.tools.logging :as log]))
 
 ;; ## CLI

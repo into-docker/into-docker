@@ -1,7 +1,7 @@
 (ns into.utils.pattern
   (:require [clojure.string :as string])
   (:import [com.github.dockerjava.core GoLangFileMatch]
-           [java.nio.file Paths Path]))
+           [java.nio.file Paths]))
 
 ;; ## .dockerignore matching
 ;;

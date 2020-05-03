@@ -1,7 +1,5 @@
 (ns into.build.cleanup
-  (:require [into.flow
-             [core :as flow]]
-            [into.utils
+  (:require [into.utils
              [log :as log]]
             [into.docker :as docker]))
 
@@ -9,7 +7,7 @@
 
 (defn- cleanup-container!
   [{:keys [client] :as data} instance-key]
-  (or (when-let [{:keys [name image container]} (get-in data [:instances instance-key])]
+  (or (when-let [{:keys [image container]} (get-in data [:instances instance-key])]
         (when container
           (log/debug data "  Cleaning up container [%s] ..." (:full-name image))
           (docker/cleanup-container client container)

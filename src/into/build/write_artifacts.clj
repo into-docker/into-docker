@@ -10,9 +10,7 @@
   (:import [org.apache.commons.compress.archivers.tar
             TarArchiveEntry
             TarArchiveInputStream]
-           [java.io InputStream File]
-           [java.nio.file.attribute PosixFilePermissions]
-           [java.nio.file Files]))
+           [java.io InputStream File]))
 
 ;; ## Write Artifacts
 

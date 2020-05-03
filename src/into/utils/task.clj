@@ -58,7 +58,7 @@
   :error)
 
 (defn- print-errors
-  [_ {:keys [errors arguments] :as opts}]
+  [_ {:keys [errors]}]
   (when (seq errors)
     (doseq [error errors]
       (show-error error))
@@ -96,7 +96,16 @@
       "unix:///var/run/docker.sock"))
 
 (defn make
-  [{:keys [cli no-args? needs usage run docker?] :as task}]
+  "Create a function that can be called with a seq of CLI arguments.
+
+   - `:cli`:      CLI options as per 'tools.cli'.
+   - `:no-args?`: Does the task support being called without arguments?
+   - `:needs`:    Which CLI options are required?
+   - `:usage`:    String describing the task usage.
+   - `:docker?`:  Should a Docker client be created for this task?
+   - `:run`:      Function to be called with parsed CLI arguments.
+   "
+  [{:keys [cli usage run docker?] :as task}]
   (let [cli (concat cli cli-options)]
     (fn [args]
       (let [opts (cli/parse-opts args cli :in-order true)

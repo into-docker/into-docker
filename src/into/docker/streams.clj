@@ -74,9 +74,9 @@
   [sq]
   (when-let [[line & rst] (seq sq)]
     (lazy-seq
-     (or (if-not (has-linebreak? line)
-           (if-let [[other & rst] rst]
-             (if (same-stream? line other)
+     (or (when-not (has-linebreak? line)
+           (when-let [[other & rst] rst]
+             (when (same-stream? line other)
                (group-lines
                 (cons (merge-lines line other) rst)))))
          (cons line (group-lines rst))))))

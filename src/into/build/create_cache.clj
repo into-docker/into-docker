@@ -7,7 +7,6 @@
              [cache :as cache]
              [data :as data]
              [log :as log]]
-            [clojure.string :as string]
             [clojure.java.io :as io])
   (:import java.util.zip.GZIPOutputStream))
 

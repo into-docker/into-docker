@@ -81,7 +81,7 @@
 
 (defn run
   "Attach VCS information for the given source directory."
-  [{:keys [spec] :as data} & [opts]]
+  [data & [opts]]
   (flow/with-flow-> data
     (attach-ci-information opts)
     (fallback-to-local-ci-revision opts)
