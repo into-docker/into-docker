@@ -68,7 +68,11 @@
 (s/def :into/source-path :into/path)
 (s/def :into/target-path :into/path)
 (s/def :into/profile :into/path)
-(s/def :into/client #(satisfies? docker/DockerClient %))
+(s/def :into/client
+  (-> #(satisfies? docker/DockerClient %)
+      (s/with-gen
+        #(gen/return
+           (reify docker/DockerClient)))))
 
 (s/def :into/cache-spec
   (s/keys :req-un [:into/cache-from
