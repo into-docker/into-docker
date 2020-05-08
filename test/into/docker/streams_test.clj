@@ -3,7 +3,7 @@
              [clojure-test :refer [defspec]]
              [properties :as prop]
              [generators :as gen]]
-            [clojure.test :refer :all]
+            [clojure.test :refer [deftest is testing]]
             [com.gfredericks.test.chuck :refer [times]]
             [clojure.string :as string]
             [into.docker.streams :as streams])
@@ -18,13 +18,13 @@
   [stream ^String data-string]
   (let [^bytes data (.getBytes data-string)
         len         (count data)]
-    (.. (ByteBuffer/allocate (+ len 8))
-        (put (byte (case stream :stdout 0x01 :stderr 0x02)))
-        (position 4)
-        (order ByteOrder/BIG_ENDIAN)
-        (putInt len)
-        (put data)
-        (array))))
+    (-> (ByteBuffer/allocate (+ len 8))
+        (.put (byte (case stream :stdout 0x01 :stderr 0x02)))
+        (.position 4)
+        (.order ByteOrder/BIG_ENDIAN)
+        (.putInt len)
+        (.put data)
+        (.array))))
 
 (def gen-block
   (gen/let [data-string (->> (gen/tuple

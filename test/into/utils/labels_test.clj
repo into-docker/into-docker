@@ -6,8 +6,6 @@
              [properties :as prop]]
             [com.gfredericks.test.chuck :refer [times]]
             [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]
-            [clojure.test :refer :all]
             [clojure.string :as string]))
 
 (defspec t-default-labels (times 20)
