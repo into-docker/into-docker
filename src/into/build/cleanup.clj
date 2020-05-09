@@ -1,28 +1,28 @@
 (ns into.build.cleanup
-  (:require [into.utils
-             [log :as log]]
-            [into.docker :as docker]))
+  (:require [into
+             [docker :as docker]
+             [log :as log]]))
 
 ;; ## Cleanup
 
 (defn- cleanup-container!
-  [{:keys [client] :as data} instance-key]
-  (or (when-let [{:keys [image container]} (get-in data [:instances instance-key])]
-        (when container
-          (log/debug data "  Cleaning up container [%s] ..." (:full-name image))
-          (docker/cleanup-container client container)
-          (update-in data [:instances instance-key] dissoc :container)))
-      data))
+  [data container-key]
+  (if-let [container (get data container-key)]
+    (do
+      (log/debug "  Cleaning up container [%s] ..." container)
+      (docker/cleanup-container container)
+      (dissoc data container-key))
+    data))
 
 ;; ## Flow
 
 (defn run
   [data]
   (-> (try
+        (log/debug "Cleaning up resources ...")
         (-> data
-            (log/debug "Cleaning up resources ...")
-            (cleanup-container! :runner)
-            (cleanup-container! :builder))
+            (cleanup-container! :runner-container)
+            (cleanup-container! :builder-container))
         (catch Exception e
           (assoc data :cleanup-error e)))
       (log/report-errors)))

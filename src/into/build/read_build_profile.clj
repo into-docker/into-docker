@@ -1,48 +1,59 @@
 (ns into.build.read-build-profile
-  (:require [into.docker :as docker]
-            [into.utils
-             [log :as log]
-             [data :as data]]
+  (:require [into
+             [constants :as constants]
+             [docker :as docker]
+             [flow :as flow]
+             [log :as log]]
             [clojure.string :as string]
             [clojure.java.io :as io]))
 
+;; ## Read the Profile
+
+(defn- profile-path
+  [profile]
+  (-> (constants/path-for :profile-directory)
+      (io/file profile)
+      (.getPath)))
+
+(defn- split-env
+  [^bytes contents]
+  (-> contents
+      (String. "UTF-8")
+      (string/split #"[\n\r]+")
+      (->> (map string/trim)
+           (remove #(string/starts-with? % "#"))
+           (remove string/blank?))))
+
 (defn- read-profile-env!
-  [{:keys [client] :as data}]
-  (when-let [profile (get-in data [:spec :profile])]
-    (let [path (.getPath
-                (io/file (data/path-for data :profile-directory)
-                         profile))
-          builder (data/instance-container data :builder)
-          ^bytes contents (docker/read-container-file! client builder path)]
-      (-> contents
-          (String. "UTF-8")
-          (string/split #"[\n\r]+")
-          (->> (map string/trim)
-               (remove #(string/starts-with? % "#"))
-               (remove string/blank?))))))
+  [{:keys [builder-container spec]}]
+  (->> (:profile spec)
+       (profile-path)
+       (docker/read-file builder-container)
+       (split-env)))
+
+;; ## Update the builder env
 
 (defn- assoc-build-profile
   [data env]
-  (if-let [profile (get-in data [:spec :profile])]
+  (let [profile (get-in data [:spec :profile])]
     (cond (seq env)
           (do
-            (log/debug data "Build profile [%s]:" profile)
+            (log/debug "Build profile [%s]:" profile)
             (doseq [e env]
-              (log/debug data "  %s" e))
-            (assoc-in data [:instances :builder :image :env] env))
+              (log/debug "|   %s" e))
+            (update data :builder-env concat env))
 
           (= profile "default")
-          (log/debug data "Build profile [%s] is empty." profile)
+          (do
+            (log/debug "Build profile [%s] is empty." profile)
+            data)
 
           :else
-          (assoc data
-                 :error
-                 (IllegalStateException.
-                  (format "Build profile [%s] is empty." profile))))
-    data))
+          (flow/fail data (format "Build profile [%s] is empty." profile)))))
+
+;; ## Flow
 
 (defn run
   [data]
-  (or (some->> (read-profile-env! data)
-               (assoc-build-profile data))
-      data))
+  (->> (read-profile-env! data)
+       (assoc-build-profile data)))

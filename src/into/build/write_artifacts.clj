@@ -1,67 +1,36 @@
 (ns into.build.write-artifacts
-  (:require [into.flow
-             [core :as flow]]
-            [into.utils
-             [data :as data]
+  (:require [into
+             [constants :as constants]
+             [docker :as docker]
              [log :as log]]
-            [into.docker :as docker]
+            [into.docker.tar :refer [untar]]
             [clojure.java.io :as io]
             [clojure.string :as string])
-  (:import [org.apache.commons.compress.archivers.tar
-            TarArchiveEntry
-            TarArchiveInputStream]
-           [java.io InputStream File]))
+  (:import [java.io InputStream]))
 
 ;; ## Write Artifacts
 
-(defn- tar-seq
-  [^TarArchiveInputStream tar]
-  (when-let [entry (.getNextTarEntry tar)]
-    (cons entry (lazy-seq (tar-seq tar)))))
-
-(defn- target-file
+(defn- target-file-fn
   "Create target file. Since we're operating on a TAR archive of a
    container directory, we drop the base directory name."
-  ^File [^File target ^TarArchiveEntry e]
-  (as-> e <>
-    (.getName <>)
+  [base-path file-path]
+  (as-> file-path <>
     (string/replace <> #"^[^/]+/" "")
-    (io/file target <>)))
-
-(defn- ensure-parent!
-  [^File out]
-  (let [parent (.getParentFile out)]
-    (when-not (.isDirectory parent)
-      (.mkdirs parent))))
-
-(defn- extract-tar-stream!
-  [data ^TarArchiveInputStream tar ^File target]
-  (doseq [^TarArchiveEntry e (tar-seq tar)
-          :when (.isFile e)
-          :let [out (target-file target e)]]
-    (log/info data "|   %s" (.getPath out))
-    (ensure-parent! out)
-    (io/copy tar out)))
+    (io/file base-path <>)))
 
 (defn- write-artifacts!
-  [{:keys [client] :as data} path]
-  (let [target (io/file path)]
-    (when-not (.isDirectory target)
-      (.mkdirs target))
-    (with-open [^InputStream in (docker/read-container-archive!
-                                 client
-                                 (data/instance-container data :builder)
-                                 (data/path-for data :artifact-directory))
-                tar (TarArchiveInputStream. in)]
-      (extract-tar-stream! data tar target)))
-  data)
+  [{:keys [builder-container]} path]
+  (with-open [^InputStream in (docker/stream-from-container
+                               builder-container
+                               (constants/path-for :artifact-directory))]
+    (untar in path target-file-fn)))
 
 ;; ## Flow
 
 (defn run
+  "Write artifacts to the desired path."
   [data]
-  (if-let [path (get-in data [:spec :target-path])]
-    (flow/with-flow-> data
-      (log/emph "Writing artifacts to '%s' ..." path)
-      (write-artifacts! path))
-    data))
+  (when-let [path (get-in data [:spec :artifact-path])]
+    (log/emph "Writing artifacts to '%s' ..." path)
+    (write-artifacts! data path))
+  data)

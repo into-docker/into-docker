@@ -1,23 +1,22 @@
 (ns into.build.assemble-script
-  (:require [into.flow
-             [exec :as exec]]
-            [into.utils
-             [data :as data]
+  (:require [into
+             [constants :as constants]
+             [docker :as docker]
              [log :as log]]))
 
 ;; ## Execute
 
 (defn- execute-assemble!
-  [data]
-  (->> {"INTO_ARTIFACT_DIR" (data/path-for data :artifact-directory)}
-       (exec/exec data :runner [(str (data/path-for data :working-directory)
-                                     "/assemble")])))
+  [{:keys [runner-container runner-env]}]
+  (let [spec {:cmd [(constants/path-for :assemble-script-runner)]
+              :env runner-env}]
+    (docker/exec-and-log runner-container spec)))
 
 ;; ## Flow
 
 (defn run
-  [data]
-  (-> data
-      (log/emph "Assembling application in [%s] ..."
-                (data/instance-image-name data :runner))
-      (execute-assemble!)))
+  [{:keys [runner-container] :as data}]
+  (when runner-container
+    (log/emph "Assembling application in [%s] ..." runner-container)
+    (execute-assemble! data))
+  data)

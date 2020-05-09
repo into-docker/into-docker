@@ -1,4 +1,4 @@
-(ns into.flow.core
+(ns into.flow
   (:import [java.io InterruptedIOException]))
 
 ;; ## Validation Helper

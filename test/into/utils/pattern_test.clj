@@ -17,7 +17,7 @@
 
 (defn gen-path
   ([]
-   (gen/bind gen/string-alphanumeric gen-path))
+   (gen/bind (gen/such-that seq gen/string-alphanumeric) gen-path))
   ([extension]
    (->> gen/string-alphanumeric
         (gen/such-that seq)

@@ -1,4 +1,5 @@
-{:lint-as {into.flow.core/with-flow->              clojure.core/->
+{:lint-as {into.flow/with-flow->                   clojure.core/->
+           into.log/deflog                         clojure.core/def
            potemkin/defprotocol+                   clojure.core/defprotocol
            peripheral.core/with-start              clojure.core/let
            peripheral.core/defcomponent            clojure.core/defrecord

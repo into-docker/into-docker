@@ -1,68 +1,21 @@
 (ns into.build.build-script
-  (:require [into.flow
-             [core :as flow]
-             [exec :as exec]]
-            [into.docker :as docker]
-            [into.utils
-             [data :as data]
-             [log :as log]]
-            [clojure.java.io :as io])
-  (:import [org.apache.commons.compress.archivers.tar
-            TarArchiveEntry
-            TarArchiveOutputStream]
-           [java.io ByteArrayOutputStream File]))
-
-;; ## Compress
-
-(defn- create-source-tar!
-  [{:keys [sources] :as data}]
-  (log/debug data "Creating TAR archive from %d files ..." (count sources))
-  (with-open [out (ByteArrayOutputStream.)
-              tar (doto (TarArchiveOutputStream. out)
-                    (.setLongFileMode TarArchiveOutputStream/LONGFILE_POSIX))]
-    (doseq [{:keys [^File file ^String path]} sources
-            :let [size  (.length file)
-                  entry (doto (TarArchiveEntry. path) (.setSize size))]]
-      (log/debug data "|   %s (%s bytes) ..." path size)
-      (.putArchiveEntry tar entry)
-      (io/copy file tar)
-      (.closeArchiveEntry tar))
-    (.finish tar)
-    (.toByteArray out)))
-
-;; ## Copy
-
-(defn- copy-to-builder!
-  [{:keys [client] :as data} ^bytes tar]
-  (log/debug data
-             "Injecting TAR (%d bytes) into container ..."
-             (count tar))
-  (let [container (data/instance-container data :builder)]
-    (with-open [in (io/input-stream tar)]
-      (docker/copy-into-container!
-       client
-       in
-       container
-       (data/path-for data :source-directory))))
-  data)
+  (:require [into
+             [constants :as constants]
+             [docker :as docker]
+             [log :as log]]))
 
 ;; ## Execute
 
 (defn- execute-build!
-  [{:keys [vcs] :as data}]
-  (->> {"INTO_SOURCE_DIR"   (data/path-for data :source-directory)
-        "INTO_ARTIFACT_DIR" (data/path-for data :artifact-directory)
-        "INTO_REVISION"     (:vcs-revision vcs "")}
-       (exec/exec data :builder [(data/path-for data :build-script)])))
+  [{:keys [builder-container builder-env]}]
+  (let [spec {:cmd [(constants/path-for :build-script)]
+              :env builder-env}]
+    (docker/exec-and-log builder-container spec)))
 
 ;; ## Flow
 
 (defn run
-  [data]
-  (log/emph data
-            "Building artifacts in [%s] ..."
-            (data/instance-image-name data :builder))
-  (let [tar (create-source-tar! data)]
-    (flow/with-flow-> data
-      (copy-to-builder! tar)
-      (execute-build!))))
+  [{:keys [builder-container] :as data}]
+  (log/emph "Building artifacts in [%s] ..." builder-container)
+  (execute-build! data)
+  data)

@@ -1,42 +1,28 @@
 (ns into.build.commit
-  (:require [into.flow
-             [core :as flow]]
-            [into.utils
-             [labels :as labels]
-             [log :as log]]
-            [into.docker :as docker]))
+  (:require [into
+             [docker :as docker]
+             [log :as log]]))
 
 ;; ## Commit
 
 (defn- commit-container!
-  [{:keys [client spec] :as data} container-key]
-  (let [{:keys [container cmd entrypoint]}
-        (get-in data [:instances container-key])
-
-        {:keys [full-name]}
-        (:target-image spec)]
+  [{:keys [target-image runner-container]}]
+  (let [{:keys [cmd entrypoint]} target-image]
     (if entrypoint
-      (log/debug data
-                 "Committing image [%s] with ENTRYPOINT %s and CMD %s"
-                 full-name
+      (log/debug "Committing image [%s] with ENTRYPOINT %s and CMD %s"
+                 target-image
                  entrypoint
                  cmd)
-      (log/debug data
-                 "Committing image [%s] with CMD %s"
-                 full-name
+      (log/debug "Committing image [%s] with CMD %s"
+                 target-image
                  cmd))
-    (->> {:image      full-name
-          :cmd        cmd
-          :entrypoint entrypoint
-          :labels     (labels/create-labels data)}
-         (docker/commit-container client container))
-    data))
+    (docker/commit-container runner-container target-image)))
 
 ;; ## Flow
 
 (defn run
-  [data]
-  (flow/with-flow-> data
-    (log/emph "Saving image [%s] ..."
-              (get-in data [:spec :target-image :full-name]))
-    (commit-container! :runner)))
+  [{:keys [target-image] :as data}]
+  (when target-image
+    (log/emph "Saving image [%s] ..." target-image)
+    (commit-container! data))
+  data)

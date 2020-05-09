@@ -1,42 +1,44 @@
 (ns into.build.restore-cache
-  (:require [into.flow
-             [core :as flow]
-             [exec :as exec]]
-            [into.docker :as docker]
-            [into.utils
-             [cache :as cache]
-             [data :as data]
+  (:require [into
+             [constants :as constants]
+             [docker :as docker]
              [log :as log]]
+            [into.utils.cache :as cache]
             [clojure.java.io :as io]))
 
 ;; ## Cache File Injection
 
 (defn- inject-cache-directory!
-  [{:keys [client] :as data} cache-from]
+  [builder-container cache-from]
   (with-open [in (io/input-stream cache-from)]
-    (docker/copy-into-container!
-     client
-     in
-     (data/instance-container data :builder)
-     (data/path-for data :working-directory)))
-  data)
+    (docker/stream-into-container
+     builder-container
+     (constants/path-for :working-directory)
+     in)))
 
 (defn- restore-cache-files!
-  [data]
+  [builder-container cache-paths]
   (let [cmd (cache/restore-cache-command
-             (data/path-for data :cache-directory)
-             (get-in data [:cache :paths]))]
-    (exec/exec data :builder cmd [])))
+             (constants/path-for :cache-directory)
+             cache-paths)]
+    (docker/exec-and-log builder-container {:cmd cmd})))
+
+(defn- restore-cache!
+  [{:keys [spec builder-container cache-paths]}]
+  (let [cache-from (:cache-from spec)]
+    (log/info "Restoring cache from '%s' ..." cache-from)
+    (inject-cache-directory! builder-container cache-from)
+    (restore-cache-files! builder-container cache-paths)))
 
 ;; ## Flow
 
+(defn- restore-cache?
+  [{:keys [spec cache-paths]}]
+  (and (some-> spec :cache-from io/file (.isFile))
+       (seq cache-paths)))
+
 (defn run
-  [{:keys [cache spec] :as data}]
-  (or (when-let [{:keys [cache-from]} (:cache-spec spec)]
-        (when (seq (:paths cache))
-          (when (.isFile (io/file cache-from))
-            (flow/with-flow-> data
-              (log/info "Restoring cache from '%s' ..." cache-from)
-              (inject-cache-directory! cache-from)
-              (restore-cache-files!)))))
-      data))
+  [data]
+  (when (restore-cache? data)
+    (restore-cache! data))
+  data)

@@ -1,104 +1,67 @@
 (ns into.build.flow
-  (:require [into.flow.core :as flow]
+  (:require [into.flow :as flow]
             [into.build
-             [assemble-script :as assemble]
-             [build-script :as build]
-             [ci :as ci]
+             [add-builder-env :as add-builder-env]
+             [add-default-labels :as add-default-labels]
+             [add-oci-labels :as add-oci-labels]
+             [add-runner-env :as add-runner-env]
+             [assemble-script :as assemble-script]
+             [build-script :as build-script]
              [cleanup :as cleanup]
-             [collect :as collect]
+             [collect-sources :as collect-sources]
              [commit :as commit]
              [create-cache :as create-cache]
-             [init :as init]
+             [create-working-directories :as create-working-directories]
+             [initialise :as initialise]
+             [inject-sources :as inject-sources]
+             [prepare-target-image :as prepare-target-image]
              [pull :as pull]
              [read-build-profile :as read-build-profile]
              [read-cache-paths :as read-cache-paths]
+             [read-ignore-paths :as read-ignore-paths]
              [restore-cache :as restore-cache]
              [start :as start]
-             [transfer :as transfer]
-             [write-artifacts :as write-artifacts]]
-            [into.utils.log :as log]))
+             [transfer-artifacts :as transfer-artifacts]
+             [transfer-assemble-script :as transfer-assemble-script]
+             [write-artifacts :as write-artifacts]
+             [validate-spec :as validate-spec]]))
 
-;; ## Phases
-
-(defn- prepare
-  [data]
-  (flow/with-flow-> data
-    (ci/run)
-    (pull/run)))
-
-(defn- build
-  [data]
-  (flow/with-flow-> data
-    (read-build-profile/run)
-    (read-cache-paths/run)
-    (restore-cache/run)
-    (collect/run)
-    (build/run)))
-
-(defn- assemble
-  [data]
-  (flow/with-flow-> data
-    (transfer/run)
-    (assemble/run)
-    (commit/run)))
-
-(defn- finalise
-  [data]
-  (flow/with-flow-> data
-    (write-artifacts/run)
-    (create-cache/run)))
-
-;; ## Flows
-
-(defn- run-for-image
-  [data]
-  (flow/with-flow-> data
-    (init/for-image)
-    (prepare)
-    (start/for-image)
-    (transfer/pre-run)
-    (build)
-    (assemble)
-    (finalise)))
-
-(defn- run-for-artifacts
-  [data]
-  (flow/with-flow-> data
-    (init/for-artifacts)
-    (prepare)
-    (start/for-artifacts)
-    (build)
-    (finalise)))
-
-;; ## Run Flows
-
-(defn- create-image?
-  [{:keys [spec]}]
-  (contains? spec :target-image))
-
-(defn- create-artifacts?
-  [{:keys [spec]}]
-  (contains? spec :target-path))
-
-(defn- report-success
-  [data]
-  (if (create-image? data)
-    (log/success
-     data
-     "Image [%s] has been built successfully."
-     (get-in data [:spec :target-image :full-name]))
-    (log/success
-     data
-     "Artifacts have been written to '%s'."
-     (get-in data [:spec :target-path]))))
+;; ## Flow
 
 (defn run
   [data]
-  (-> (cond (create-image? data)     (run-for-image data)
-            (create-artifacts? data) (run-for-artifacts data)
-            :else (flow/fail
-                    data
-                    "You need to supply either '--tag' or '--write-artifacts'."))
-      (cleanup/run)
-      (flow/with-flow->
-        (report-success))))
+  (-> (flow/with-flow-> data
+        (initialise/run)
+        (validate-spec/run)
+
+        ;; --- Create the build environment (builder, runner, target)
+        (pull/run)
+        (prepare-target-image/run)
+        (add-default-labels/run)
+        (add-oci-labels/run)
+        (start/run)
+
+        ;; --- Prepare the builder and runner
+        (read-build-profile/run)
+        (read-cache-paths/run)
+        (read-ignore-paths/run)
+        (add-builder-env/run)
+        (add-runner-env/run)
+        (create-working-directories/run)
+        (transfer-assemble-script/run)
+        (restore-cache/run)
+
+        ;; --- Run build script
+        (collect-sources/run)
+        (inject-sources/run)
+        (build-script/run)
+
+        ;; --- Run assemble script
+        (transfer-artifacts/run)
+        (assemble-script/run)
+
+        ;; --- Generate outputs (image, artifacts, cache)
+        (commit/run)
+        (write-artifacts/run)
+        (create-cache/run))
+      (cleanup/run)))

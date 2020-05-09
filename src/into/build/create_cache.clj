@@ -1,43 +1,43 @@
 (ns into.build.create-cache
-  (:require [into.flow
-             [core :as flow]
-             [exec :as exec]]
-            [into.docker :as docker]
-            [into.utils
-             [cache :as cache]
-             [data :as data]
+  (:require [into
+             [constants :as constants]
+             [docker :as docker]
              [log :as log]]
+            [into.utils.cache :as cache]
             [clojure.java.io :as io])
   (:import java.util.zip.GZIPOutputStream))
 
 ;; ## Create Cache
 
 (defn- prepare-cache-files!
-  [data]
-  (let [cmd (cache/prepare-cache-command
-             (data/path-for data :cache-directory)
-             (get-in data [:cache :paths]))]
-    (exec/exec data :builder cmd [])))
+  "Copy all cache paths to `path` to prepare for extraction."
+  [builder-container path cache-paths]
+  (let [cmd (cache/prepare-cache-command path cache-paths)]
+    (docker/exec-and-log builder-container {:cmd cmd})))
 
 (defn- export-cache-directory!
-  [{:keys [client] :as data} cache-to]
-  (with-open [out (io/output-stream cache-to)
-              gz-out (GZIPOutputStream. out)]
-    (docker/copy-from-container!
-     client
-     gz-out
-     (data/instance-container data :builder)
-     (data/path-for data :cache-directory)))
-  data)
+  [builder-container path cache-to]
+  (with-open [out    (io/output-stream cache-to)
+              gz-out (GZIPOutputStream. out)
+              in     (docker/stream-from-container builder-container path)]
+    (io/copy in gz-out)))
+
+(defn- create-cache!
+  [{:keys [spec builder-container cache-paths]}]
+  (let [cache-to (:cache-to spec)
+        path     (constants/path-for :cache-directory)]
+    (log/info "Writing cache to '%s' ..." cache-to)
+    (prepare-cache-files! builder-container path cache-paths)
+    (export-cache-directory! builder-container path cache-to)))
 
 ;; ## Flow
 
+(defn- create-cache?
+  [{:keys [spec cache-paths]}]
+  (and (:cache-to spec) (seq cache-paths)))
+
 (defn run
-  [{:keys [cache spec] :as data}]
-  (or (when-let [{:keys [cache-to]} (:cache-spec spec)]
-        (when (seq (:paths cache))
-          (flow/with-flow-> data
-            (log/info "Creating cache at '%s' ..." cache-to)
-            (prepare-cache-files!)
-            (export-cache-directory! cache-to))))
-      data))
+  [data]
+  (when (create-cache? data)
+    (create-cache! data))
+  data)

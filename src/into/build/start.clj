@@ -1,55 +1,56 @@
 (ns into.build.start
-  (:require [into.flow
-             [core :as flow]]
-            [into.docker :as docker]
-            [into.utils
-             [data :as data]
+  (:require [into
+             [docker :as docker]
+             [flow :as flow]
              [log :as log]])
   (:import [java.util UUID]))
 
 ;; ## Startup Logic
 
-(defn- create-working-directories!
-  [{:keys [client] :as data} container]
-  (docker/mkdir
-   client
-   container
-   (data/path-for data :source-directory)
-   (data/path-for data :artifact-directory)))
-
 (defn- random-container-name
   []
   (str "into-docker-" (UUID/randomUUID)))
 
-(defn- run-container!
-  [{:keys [client] :as data} {:keys [full-name user] :as image}]
-  (let [name  (random-container-name)]
-    (log/debug data "  Running container [%s] ..." full-name)
-    (when (#{"root", "0"} user)
-      (log/warn data "Container [%s] is running as root!" full-name))
-    (docker/run-container client name image)))
+(defn- log-run-container!
+  [data {:keys [user] :as image}]
+  (log/debug "  Running container [%s] as user '%s' ..." image user)
+  data)
 
-(defn- start-image-instance!
-  [data instance-key]
-  (let [image     (data/instance-image data instance-key)
-        container (run-container! data image)]
-    (create-working-directories! data container)
-    (data/assoc-instance-container data instance-key container)))
+(defn- warn-container-root!
+  [data image-key]
+  (when-let [{:keys [user] :as image} (get data image-key)]
+    (when (#{"root", "0"} user)
+      (log/warn "Container [%s] is running as root!" image)))
+  data)
+
+(defn- run-container!
+  [{:keys [client] :as data} container-key image]
+  (let [container-name (random-container-name)
+        container (docker/container client container-name image)]
+    (docker/run-container container)
+    (assoc data container-key container)))
+
+(defn- start-container!
+  [data image-key container-key]
+  (if-let [image (get data image-key)]
+    (flow/with-flow-> data
+      (log-run-container! image)
+      (run-container! container-key image))
+    data))
 
 ;; ## Flow
 
-(defn for-image
-  [data]
-  (flow/with-flow-> data
-    (log/info "Starting environment [%s -> %s] ..."
-              (data/instance-image-name data :builder)
-              (data/instance-image-name data :runner))
-    (start-image-instance! :builder)
-    (start-image-instance! :runner)))
+(defn- log-start!
+  [{:keys [builder-image runner-image] :as data}]
+  (if runner-image
+    (log/emph "Starting environment [%s -> %s] ..." builder-image runner-image)
+    (log/emph "Starting builder [%s] ..." builder-image))
+  data)
 
-(defn for-artifacts
+(defn run
   [data]
   (flow/with-flow-> data
-    (log/info "Starting artifact builder [%s] ..."
-              (data/instance-image-name data :builder))
-    (start-image-instance! :builder)))
+    (log-start!)
+    (warn-container-root! :builder-image)
+    (start-container! :builder-image :builder-container)
+    (start-container! :runner-image :runner-container)))

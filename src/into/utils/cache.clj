@@ -4,8 +4,7 @@
    - Move all paths into the cache directory using the hash as name
    - Export TAR from the container.
    Reverse to restore."
-  (:require [into.utils.data :as data]
-            [clojure.string :as string]
+  (:require [clojure.string :as string]
             [clojure.java.io :as io])
   (:import [java.security MessageDigest]))
 
@@ -61,20 +60,3 @@
        (string/join "; ")
        (format "%s; true")
        (vector "sh" "-c")))
-
-(defn default-cache-file
-  [target-image]
-  (let [dir (io/file
-             (or (System/getenv "HOME")
-                 (System/getProperty "user.home")
-                 (throw
-                  (IllegalStateException.
-                   "Could not find HOME directory for cache creation.")))
-             ".cache"
-             "into-docker")]
-    (.mkdirs dir)
-    (io/file dir (-> target-image
-                     (data/->image)
-                     (:full-name)
-                     (sha1)
-                     (str ".tar")))))

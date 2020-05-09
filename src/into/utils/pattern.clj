@@ -48,7 +48,7 @@
     (fn [name]
       (-> (some
            (fn [{:keys [selector pattern]}]
-             (when (re-find pattern name)
+             (when (re-matches pattern name)
                selector))
            patterns)
           (= :include)))))

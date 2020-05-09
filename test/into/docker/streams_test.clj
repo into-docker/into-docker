@@ -6,25 +6,11 @@
             [clojure.test :refer [deftest is testing]]
             [com.gfredericks.test.chuck :refer [times]]
             [clojure.string :as string]
+            [into.docker.test :refer [exec-stream-block]]
             [into.docker.streams :as streams])
-  (:import [java.io PipedInputStream PipedOutputStream]
-           [java.nio ByteBuffer ByteOrder]))
+  (:import [java.io PipedInputStream PipedOutputStream]))
 
 ;; ## Test Data
-
-(defn- ->block
-  "Create a block as it would be returned from a docker exec stream,
-   prefixed as either stdout or stderr."
-  [stream ^String data-string]
-  (let [^bytes data (.getBytes data-string)
-        len         (count data)]
-    (-> (ByteBuffer/allocate (+ len 8))
-        (.put (byte (case stream :stdout 0x01 :stderr 0x02)))
-        (.position 4)
-        (.order ByteOrder/BIG_ENDIAN)
-        (.putInt len)
-        (.put data)
-        (.array))))
 
 (def gen-block
   (gen/let [data-string (->> (gen/tuple
@@ -35,7 +21,7 @@
     {:string data-string
      :bytes  (.getBytes ^String data-string)
      :stream stream
-     :block  (->block stream data-string)}))
+     :block  (exec-stream-block stream data-string)}))
 
 ;; ## Helper
 
@@ -65,16 +51,6 @@
        (string/join)))
 
 ;; ## Tests
-
-(deftest t-block-generator
-  (testing "test utility function '->block'"
-    (let [data  "HELLO"
-          len   (count data)
-          bytes (.getBytes data)]
-      (is (= (concat [1 0 0 0 0 0 0 len] bytes)
-             (seq (->block :stdout data))))
-      (is (= (concat [2 0 0 0 0 0 0 len] bytes)
-             (seq (->block :stderr data)))))))
 
 (defspec t-exec-seq (times 20)
   (prop/for-all

@@ -1,76 +1,53 @@
 (ns into.build.pull
-  (:require [into.flow
-             [core :as flow]]
-            [into.docker :as docker]
-            [into.utils
-             [data :as data]
-             [labels :as labels]
+  (:require [into
+             [constants :as constants]
+             [docker :as docker]
+             [flow :as flow]
              [log :as log]]))
 
-;; ## Pull Logic
+;; ## Steps
 
-(defn- pull-image-if-not-exists!
-  [{:keys [client] :as data} {:keys [full-name]}]
-  (log/debug data "  Pulling image [%s] ..." full-name)
-  (or (docker/inspect-image client full-name)
-      (do (docker/pull-image client full-name)
-          (docker/inspect-image client full-name))))
+(defn- pull-image!
+  [{:keys [client] :as data} target-key image-name]
+  (log/debug "  Pulling image [%s] ..." image-name)
+  (if-let [image (docker/pull-image-record client image-name)]
+    (assoc data target-key image)
+    (flow/fail data (str "Image not found:" image-name))))
 
-(defn- create-image-instance!
-  [data image]
-  (when-let [{:keys [Config]} (pull-image-if-not-exists! data image)]
-    {:image       (assoc image :hash (:Image Config))
-     :labels      (into {} (:Labels Config))
-     :cmd         (into [] (:Cmd Config))
-     :entrypoint  (into [] (:Entrypoint Config))}))
-
-(defn- pull-image-instance!
-  [data spec-key instance-key]
-  (let [image (get-in data [:spec spec-key])]
-    (-> (->> (create-image-instance! data image)
-             (assoc-in data [:instances instance-key]))
-        (flow/validate
-         [:instances instance-key]
-         (str "Image not found: " (:full-name image))))))
-
-;; ## Select Logic
-
-(defn- select-runner-image
+(defn- pull-builder-image!
   [data]
-  (-> (or (some->> (data/instance data :builder)
-                   (labels/get-runner-image)
-                   (data/->image)
-                   (update-in data [:spec :runner-image] #(or %1 %2)))
-          data)
-      (flow/validate [:spec :runner-image] "No runner image given.")))
+  (->> (get-in data [:spec :builder-image-name])
+       (pull-image! data :builder-image)))
 
-(defn- overwrite-builder-data
+(defn- pull-runner-image!
   [data]
-  (let [builder (data/instance data :builder)
-        user    (or (labels/get-builder-user builder) "root")]
-    (cond-> data
-      :always (assoc-in [:instances :builder :image :user] user))))
+  (->> (get-in data [:builder-image
+                     :labels
+                     constants/runner-image-label])
+       (pull-image! data :runner-image)))
 
-(defn- overwrite-runner-data
+(defn- set-builder-user
   [data]
-  (let [builder (data/instance data :builder)
-        cmd     (labels/get-runner-cmd builder)
-        entryp  (labels/get-runner-entrypoint builder)]
-    (cond-> data
-      entryp (assoc-in [:instances :runner :entrypoint]
-                       ["sh" "-c" (str entryp " $@") "--"])
-      entryp (assoc-in [:instances :runner :cmd] [])
-      cmd    (assoc-in [:instances :runner :cmd]
-                       ["sh" "-c" cmd]))))
+  (if-let [user (get-in data [:builder-image
+                              :labels
+                              constants/builder-user-label])]
+    (assoc-in data [:builder-image :user] user)
+    data))
+
+(defn- verify-runner-image
+  [data]
+  (flow/validate
+   data
+   [:builder-image :labels constants/runner-image-label]
+   "No runner image found in builder image labels."))
 
 ;; ## Flow
 
 (defn run
   [data]
+  (log/info "Pulling necessary images ...")
   (flow/with-flow-> data
-    (log/info "Pulling images ...")
-    (pull-image-instance! :builder-image :builder)
-    (select-runner-image)
-    (pull-image-instance! :runner-image :runner)
-    (overwrite-builder-data)
-    (overwrite-runner-data)))
+    (pull-builder-image!)
+    (set-builder-user)
+    (verify-runner-image)
+    (pull-runner-image!)))

@@ -1,3 +1,7 @@
+# Clojure
+test/
+.clj-kondo/
+
 # Documentation
 LICENSE
 README.md

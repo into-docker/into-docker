@@ -68,9 +68,18 @@
       (= (sources-as-string sources)
          (sources-as-string extracted)))))
 
+(defspec t-tar-gz-vs-untar (times 20)
+  (prop/for-all
+   [sources gen-sources]
+    (let [extracted
+          (tar/with-gz-open [in (io/input-stream (tar/tar-gz sources))]
+            (tar/untar-seq in))]
+      (= (sources-as-string sources)
+         (sources-as-string extracted)))))
+
 (defspec t-untar-to-path (times 10)
   (prop/for-all
-    [sources gen-sources]
+   [sources gen-sources]
     (with-temp-dir
       (fn [target]
         (with-open [in (io/input-stream (tar/tar sources))]
@@ -85,11 +94,11 @@
     prefix-fn (gen/fmap #(fn [s] (str % s)) gen/string-alphanumeric)]
     (with-temp-dir
       (fn [target]
-      (with-open [in (io/input-stream (tar/tar sources))]
-        (tar/untar in target #(io/file %1 (prefix-fn %2))))
-      (let [extracted (sources-from-path target)]
-        (= (set
-            (map
-             #(update % :path prefix-fn)
-             (sources-as-string sources)))
-           (sources-as-string extracted)))))))
+        (with-open [in (io/input-stream (tar/tar sources))]
+          (tar/untar in target #(io/file %1 (prefix-fn %2))))
+        (let [extracted (sources-from-path target)]
+          (= (set
+              (map
+               #(update % :path prefix-fn)
+               (sources-as-string sources)))
+             (sources-as-string extracted)))))))
