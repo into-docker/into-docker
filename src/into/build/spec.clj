@@ -1,16 +1,40 @@
 (ns into.build.spec
   (:require [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]))
+            [clojure.spec.gen.alpha :as gen]
+            [clojure.string :as string]))
 
 ;; ## Generic
 
 (s/def ::non-empty-string
-  (s/and string? seq))
+  (-> (s/and string? seq)
+      (s/with-gen
+        #(gen/such-that seq (gen/string-alphanumeric)))))
 
 (s/def ::name ::non-empty-string)
-(s/def ::path ::non-empty-string)
-(s/def ::paths (s/coll-of ::path))
+
+(s/def ::path
+  (s/with-gen ::non-empty-string
+    (fn []
+      (->> (gen/vector
+            (s/gen ::non-empty-string)
+            1 10)
+           (gen/fmap #(string/join "/" %))))))
+
+(s/def ::file-path
+  (s/with-gen ::non-empty-string
+    (fn []
+      (->> (gen/tuple
+            (s/gen ::path)
+            (gen/return "/")
+            (s/gen ::non-empty-string)
+            (gen/return ".")
+            (s/gen ::non-empty-string))
+           (gen/fmap string/join)))))
+
 (s/def ::pattern string?)
+
+(s/def ::paths (s/coll-of ::path))
+(s/def ::file-paths (s/coll-of ::file-path))
 (s/def ::patterns (s/coll-of ::pattern))
 
 ;; ## Spec

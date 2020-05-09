@@ -3,7 +3,6 @@
              [clojure-test :refer [defspec]]
              [properties :as prop]
              [generators :as gen]]
-            [clojure.test :refer [deftest is testing]]
             [com.gfredericks.test.chuck :refer [times]]
             [clojure.string :as string]
             [into.docker.test :refer [exec-stream-block]]
