@@ -13,7 +13,7 @@
   (testing "returns nil if command throws"
     (with-redefs [sh/sh (fn [& _]
                           (throw
-                            (ex-info "FAILURE" {})))]
+                           (ex-info "FAILURE" {})))]
       (is (nil? (version/read-revision {}))))))
 
 (deftest t-current-version-and-revision
