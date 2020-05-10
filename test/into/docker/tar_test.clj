@@ -5,7 +5,8 @@
              [generators :as gen]]
             [com.gfredericks.test.chuck :refer [times]]
             [clojure.java.io :as io]
-            [into.docker.tar :as tar])
+            [into.docker.tar :as tar]
+            [into.test.files :refer [with-temp-dir]])
   (:import [java.io File]))
 
 ;; ## Generators
@@ -46,18 +47,6 @@
      :length (.length f)
      :path   (.getName f)}))
 
-(defn- with-temp-dir
-  [f]
-  (let [target (doto (File/createTempFile "into-docker-test-" "")
-                 (.delete)
-                 (.mkdir))]
-    (try
-      (f target)
-      (finally
-        (doseq [f (reverse (file-seq target))]
-          (io/delete-file f))
-        (.delete target)))))
-
 ;; ## Tests
 
 (defspec t-tar-vs-untar (times 20)
@@ -80,25 +69,23 @@
 (defspec t-untar-to-path (times 10)
   (prop/for-all
    [sources gen-sources]
-    (with-temp-dir
-      (fn [target]
-        (with-open [in (io/input-stream (tar/tar sources))]
-          (tar/untar in target))
-        (let [extracted (sources-from-path target)]
-          (= (sources-as-string sources)
-             (sources-as-string extracted)))))))
+    (with-temp-dir [target []]
+      (with-open [in (io/input-stream (tar/tar sources))]
+        (tar/untar in target))
+      (let [extracted (sources-from-path target)]
+        (= (sources-as-string sources)
+           (sources-as-string extracted))))))
 
 (defspec t-untar-to-path-with-file-fn (times 10)
   (prop/for-all
    [sources   gen-sources
     prefix-fn (gen/fmap #(fn [s] (str % s)) gen/string-alphanumeric)]
-    (with-temp-dir
-      (fn [target]
-        (with-open [in (io/input-stream (tar/tar sources))]
-          (tar/untar in target #(io/file %1 (prefix-fn %2))))
-        (let [extracted (sources-from-path target)]
-          (= (set
-              (map
-               #(update % :path prefix-fn)
-               (sources-as-string sources)))
-             (sources-as-string extracted)))))))
+    (with-temp-dir [target []]
+      (with-open [in (io/input-stream (tar/tar sources))]
+        (tar/untar in target #(io/file %1 (prefix-fn %2))))
+      (let [extracted (sources-from-path target)]
+        (= (set
+            (map
+             #(update % :path prefix-fn)
+             (sources-as-string sources)))
+           (sources-as-string extracted))))))

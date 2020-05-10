@@ -1,4 +1,4 @@
-(ns into.docker.test
+(ns into.test.docker
   "Mock Docker client that can be modified for specific test cases."
   (:require [into.docker :as docker]
             [into.docker.tar :as tar]
@@ -45,8 +45,10 @@
 
 ;; ## Container
 
-(defrecord MockContainer [filesystem]
+(defrecord MockContainer [filesystem name]
   docker/DockerContainer
+  (container-name [this]
+    name)
   (run-container [this])
   (commit-container [this data])
   (cleanup-container [this])
@@ -89,8 +91,8 @@
 
 (defn container
   "Create a new mock container."
-  []
-  (->MockContainer (atom {})))
+  [name]
+  (->MockContainer (atom {}) name))
 
 (defn add-file
   "Add a file to the container."
