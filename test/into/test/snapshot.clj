@@ -21,7 +21,7 @@
     (io/file "test"
              (.getParentFile f)
              "snapshots"
-             (str (name snapshot-name) ".snap"))))
+             (str (name snapshot-name) ".snap.edn"))))
 
 (defmacro is-snap?
   "Compare value with a snapshot of the given name, calling `clojure.test/is`
