@@ -78,10 +78,15 @@
         (->MockExec this [] {:exit 0})
 
         "cat"
-        (->MockExec
-         this
-         [[:stdout (get @filesystem (first args))]]
-         {:exit 0})
+        (if-let [contents (get @filesystem (first args))]
+          (->MockExec
+           this
+           [[:stdout contents]]
+           {:exit 0})
+          (->MockExec
+           this
+           [[:stderr "No such file"]]
+           {:exit 1}))
 
         (let [{:keys [output result]} (apply
                                        (get @filesystem path)
