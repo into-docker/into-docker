@@ -1,0 +1,1 @@
+("_CPTH_='cache/cfc7b4885384957ae445bc14914d4588f607651c'; _PTH_='a.txt';[ -e \"$_CPTH_\" ] && (rm -rf \"$_PTH_\";mv \"$_CPTH_\" \"$_PTH_\" && echo \"$_PTH_\";rm -rf \"$_CPTH_\")" "_CPTH_='cache/aceba96ffdf13ce4cd4171c0248420cc03108ef0'; _PTH_='b.txt';[ -e \"$_CPTH_\" ] && (rm -rf \"$_PTH_\";mv \"$_CPTH_\" \"$_PTH_\" && echo \"$_PTH_\";rm -rf \"$_CPTH_\")")

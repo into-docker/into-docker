@@ -30,10 +30,13 @@
      cache-path
      path)))
 
+(defn prepare-cache-commands
+  [cache-directory paths]
+  (map #(->prepare-command cache-directory %) paths))
+
 (defn prepare-cache-command
   [cache-directory paths]
-  (->> paths
-       (map #(->prepare-command cache-directory %))
+  (->> (prepare-cache-commands cache-directory paths)
        (string/join "; ")
        (format "mkdir -p '%s'; %s" cache-directory)
        (format "%s; true")
@@ -53,10 +56,13 @@
      cache-path
      path)))
 
+(defn restore-cache-commands
+  [cache-directory paths]
+  (map #(->restore-command cache-directory %) paths))
+
 (defn restore-cache-command
   [cache-directory paths]
-  (->> paths
-       (map #(->restore-command cache-directory %))
+  (->> (restore-cache-commands cache-directory paths)
        (string/join "; ")
        (format "%s; true")
        (vector "sh" "-c")))
