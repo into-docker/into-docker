@@ -16,7 +16,8 @@
   (s/with-gen ::non-empty-string
     (fn []
       (->> (gen/vector
-            (s/gen ::non-empty-string)
+            (->> (s/gen ::non-empty-string)
+                 (gen/fmap string/lower-case))
             1 10)
            (gen/fmap #(string/join "/" %))))))
 
