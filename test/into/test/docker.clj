@@ -91,8 +91,10 @@
 
 (defn container
   "Create a new mock container."
-  [name]
-  (->MockContainer (atom {}) name))
+  [& [name]]
+  (->MockContainer
+   (atom {})
+   (or name (str (java.util.UUID/randomUUID)))))
 
 (defn add-file
   "Add a file to the container."
