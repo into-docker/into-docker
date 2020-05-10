@@ -79,7 +79,9 @@ into build -t <name:tag> --cache <path> <builder>
 ```
 
 Subsequent builds will use the archive (if it exists) to seed the builder
-container. Learn how to [add caching to your builder image][builder-caching].
+container.
+
+Learn how to [add caching to your builder image][builder-caching].
 
 ### Build Artifacts
 
