@@ -15,7 +15,7 @@ jobs:
       - name: install-dependencies
         run: lein deps
       - name: Run tests
-        run: lein test
+        run: lein kaocha --reporter documentation
       - name: build-uberjar
         run: lein uberjar && mv target/*-standalone.jar target/app.jar
       - name: upload-uberjar
