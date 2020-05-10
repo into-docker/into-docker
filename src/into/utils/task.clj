@@ -23,16 +23,20 @@
   ^Logger []
   (LoggerFactory/getLogger "root"))
 
+(defonce ^:private current-log-level
+  (atom "INFO"))
+
 (defn- set-log-level!
   [^String value]
-  (let [^Level level (-> value
-                         (.toUpperCase)
-                         (Level/valueOf))]
-    (.setLevel (root-logger) level)))
+  (when (not= @current-log-level value)
+    (let [^Level level (-> value
+                           (.toUpperCase)
+                           (Level/valueOf))]
+      (.setLevel (root-logger) level))))
 
 (defn- set-verbosity!
   [{:keys [^long verbosity]}]
-  (cond (= 0 verbosity) nil
+  (cond (= 0 verbosity) (set-log-level! "INFO")
         (= 1 verbosity) (set-log-level! "DEBUG")
         :else (set-log-level! "TRACE")))
 

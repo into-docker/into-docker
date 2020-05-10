@@ -12,6 +12,7 @@
              [commit :as commit]
              [create-cache :as create-cache]
              [create-working-directories :as create-working-directories]
+             [finalise :as finalise]
              [initialise :as initialise]
              [inject-sources :as inject-sources]
              [prepare-target-image :as prepare-target-image]
@@ -64,4 +65,5 @@
         (commit/run)
         (write-artifacts/run)
         (create-cache/run))
-      (cleanup/run)))
+      (cleanup/run)
+      (finalise/run)))
