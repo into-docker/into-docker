@@ -46,7 +46,7 @@
           (= profile "default")
           (do
             (log/debug "Build profile [%s] is empty." profile)
-            data)
+            (update data :builder-env concat env))
 
           :else
           (flow/fail data (format "Build profile [%s] is empty." profile)))))
