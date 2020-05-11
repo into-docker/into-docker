@@ -29,7 +29,7 @@
 
 ;; ## Report
 
-(defn report-error
+(defn- report-error
   [^Exception e message]
   (when e
     (error "%s%s" message (.getMessage e))
@@ -55,7 +55,7 @@
       unit     1024
       unit-log (Math/log unit)]
   (defn as-file-size
-    [v]
+    ^String [v]
     (if (< v unit)
       (str v "B")
       (let [exp    (int (min (/ (Math/log v) unit-log) 6))
