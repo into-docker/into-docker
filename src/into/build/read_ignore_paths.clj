@@ -16,17 +16,17 @@
     (Paths/get path rst)))
 
 (defn- patterns-from
-  [label source]
+  [source]
   (with-open [in (io/reader source)]
     (->> (line-seq in)
          (map string/trim)
          (remove string/blank?)
-         (cons (str "# --- " label))
+         (remove #(string/starts-with? % "#"))
          (vec))))
 
 (defn- add-ignore-paths
-  [data label source]
-  (->> (patterns-from label source)
+  [data source]
+  (->> (patterns-from source)
        (update data :ignore-paths concat)))
 
 (defn- add-ignore-path-if-in-directory
@@ -34,8 +34,7 @@
   (let [dir (->path dir)
         file (->path file)]
     (when (.startsWith file dir)
-      (->> ["--- cache file"
-            (str (.relativize dir file))]
+      (->> [(str (.relativize dir file))]
            (update data :ignore-paths concat)))))
 
 ;; ## Steps
@@ -52,13 +51,13 @@
   (let [path (constants/path-for :ignore-file)]
     (->> path
          (docker/read-file builder-container)
-         (add-ignore-paths data path))))
+         (add-ignore-paths data))))
 
 (defn- add-local-ignore-paths
   [{:keys [spec] :as data}]
   (let [f (io/file (:source-path spec) ".dockerignore")]
     (if (.isFile f)
-      (add-ignore-paths data (.getPath f) f)
+      (add-ignore-paths data f)
       data)))
 
 (defn- add-cache-file-path

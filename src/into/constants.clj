@@ -43,8 +43,7 @@
 ;; ## Ignore Paths
 
 (def default-ignore-paths
-  ["# --- default patterns"
-   ".git"
+  [".git"
    ".github"
    ".gitignore"
    ".hg"
