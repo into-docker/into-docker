@@ -1,6 +1,5 @@
 (ns into.utils.task
   (:require [into.docker.client :as client]
-            [peripheral.core :as p]
             [jansi-clj.core :as jansi]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
@@ -122,6 +121,8 @@
             (print-missing task opts)
             (with-verbosity opts
               (if docker?
-                (p/with-start [client (client/make {:uri (get-docker-uri)})]
+                (let [client (-> {:uri (get-docker-uri)}
+                                 (client/make)
+                                 (client/start))]
                   (run (assoc opts :client client)))
                 (run opts))))))))

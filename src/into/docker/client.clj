@@ -2,7 +2,6 @@
   "Docker client implementation based on clj-docker-client"
   (:require [into.docker :as proto]
             [into.docker.container :as container]
-            [peripheral.core :refer [defcomponent]]
             [clj-docker-client.core :as docker]))
 
 ;; ## Helpers
@@ -33,14 +32,7 @@
 
 ;; ## Component
 
-(defcomponent DockerClient [uri]
-  :assert/uri (seq uri)
-  :conn       (docker/connect {:uri uri})
-  :clients    {:images     (docker/client {:conn conn, :category :images})
-               :containers (docker/client {:conn conn, :category :containers})
-               :commit     (docker/client {:conn conn, :category :commit})
-               :exec       (docker/client {:conn conn, :category :exec})}
-
+(defrecord DockerClient [uri conn clients]
   proto/DockerClient
   (pull-image [this image]
     (invoke-pull-image this image))
@@ -56,3 +48,13 @@
    (make {}))
   ([components]
    (map->DockerClient components)))
+
+(defn start
+  [{:keys [uri] :as client}]
+  {:pre [(seq uri)]}
+  (let [conn    (docker/connect {:uri uri})
+        clients {:images     (docker/client {:conn conn, :category :images})
+                 :containers (docker/client {:conn conn, :category :containers})
+                 :commit     (docker/client {:conn conn, :category :commit})
+                 :exec       (docker/client {:conn conn, :category :exec})}]
+    (assoc client :conn conn, :clients clients)))

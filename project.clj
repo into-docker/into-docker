@@ -11,17 +11,18 @@
 
                  ;; components
                  [lispyclouds/clj-docker-client "1.0.0-RC2"]
-                 [peripheral "0.5.4"]
 
                  ;; utilities
                  [org.apache.commons/commons-compress "1.20"]
                  [commons-lang "2.6"]
+                 [potemkin "0.4.5"]
 
                  ;; logging
                  [jansi-clj "0.1.1"]
                  [ch.qos.logback/logback-classic "1.2.3"]
 
                  ;; cleanup dependency chain
+                 [riddley "0.2.0"]
                  [org.jetbrains.kotlin/kotlin-stdlib-common "1.3.72"]]
   :exclusions [org.clojure/clojure]
   :java-source-paths ["src"]
@@ -32,7 +33,14 @@
               :global-vars {*warn-on-reflection* true}}
              :kaocha
              {:dependencies [[lambdaisland/kaocha "1.0-612"
-                              :exclusions [org.clojure/spec.alpha]]]}
+                              :exclusions [org.clojure/spec.alpha]]
+                             [lambdaisland/kaocha-cloverage "1.0-45"]
+                             [org.clojure/java.classpath "1.0.0"]]}
+             :ci
+             [:kaocha
+              {:dependencies [[lambdaisland/kaocha-cloverage "1.0-45"]
+                              [org.clojure/java.classpath "1.0.0"]]
+               :global-vars {*warn-on-reflection* false}}]
              :uberjar
              {:global-vars {*assert* false}
               :jvm-opts ["-Dclojure.compiler.direct-linking=true"
@@ -41,5 +49,10 @@
               :aot :all}}
   :cljfmt {:indents {prop/for-all [[:block 1]]
                      defcomponent [[:block 2] [:inner 1]]}}
-  :aliases {"kaocha" ["with-profile" "+kaocha" "run" "-m" "kaocha.runner"]}
+  :aliases {"kaocha" ["with-profile" "+kaocha" "run" "-m" "kaocha.runner"]
+            "ci"     ["with-profile" "+ci" "run" "-m" "kaocha.runner"
+                      "--reporter" "documentation"
+                      "--plugin"   "cloverage"
+                      "--codecov"
+                      "--no-cov-html"]}
   :pedantic? :abort)
