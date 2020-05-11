@@ -18,10 +18,11 @@
   [^bytes cache-file-contents]
   (with-open [in (io/reader cache-file-contents)]
     (->> (line-seq in)
-         (map string/triml)
+         (map string/trim)
          (remove string/blank?)
          (remove #(string/starts-with? % "#"))
          (map ->absolute-path)
+         (distinct)
          (vec))))
 
 (defn run
