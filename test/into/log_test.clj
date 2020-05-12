@@ -5,13 +5,14 @@
              [generators :as gen]]
             [com.gfredericks.test.chuck :refer [times]]
             [clojure.tools.logging.test :refer [logged? the-log with-log]]
-            [into.log :as log]))
+            [into.log :as log])
+  (:import [java.util.regex Pattern]))
 
 ;; ## Helpers
 
 (defn- literal
   [fmt & args]
-  (re-pattern (str "\\Q" (apply format fmt args) "\\E")))
+  (re-pattern (Pattern/quote (apply format fmt args))))
 
 ;; ## Tests
 
