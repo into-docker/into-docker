@@ -16,27 +16,27 @@
 
 ;; ## Tests
 
-(defspec t-run-step-calls-next-fn (times 5)
+(defspec t-run-step-calls-next-fn (times 20)
   (prop/for-all
     [state (gen/hash-map :counter gen/pos-int)]
     (= (inc-counter state)
        (flow/run-step inc-counter state))))
 
-(defspec t-run-step-does-nothing-when-interrupted (times 5)
+(defspec t-run-step-does-nothing-when-interrupted (times 20)
   (prop/for-all
     [state (gen/hash-map
              :counter      gen/pos-int
              :interrupted? (gen/return true))]
     (= state (flow/run-step inc-counter state))))
 
-(defspec t-run-step-does-nothing-when-error (times 5)
+(defspec t-run-step-does-nothing-when-error (times 20)
   (prop/for-all
     [state (gen/hash-map
              :counter      gen/pos-int
              :error        (gen/fmap #(Exception. ^String %) gen/string-ascii))]
     (= state (flow/run-step inc-counter state))))
 
-(defspec t-run-step-does-nothing-when-failed (times 5)
+(defspec t-run-step-does-nothing-when-failed (times 20)
   (prop/for-all
     [state (gen/hash-map :counter gen/pos-int)
      error-message gen/string-ascii]
@@ -46,7 +46,7 @@
       (and (= error-message (.getMessage error))
            (= (:counter state) counter)))))
 
-(defspec t-run-step-does-nothing-when-validation-failed (times 5)
+(defspec t-run-step-does-nothing-when-validation-failed (times 20)
   (prop/for-all
     [state        (gen/hash-map :counter gen/pos-int)
      error-message gen/string-ascii]
@@ -56,7 +56,7 @@
       (and (= error-message (.getMessage error))
            (= (:counter state) counter)))))
 
-(defspec t-run-step-handles-interrupt (times 5)
+(defspec t-run-step-handles-interrupt (times 20)
   (prop/for-all
     [state  (gen/hash-map :counter gen/pos-int)
      ex     (gen/elements [(InterruptedException.) (InterruptedIOException.)])]
@@ -72,7 +72,7 @@
            (= ex interrupt-error)
            (= (:counter state) counter)))))
 
-(defspec t-run-step-handles-exceptions (times 5)
+(defspec t-run-step-handles-exceptions (times 20)
   (prop/for-all
     [state        (gen/hash-map :counter gen/pos-int)
      error-message gen/string-ascii]
