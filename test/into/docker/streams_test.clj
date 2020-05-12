@@ -7,7 +7,7 @@
             [clojure.string :as string]
             [into.test.docker :refer [exec-stream-block]]
             [into.docker.streams :as streams])
-  (:import [java.io PipedInputStream PipedOutputStream]))
+  (:import [java.io ByteArrayInputStream ByteArrayOutputStream]))
 
 ;; ## Test Data
 
@@ -25,14 +25,11 @@
 ;; ## Helper
 
 (defn- block-stream
-  ^PipedInputStream [blocks]
-  (let [out (PipedOutputStream.)]
-    (doto (Thread.
-           #(with-open [out out]
-              (doseq [{:keys [block]} blocks]
-                (.write out block 0 (count block)))))
-      (.start))
-    (PipedInputStream. out)))
+  ^ByteArrayInputStream [blocks]
+  (with-open [out (ByteArrayOutputStream.)]
+    (doseq [{:keys [block]} blocks]
+      (.write out block 0 (count block)))
+    (ByteArrayInputStream. (.toByteArray out))))
 
 (defn- collect-data-string
   [stream sq]
