@@ -23,9 +23,9 @@
 
 (defn- handle-interrupt
   [data e]
-  (if (Thread/interrupted)
-    (assoc data :interrupted? true)
-    (assoc data :error e)))
+  (assoc data
+         :interrupted? (Thread/interrupted)
+         :interrupt-error e))
 
 (defn ^:internal run-step
   [next-fn data]
