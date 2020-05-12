@@ -12,7 +12,7 @@
   (log/debug "  Pulling image [%s] ..." image-name)
   (if-let [image (docker/pull-image-record client image-name)]
     (assoc data target-key image)
-    (flow/fail data (str "Image not found:" image-name))))
+    (flow/fail data (str "Image not found: " image-name))))
 
 (defn- pull-builder-image!
   [data]
