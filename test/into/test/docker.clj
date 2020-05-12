@@ -43,26 +43,46 @@
   (exec-result [this]
     result))
 
+(defn as-exec-result
+  [container ^String stdout]
+  (->MockExec
+    container
+    [[:stdout stdout]]
+    {:exit 0}))
+
 ;; ## Container
 
-(defrecord MockContainer [filesystem name]
+(defn- as-bytes
+  ^bytes [data]
+  (cond (string? data) (.getBytes ^String data)
+        (seq? data)    (.getBytes (pr-str data))
+        :else data))
+
+(defrecord MockContainer [filesystem name committed-container]
   docker/DockerContainer
   (container-name [this]
     name)
   (run-container [this])
-  (commit-container [this data])
+  (commit-container [this data]
+    (reset! committed-container
+            {:filesystem @filesystem
+             :target     data}))
   (cleanup-container [this])
   (stream-from-container [this path]
-    (->> (for [[fs-path data] @filesystem
-               :when (string/starts-with? fs-path (str path "/"))]
-           {:source data
-            :length (count data)
-            :path   (let [f (io/file fs-path)
-                          p (.getParentFile f)]
-                      ;; To replicate the behaviour of the actual
-                      ;; `ContainerArchive` call, we have to include the
-                      ;; directory name in the entry.
-                      (str (.getName p) "/" (.getName f)))})
+    (->> (if-let [data (some-> (get @filesystem path) as-bytes)]
+           [{:path   (.getName (io/file path))
+             :length (count data)
+             :source data}]
+           (let [prefix (.getParent (io/file path))]
+             (for [[fs-path data] @filesystem
+                   :when (string/starts-with? fs-path (str path "/"))
+                   :let [data (as-bytes data)]]
+               {:source data
+                :length (count data)
+                ;; To replicate the behaviour of the actual
+                ;; `ContainerArchive` call, we have to include the
+                ;; directory name in the entry.
+                :path (subs fs-path (count prefix))})))
          (tar/tar)
          (ByteArrayInputStream.)))
   (stream-into-container [this target-path tar-stream]
@@ -73,36 +93,32 @@
              source)))
   (run-container-command [this data]
     (let [[path & args] (:cmd data)]
-      (case path
-        "mkdir"
-        (->MockExec this [] {:exit 0})
-
-        "cat"
-        (if-let [contents (get @filesystem (first args))]
-          (->MockExec
-           this
-           [[:stdout contents]]
-           {:exit 0})
-          (->MockExec
-           this
-           [[:stderr "No such file"]]
-           {:exit 1}))
-
-        (let [{:keys [output result]} (apply
-                                       (get @filesystem path)
-                                       this
-                                       args)]
-          (->MockExec this output result))))))
+      (if-let [contents (get @filesystem path)]
+        (let [evaled-fn (-> contents as-bytes (String.) read-string eval)]
+          (apply evaled-fn this args))
+        (->MockExec this [] {:exit 0}))))
+  Object
+  (toString [this]
+    name))
 
 (defn container
   "Create a new mock container."
   [& [name]]
-  (->MockContainer
-   (atom {})
-   (or name (str (java.util.UUID/randomUUID)))))
+  (map->MockContainer
+    {:filesystem
+     (atom
+       {"cat" `(fn [this# filename#]
+                 (if-let [contents# (get @(:filesystem this#) filename#)]
+                   (as-exec-result this# contents#)
+                   (as-exec-result this# "")))})
+     :name
+     (or name (str (java.util.UUID/randomUUID)))
+     :committed-container
+     (atom nil)}))
 
 (defn add-file
-  "Add a file to the container."
+  "Add a file to the container. You can also add a serialised s-expression
+   that will be evaluated when the given path is called as a script."
   [container path data]
   (swap! (:filesystem container) assoc path data)
   container)
@@ -115,7 +131,8 @@
   (inspect-image [this image]
     (get images image))
   (container [this _ image]
-    (get containers image)))
+    (some containers [(:full-name image)
+                      (:name image)])))
 
 (defn client
   "Create a new mock client."

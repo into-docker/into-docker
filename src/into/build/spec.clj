@@ -12,6 +12,17 @@
 
 (s/def ::name ::non-empty-string)
 
+(s/def ::image-name
+  (s/or :full-name ::full-name
+        :name      ::name))
+
+(s/def ::full-name
+  (-> (s/and ::non-empty-string #(re-matches #".+:.+" %))
+      (s/with-gen
+        (fn []
+          (->> (gen/tuple (s/gen ::name) (s/gen ::tag))
+               (gen/fmap #(string/join ":" %)))))))
+
 (s/def ::path
   (s/with-gen ::non-empty-string
     (fn []
@@ -52,8 +63,8 @@
 
 (s/def ::source-path ::path)
 (s/def ::artifact-path ::path)
-(s/def ::builder-image-name ::name)
-(s/def ::target-image-name ::name)
+(s/def ::builder-image-name ::image-name)
+(s/def ::target-image-name ::image-name)
 (s/def ::profile ::name)
 (s/def ::ci-type #{"github-actions", "local"})
 
@@ -69,7 +80,6 @@
                    ::entrypoint]))
 
 (s/def ::tag ::non-empty-string)
-(s/def ::full-name ::non-empty-string)
 (s/def ::user ::non-empty-string)
 (s/def ::labels (s/map-of (s/or :k keyword? :s string?) string?))
 (s/def ::cmd (s/coll-of string?))
