@@ -86,7 +86,7 @@
         artifact-files (->> (io/file artifact-path)
                             (file-seq)
                             (filter #(.isFile ^java.io.File %))
-                            (map #(.getCanonicalPath %))
+                            (map #(.getCanonicalPath ^java.io.File %))
                             (map #(subs % (inc (count artifact-path)))))]
     (= (set artifact-files)
        (set (keys artifacts)))))
