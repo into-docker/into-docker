@@ -4,14 +4,16 @@
             [into.docker :as docker]))
 
 (defn- create-target-image
-  [data image-name]
-  (->> (let [labels (get-in data [:builder-image :labels])
-             cmd    (get labels constants/runner-cmd-label)
-             entryp (get labels constants/runner-entrypoint-label)]
+  [{:keys [runner-image builder-image] :as data} image-name]
+  (->> (let [{:keys [labels]} builder-image
+             {:keys [cmd entrypoint]} runner-image
+             cmd'        (get labels constants/runner-cmd-label)
+             entrypoint' (get labels constants/runner-entrypoint-label)]
          (cond-> (docker/->image image-name)
-           entryp (assoc :entrypoint ["sh" "-c" (str entryp " $@") "--"]
-                         :cmd        [])
-           cmd    (assoc :cmd        ["sh" "-c" cmd])))
+           :always     (assoc :cmd cmd, :entrypoint entrypoint)
+           entrypoint' (assoc :entrypoint ["sh" "-c" (str entrypoint " $@") "--"]
+                              :cmd        [])
+           cmd'        (assoc :cmd        ["sh" "-c" cmd'])))
        (assoc data :target-image)))
 
 (defn run
