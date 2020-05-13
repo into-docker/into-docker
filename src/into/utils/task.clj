@@ -69,9 +69,9 @@
 
 (defn- print-help
   [{:keys [usage no-args?]}
-   {{:keys [help]} :options, args :arguments, :as opts}]
+   {{:keys [help version]} :options, args :arguments, :as opts}]
   (when (or help
-            (not (or no-args? (seq args))))
+            (not (or version no-args? (seq args))))
     (show-help usage opts)))
 
 (letfn [(find-option [cli k]

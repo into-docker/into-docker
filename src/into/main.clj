@@ -37,12 +37,19 @@
              (or (print-version opts)
                  (run-subtask opts)))}))
 
+(defn register-sigint-handler!
+  []
+  (signal/register-sigint-handler!))
+
+(defn exit
+  [result]
+  (System/exit
+    (if (or (= result :help)
+            (not (:error result)))
+      0
+      1)))
+
 (defn -main
   [& args]
-  (signal/register-sigint-handler!)
-  (let [result (run args)]
-    (System/exit
-     (if (or (= result :help)
-             (not (:error result)))
-       0
-       1))))
+  (register-sigint-handler!)
+  (exit (run args)))
