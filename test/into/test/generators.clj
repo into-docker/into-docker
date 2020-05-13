@@ -42,15 +42,16 @@
   "Generate a set of unique paths that do not cause directory vs. file conflicts
    when they are all treated as file paths, e.g. `0/0` vs. `0/0/0` where the
    second `0` would need to be both a file and directory."
-  [num-elements]
-  (let [segment-gen (gen/not-empty gen/string-alphanumeric)]
-    (-> segment-gen
-        (gen/set {:num-elements num-elements})
-        (gen/bind
-          (fn [filenames]
-            (gen/let [segments (gen/vector
-                                 (gen/such-that
-                                   (complement filenames)
-                                   (gen/vector segment-gen 0 5))
-                                 (count filenames))]
-              (map #(string/join "/" (cons %1 %2)) filenames segments)))))))
+  ([] (gen/sized gen-unique-paths))
+  ([num-elements]
+   (let [segment-gen (gen/not-empty (gen/fmap string/lower-case gen/string-alphanumeric))]
+     (-> segment-gen
+         (gen/set {:num-elements num-elements})
+         (gen/bind
+           (fn [filenames]
+             (gen/let [segments (gen/vector
+                                  (gen/such-that
+                                    (complement filenames)
+                                    (gen/vector segment-gen 0 5))
+                                  (count filenames))]
+               (map #(string/join "/" (cons %1 %2)) filenames segments))))))))

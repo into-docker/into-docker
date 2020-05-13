@@ -3,11 +3,8 @@
              [clojure-test :refer [defspec]]
              [properties :as prop]]
             [com.gfredericks.test.chuck :refer [times]]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]
             [into.test.generators :refer [gen-unique-paths]]
             [into.test.files :as files]
-            [into.build.spec :as spec]
             [into.utils.collect :as collect]))
 
 ;; ## Helper
@@ -23,13 +20,13 @@
 
 (defspec t-collect-by-patterns-should-collect-all-by-default (times 10)
   (prop/for-all
-   [paths (gen/set (s/gen ::spec/path))]
+   [paths (gen-unique-paths)]
     (files/with-temp-dir [target paths]
-      (= paths (collect-from target)))))
+      (= (set paths) (collect-from target)))))
 
 (defspec t-collect-by-patterns-should-prefer-exclusions (times 10)
   (prop/for-all
-   [paths (gen/set (s/gen ::spec/path))]
+   [paths (gen-unique-paths)]
     (files/with-temp-dir [target paths]
       (empty? (collect-from target {:exclude ["**"]})))))
 
