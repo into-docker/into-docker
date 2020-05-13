@@ -26,8 +26,8 @@
   [artifacts]
   (fn [{:keys [container env]}]
     (let [artifact-dir (get env "INTO_ARTIFACT_DIR")]
-      (doseq [[filename contents] artifacts]
-        (docker/add-file container (str artifact-dir "/" filename) contents))
+      (doseq [filename artifacts]
+        (docker/add-file container (str artifact-dir "/" filename) filename))
       (docker/as-exec-result container "Build was successful."))))
 
 (defn run-script
@@ -45,7 +45,7 @@
 (defn- create-builder-container
   [builder-name artifacts]
   (-> (docker/container builder-name)
-      (docker/add-file "/into/bin/build"    `(build-script ~artifacts))
+      (docker/add-file "/into/bin/build"    `(build-script [~@artifacts]))
       (docker/add-file "/into/bin/assemble" `(run-script))))
 
 (defn- create-runner-container
@@ -97,8 +97,7 @@
   [{:keys [commit]} artifacts]
   (when commit
     (let [artifact-files (docker/list-contents (:fs commit) "/dist")]
-      (= (set artifact-files)
-         (set (keys artifacts))))))
+      (= (set artifact-files) (set artifacts)))))
 
 (defn- has-written-artifacts?
   [{:keys [spec]} artifacts]
@@ -108,12 +107,16 @@
                             (filter #(.isFile ^java.io.File %))
                             (map #(.getCanonicalPath ^java.io.File %))
                             (map #(subs % (inc (count artifact-path)))))]
-    (= (set artifact-files)
-       (set (keys artifacts)))))
+    (= (set artifact-files) (set artifacts))))
 
 (defn- run-build-flow
-  [{:keys [^java.io.File source-path artifacts cache-file ignore-file]}
-   {:keys [builder-image-name artifact-path cache-to] :as spec}]
+  [{:keys [^java.io.File source-path
+           ^java.io.File artifact-path
+           ^java.io.File cache-to
+           artifacts
+           cache-file
+           ignore-file]}
+   {:keys [builder-image-name] :as spec}]
   (let [{:keys [client builder-container runner-container]}
         (create-client builder-image-name artifacts)]
     (some->> ignore-file (docker/add-file builder-container "/into/ignore"))
@@ -121,16 +124,11 @@
     (merge
       (-> {:spec   (cond-> spec
                      artifact-path
-                     (assoc :artifact-path
-                            (.getCanonicalPath (io/file source-path artifact-path)))
-
+                     (assoc :artifact-path (.getCanonicalPath artifact-path))
                      cache-to
-                     (assoc :cache-to
-                            (.getCanonicalPath (io/file source-path cache-to)))
-
+                     (assoc :cache-to (.getCanonicalPath cache-to))
                      :always
-                     (assoc :source-path
-                            (.getCanonicalPath source-path)))
+                     (assoc :source-path (.getCanonicalPath source-path)))
            :client client}
           (flow/run))
       {:commit @(:commit runner-container)})))
@@ -145,7 +143,9 @@
       (fn [spec]
         (gen/fmap
           #(cond-> spec % (assoc k %))
-          k-gen)))
+          (if (instance? clojure.test.check.generators.Generator k-gen)
+            k-gen
+            (gen/return k-gen)))))
     gen))
 
 (defn maybe-gen
@@ -155,17 +155,13 @@
 (defn- gen-spec
   [{:keys [profile
            target-image-name
-           cache-to
-           ci-type
-           artifact-path]
+           ci-type]
     :or {ci-type (maybe-gen (s/gen ::spec/ci-type))
          profile (gen/return "default")}}]
   (-> (gen/hash-map
         :builder-image-name (s/gen ::spec/builder-image-name)
         :profile            profile)
       (attach-via-gen :target-image-name target-image-name)
-      (attach-via-gen :artifact-path artifact-path)
-      (attach-via-gen :cache-to cache-to)
       (attach-via-gen :ci-type ci-type)))
 
 ;; ## Tests
@@ -173,7 +169,7 @@
 (defspec t-build-flow-with-target-image (times 10)
   (prop/for-all
     [spec      (gen-spec {:target-image-name (s/gen ::spec/target-image-name)})
-     artifacts (gen/map (s/gen ::spec/path) gen/string-ascii)
+     artifacts (gen-unique-paths)
      sources   (gen-unique-paths)]
     (with-log
       (with-temp-dir [source-path sources]
@@ -188,15 +184,17 @@
 
 (defspec t-build-flow-with-artifact-path (times 10)
   (prop/for-all
-    [spec      (gen-spec {:artifact-path (s/gen ::spec/path)})
-     artifacts (gen/map (s/gen ::spec/path) gen/string-ascii)
+    [spec      (gen-spec {})
+     artifacts (gen-unique-paths)
      sources   (gen-unique-paths)]
     (with-log
-      (with-temp-dir [source-path sources]
+      (with-temp-dir [source-path   sources
+                      artifact-path []]
         (let [result (run-build-flow
-                      {:source-path source-path
-                       :artifacts   artifacts}
-                      spec)]
+                       {:source-path   source-path
+                        :artifacts     artifacts
+                        :artifact-path artifact-path}
+                       spec)]
           (and (not (:error result))
                (not (:commit result))
                (has-source-paths? result sources)
@@ -204,17 +202,18 @@
 
 (defspec t-build-flow-with-target-image-and-cache (times 10)
   (prop/for-all
-    [spec      (gen-spec
-                 {:target-image-name (s/gen ::spec/target-image-name)
-                  :cache-to          (s/gen ::spec/name)})
-     artifacts (gen/map (s/gen ::spec/path) gen/string-ascii)
-     sources   (gen/not-empty (gen-unique-paths))]
+    [spec      (gen-spec {:target-image-name (s/gen ::spec/target-image-name)})
+     artifacts (gen-unique-paths)
+     sources   (gen/not-empty (gen-unique-paths))
+     cache-to  (s/gen ::spec/name)]
     (with-log
-      (with-temp-dir [source-path sources]
+      (with-temp-dir [source-path sources
+                      out-path    []]
         (let [path-to-cache (first sources)
               result (run-build-flow
                        {:source-path source-path
                         :artifacts   artifacts
+                        :cache-to    (io/file out-path cache-to)
                         :cache-file  path-to-cache}
                        spec)]
           (and (not (:error result))

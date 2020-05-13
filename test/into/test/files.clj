@@ -31,8 +31,12 @@
         (.delete target)))))
 
 (defmacro with-temp-dir
-  [[sym paths] & body]
-  `(with-temp-dir*
+  [[sym paths & more] & body]
+  (if more
+    `(with-temp-dir [~sym ~paths]
+       (with-temp-dir [~@more]
+         ~@body))
+    `(with-temp-dir*
      ~paths
      (fn [~(with-meta sym {:tag `java.io.File})]
-       ~@body)))
+       ~@body))))
