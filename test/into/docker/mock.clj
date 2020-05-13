@@ -11,6 +11,15 @@
             ByteBuffer
             ByteOrder]))
 
+;; ## Debug
+
+(def ^:dynamic *debug?* false)
+
+(defn debug
+  [& args]
+  (when *debug?*
+    (println '---debug--- (string/join " " args))))
+
 ;; ## Exec
 
 (defn exec-stream-block
@@ -104,23 +113,30 @@
   (file-exists? [this path]
     (contains? @fs path))
   (list-files [this directory-path]
-    (let [prefix (-> directory-path
-                     (io/file)
-                     (.getPath)
-                     (str "/"))]
-      (set
-        (for [fs-path (keys @fs)
-              :when (string/starts-with? fs-path prefix)]
-          fs-path))))
+    (let [prefix (if (= directory-path "/")
+                   directory-path
+                   (-> directory-path
+                       (io/file)
+                       (.getPath)
+                       (str "/")))]
+        (set
+          (for [fs-path (keys @fs)
+                :when (string/starts-with? fs-path prefix)]
+            fs-path))))
   (add-file [this path contents]
+    (when (string/starts-with? path "/")
+      (debug :add-file path))
     (swap! fs assoc path (as-bytes contents))
     this)
   (move-file [this path target-path]
+    (debug :move-file path target-path)
     (swap! fs #(-> %
                    (assoc target-path (get % path))
                    (dissoc path)))
     this)
   (get-file-contents [this path]
+    (when (string/starts-with? path "/")
+      (debug :get-file-contents path))
     (or (get @fs path)
         (throw (IllegalStateException. "File does not exist."))))
 
@@ -199,21 +215,30 @@
          (tar/tar)
          (io/input-stream)))
   (stream-into-container [this target-path tar-stream]
-    (doseq [{:keys [source path]} (tar/untar-seq tar-stream)
-            :let [full-path (.getPath (io/file target-path path))]]
-      (add-file this full-path source)))
+    (with-open [^java.io.InputStream in
+                ;; The archive with the source files is compressed, others
+                ;; are not.
+                (if (= target-path "/tmp/src")
+                  (java.util.zip.GZIPInputStream. tar-stream)
+                  tar-stream)]
+      (doseq [{:keys [source path]} (tar/untar-seq in)
+              :let [full-path (.getPath (io/file target-path path))]]
+        (add-file this full-path source))))
   (run-container-command [this data]
-    (let [[path & args] (:cmd data)]
-      (if (file-exists? this path)
-        (let [f (-> (get-file-contents this path)
-                    (String.)
-                    (read-string)
-                    (eval))
-              e (-> data
-                    (assoc :container this)
-                    (update :env env->map))]
-          (apply f e args))
-        (->MockExec this [[:stderr (str "Not found: " path)]] {:exit 1}))))
+    (some-> (let [[path & args] (:cmd data)]
+              (if (file-exists? this path)
+                (let [f (-> (get-file-contents this path)
+                            (String.)
+                            (read-string)
+                            (eval))
+                      e (-> data
+                            (assoc :container this)
+                            (update :env env->map))]
+                  (apply f e args))
+                (->MockExec this [[:stderr (str "Not found: " path)]] {:exit 1})))
+            (update :result
+                    merge
+                    (select-keys data [:cmd :env]))))
 
   Object
   (toString [this]
@@ -229,13 +254,29 @@
   [{:keys [container]} & _]
   (as-exec-result container ""))
 
+(defn sh-script
+  [{:keys [container]} & [flag cmd]]
+  ;; cache scripts
+  (when (= flag "-c")
+    (if (string/includes? cmd "rm -rf")
+      ;; restore script
+      (doseq [[_ from to] (re-seq #"_CPTH_='([a-z0-9/]+)'; _PTH_='([a-z0-9/]+)'" cmd)]
+        (when (file-exists? container from)
+          (move-file container from to)))
+      ;; prepare script
+      (doseq [[_ to from] (re-seq #"_CPTH_='([a-z0-9/]+)'; _PTH_='([a-z0-9/]+)'" cmd)]
+        (when (file-exists? container from)
+          (move-file container from to)))))
+  (as-exec-result container ""))
+
 (defn container
   "Create a new mock container."
   [& [name]]
   (map->MockContainer
     {:fs     (-> (make-file-system)
                  (add-file "cat"   `cat-script)
-                 (add-file "mkdir" `mkdir-script))
+                 (add-file "mkdir" `mkdir-script)
+                 (add-file "sh"    `sh-script))
      :name   (or name (str (java.util.UUID/randomUUID)))
      :commit (atom nil)}))
 

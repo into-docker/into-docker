@@ -7,7 +7,9 @@
             [clojure.spec.alpha :as s]
             [clojure.tools.logging.test :refer [with-log]]
             [clojure.java.io :as io]
+            [into.docker.tar :refer [untar-seq]]
             [into.docker.mock :as docker]
+            [into.test.generators :refer [gen-unique-paths]]
             [into.test.files :refer [with-temp-dir]]
             [into.build.spec :as spec]
             [into.build.flow :as flow]))
@@ -73,6 +75,24 @@
   (and (some? commit)
        (= (:full-name commit) (:full-name target-image))))
 
+(defn- has-source-paths?
+  [{:keys [source-paths]} paths]
+  (= (set source-paths) (set paths)))
+
+(defn- has-cache-paths?
+  [{:keys [cache-paths]} paths]
+  (= (set cache-paths)
+     (set (map #(str "/tmp/src/" %) paths))))
+
+(defn- has-created-cache?
+  [{:keys [spec cache-paths]}]
+  (when-let [cache-to (some-> spec :cache-to (io/file))]
+    (and (.isFile cache-to)
+         (= (count cache-paths)
+            (with-open [in (io/input-stream cache-to)
+                        gz (java.util.zip.GZIPInputStream. in)]
+              (count (untar-seq gz)))))))
+
 (defn- has-committed-artifacts?
   [{:keys [commit]} artifacts]
   (when commit
@@ -92,15 +112,22 @@
        (set (keys artifacts)))))
 
 (defn- run-build-flow
-  [{:keys [^java.io.File source-path artifacts]}
-   {:keys [builder-image-name artifact-path] :as spec}]
-  (let [{:keys [client runner-container]}
+  [{:keys [^java.io.File source-path artifacts cache-file ignore-file]}
+   {:keys [builder-image-name artifact-path cache-to] :as spec}]
+  (let [{:keys [client builder-container runner-container]}
         (create-client builder-image-name artifacts)]
+    (some->> ignore-file (docker/add-file builder-container "/into/ignore"))
+    (some->> cache-file (docker/add-file builder-container "/into/cache"))
     (merge
       (-> {:spec   (cond-> spec
                      artifact-path
                      (assoc :artifact-path
                             (.getCanonicalPath (io/file source-path artifact-path)))
+
+                     cache-to
+                     (assoc :cache-to
+                            (.getCanonicalPath (io/file source-path cache-to)))
+
                      :always
                      (assoc :source-path
                             (.getCanonicalPath source-path)))
@@ -108,38 +135,90 @@
           (flow/run))
       {:commit @(:commit runner-container)})))
 
+;; ## Generators
+
+(defn- attach-via-gen
+  [gen k k-gen]
+  (if k-gen
+    (gen/bind
+      gen
+      (fn [spec]
+        (gen/fmap
+          #(cond-> spec % (assoc k %))
+          k-gen)))
+    gen))
+
+(defn maybe-gen
+  [gen]
+  (gen/one-of [gen (gen/return nil)]))
+
+(defn- gen-spec
+  [{:keys [profile
+           target-image-name
+           cache-to
+           ci-type
+           artifact-path]
+    :or {ci-type (maybe-gen (s/gen ::spec/ci-type))
+         profile (gen/return "default")}}]
+  (-> (gen/hash-map
+        :builder-image-name (s/gen ::spec/builder-image-name)
+        :profile            profile)
+      (attach-via-gen :target-image-name target-image-name)
+      (attach-via-gen :artifact-path artifact-path)
+      (attach-via-gen :cache-to cache-to)
+      (attach-via-gen :ci-type ci-type)))
+
 ;; ## Tests
 
 (defspec t-build-flow-with-target-image (times 10)
   (prop/for-all
-    [spec      (gen/hash-map
-                 :builder-image-name (s/gen ::spec/builder-image-name)
-                 :target-image-name  (s/gen ::spec/target-image-name)
-                 :profile            (gen/return "default"))
-     artifacts (gen/map (s/gen ::spec/path) gen/string-ascii)]
+    [spec      (gen-spec {:target-image-name (s/gen ::spec/target-image-name)})
+     artifacts (gen/map (s/gen ::spec/path) gen/string-ascii)
+     sources   (gen-unique-paths)]
     (with-log
-      (with-temp-dir [source-path []]
+      (with-temp-dir [source-path sources]
         (let [result (run-build-flow
                       {:source-path source-path
                        :artifacts   artifacts}
                       spec)]
           (and (not (:error result))
+               (has-source-paths? result sources)
                (has-target-image? result)
                (has-committed-artifacts? result artifacts)))))))
 
 (defspec t-build-flow-with-artifact-path (times 10)
   (prop/for-all
-    [spec      (gen/hash-map
-                 :builder-image-name (s/gen ::spec/builder-image-name)
-                 :artifact-path      (s/gen ::spec/path)
-                 :profile            (gen/return "default"))
-     artifacts (gen/map (s/gen ::spec/path) gen/string-ascii)]
+    [spec      (gen-spec {:artifact-path (s/gen ::spec/path)})
+     artifacts (gen/map (s/gen ::spec/path) gen/string-ascii)
+     sources   (gen-unique-paths)]
     (with-log
-      (with-temp-dir [source-path []]
+      (with-temp-dir [source-path sources]
         (let [result (run-build-flow
                       {:source-path source-path
                        :artifacts   artifacts}
                       spec)]
           (and (not (:error result))
                (not (:commit result))
+               (has-source-paths? result sources)
                (has-written-artifacts? result artifacts)))))))
+
+(defspec t-build-flow-with-target-image-and-cache (times 10)
+  (prop/for-all
+    [spec      (gen-spec
+                 {:target-image-name (s/gen ::spec/target-image-name)
+                  :cache-to          (s/gen ::spec/name)})
+     artifacts (gen/map (s/gen ::spec/path) gen/string-ascii)
+     sources   (gen/not-empty (gen-unique-paths))]
+    (with-log
+      (with-temp-dir [source-path sources]
+        (let [path-to-cache (first sources)
+              result (run-build-flow
+                       {:source-path source-path
+                        :artifacts   artifacts
+                        :cache-file  path-to-cache}
+                       spec)]
+          (and (not (:error result))
+               (has-cache-paths? result [path-to-cache])
+               (has-created-cache? result)
+               (has-target-image? result)
+               (has-committed-artifacts? result artifacts)))))))
