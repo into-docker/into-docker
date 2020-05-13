@@ -8,14 +8,10 @@
 (defn- commit-container!
   [{:keys [target-image runner-container]}]
   (let [{:keys [cmd entrypoint]} target-image]
-    (if entrypoint
-      (log/debug "Committing image [%s] with ENTRYPOINT %s and CMD %s"
-                 target-image
-                 entrypoint
-                 cmd)
-      (log/debug "Committing image [%s] with CMD %s"
-                 target-image
-                 cmd))
+    (log/debug "Committing image [%s] with ENTRYPOINT %s and CMD %s"
+               target-image
+               entrypoint
+               cmd)
     (docker/commit-container runner-container target-image)))
 
 ;; ## Flow
