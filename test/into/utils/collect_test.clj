@@ -32,7 +32,7 @@
     (files/with-temp-dir [target paths]
       (empty? (collect-from target {:exclude ["**"]})))))
 
-(defspec t-collect-by-patterns (times 10)
+(defspec t-collect-by-patterns (times 20)
   (prop/for-all
    [paths (gen/set (s/gen ::spec/path) {:num-elements 3})]
     (files/with-temp-dir [target paths]

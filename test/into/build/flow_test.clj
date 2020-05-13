@@ -5,49 +5,45 @@
              [properties :as prop]]
             [com.gfredericks.test.chuck :refer [times]]
             [clojure.spec.alpha :as s]
-            [into.constants :as constants]
-            [into.test.docker :as docker]
+            [clojure.tools.logging.test :refer [with-log]]
+            [into.docker.mock :as docker]
             [into.test.files :refer [with-temp-dir]]
             [into.build.spec :as spec]
             [into.build.flow :as flow]))
+
+;; ## Note
+;;
+;; This file does not use `into.constants` since we want the test to fail if
+;; there is an incompatible change in the constants.
 
 ;; ## "Scripts"
 
 (defn build-script
   "Creates the given files in the artifact directory."
   [artifacts]
-  (fn [this]
-    (doseq [[filename contents] artifacts]
-      (docker/add-file
-        this
-        (str (constants/path-for :artifact-directory) "/" filename)
-        contents))
-    (docker/as-exec-result this "Build was successful.")))
+  (fn [{:keys [container env]}]
+    (let [artifact-dir (get env "INTO_ARTIFACT_DIR")]
+      (doseq [[filename contents] artifacts]
+        (docker/add-file container (str artifact-dir "/" filename) contents))
+      (docker/as-exec-result container "Build was successful."))))
 
 (defn run-script
   "Move stuff from the artifact directory to '/dist/'."
   []
-  (fn [this]
-    (doseq [[path contents] @(:filesystem this)
-            :let [_ (prn path)]
-            :when (.startsWith ^String path "/tmp/artifacts/")]
-      (docker/add-file
-        this
-        (str "/dist/" (subs path 15))
-        contents))
-    (docker/as-exec-result this "Assemble was successful.")))
+  (fn [{:keys [container env]}]
+    (let [artifact-dir (get env "INTO_ARTIFACT_DIR")]
+      (doseq [path (docker/list-contents container artifact-dir)
+              :let [target (str "/dist/" path)]]
+        (docker/move-file container path target)))
+    (docker/as-exec-result container "Assemble was successful.")))
 
 ;; ## Containers
 
 (defn- create-builder-container
   [builder-name artifacts]
   (-> (docker/container builder-name)
-      (docker/add-file
-        (constants/path-for :build-script)
-        `(build-script ~artifacts))
-      (docker/add-file
-        (constants/path-for :assemble-script)
-        `(run-script))))
+      (docker/add-file "/into/bin/build"    `(build-script ~artifacts))
+      (docker/add-file "/into/bin/assemble" `(run-script))))
 
 (defn- create-runner-container
   [runner-name]
@@ -55,11 +51,11 @@
 
 (defn- create-client
   [builder-name artifacts]
-  (let [runner-name (str builder-name "-run")
-        builder-container (create-builder-container builder-name artifacts)
-        runner-container (create-runner-container runner-name)
-        builder-image-labels {constants/runner-image-label runner-name
-                              constants/builder-user-label "builder"}]
+  (let [runner-name          (str builder-name "-run")
+        builder-container    (create-builder-container builder-name artifacts)
+        runner-container     (create-runner-container runner-name)
+        builder-image-labels {:org.into-docker.runner-image runner-name
+                              :org.into-docker.builder-user "builder"}]
     {:client
      (-> (docker/client)
          (docker/add-container builder-name builder-container)
@@ -77,12 +73,10 @@
       (= (:name target) target-name)))
 
 (defn- has-artifacts?
-  [{:keys [filesystem]} artifacts]
-  (let [artifact-files (->> (keys filesystem)
-                            (filter #(.startsWith ^String % "/dist/"))
-                            (map #(subs % 6)))]
-    (or (= (set artifact-files) (set (keys artifacts)))
-        (prn 'XX artifact-files (keys artifacts)))))
+  [{:keys [fs]} artifacts]
+  (let [artifact-files (docker/list-contents fs "/dist")]
+    (= (set artifact-files)
+       (set (keys artifacts)))))
 
 ;; ## Tests
 
@@ -91,20 +85,21 @@
     [builder-name (s/gen ::spec/builder-image-name)
      target-name  (s/gen ::spec/target-image-name)
      artifacts    (gen/map (s/gen ::spec/path) gen/string-ascii)]
-    (with-temp-dir [target []]
-      (let [{:keys [client runner-container]}
-            (create-client builder-name artifacts)
+    (with-log
+      (with-temp-dir [target []]
+        (let [{:keys [client runner-container]}
+              (create-client builder-name artifacts)
 
-            result
-            (-> {:spec   {:builder-image-name builder-name
-                          :target-image-name  target-name
-                          :profile            "default"
-                          :source-path        (.getCanonicalPath target)}
-                 :client client}
-                (flow/run))
+              result
+              (-> {:spec   {:builder-image-name builder-name
+                            :target-image-name  target-name
+                            :profile            "default"
+                            :source-path        (.getCanonicalPath target)}
+                   :client client}
+                  (flow/run))
 
-            target-image
-            @(:committed-container runner-container)]
-        (and (not (:error result))
-             (has-target? target-image target-name)
-             (has-artifacts? target-image artifacts))))))
+              target-image
+              @(:commit runner-container)]
+          (and (not (:error result))
+               (has-target? target-image target-name)
+               (has-artifacts? target-image artifacts)))))))

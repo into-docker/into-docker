@@ -6,7 +6,7 @@
             [clojure.spec.alpha :as s]
             [clojure.test :refer [deftest is]]
             [into.constants :as constants]
-            [into.test.docker :as docker]
+            [into.docker.mock :as docker]
             [into.test.generators :refer [gen-file-with-comments]]
             [into.build.spec :as spec]
             [into.build.read-cache-paths :as step]))

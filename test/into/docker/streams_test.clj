@@ -5,7 +5,7 @@
              [generators :as gen]]
             [com.gfredericks.test.chuck :refer [times]]
             [clojure.string :as string]
-            [into.test.docker :refer [exec-stream-block]]
+            [into.docker.mock :refer [exec-stream-block]]
             [into.docker.streams :as streams])
   (:import [java.io ByteArrayInputStream ByteArrayOutputStream]))
 

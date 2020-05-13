@@ -6,7 +6,7 @@
             [com.gfredericks.test.chuck :refer [times]]
             [clojure.spec.alpha :as s]
             [into.constants :as constants]
-            [into.test.docker :as docker]
+            [into.docker.mock :as docker]
             [into.test.generators :refer [gen-file-with-comments]]
             [into.build.spec :as spec]
             [into.build.read-build-profile :as step]))
