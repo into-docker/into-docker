@@ -11,9 +11,9 @@
         (IllegalStateException.
           (format
             (str "Could not create file '%s' since it was already previously "
-                 "created as a directory by one of: %s"
-                 path
-                 paths)))))
+                 "created as a directory by one of: %s")
+            path
+            paths))))
     (some-> f (.getParentFile) (.mkdirs))
     (spit f "")))
 
