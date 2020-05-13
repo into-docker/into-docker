@@ -5,6 +5,7 @@
             [com.gfredericks.test.chuck :refer [times]]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
+            [into.test.generators :refer [gen-unique-paths]]
             [into.test.files :as files]
             [into.build.spec :as spec]
             [into.utils.collect :as collect]))
@@ -34,7 +35,7 @@
 
 (defspec t-collect-by-patterns (times 20)
   (prop/for-all
-   [paths (gen/set (s/gen ::spec/path) {:num-elements 3})]
+    [paths (gen-unique-paths 3)]
     (files/with-temp-dir [target paths]
       (let [[a b c] (seq paths)]
         (and (= #{a b} (collect-from target {:include [a b]}))

@@ -6,6 +6,14 @@
   [target paths]
   (doseq [path paths
           :let [f (io/file target path)]]
+    (when (.isDirectory f)
+      (throw
+        (IllegalStateException.
+          (format
+            (str "Could not create file '%s' since it was already previously "
+                 "created as a directory by one of: %s"
+                 path
+                 paths)))))
     (some-> f (.getParentFile) (.mkdirs))
     (spit f "")))
 
