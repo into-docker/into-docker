@@ -124,10 +124,6 @@
     (or (get @fs path)
         (throw (IllegalStateException. "File does not exist."))))
 
-  clojure.lang.IDeref
-  (deref [this]
-    @fs)
-
   Object
   (toString [_]
     (pr-str @fs)))
@@ -193,9 +189,8 @@
     name)
   (run-container [this])
   (commit-container [this data]
-    (reset! commit
-            {:fs (->MockFileSystem (atom @fs))
-             :target     data}))
+    (->> (assoc data :fs (->MockFileSystem (atom @(:fs fs))))
+         (reset! commit)))
   (cleanup-container [this])
   (stream-from-container [this path]
     (->> (if (file-exists? this path)

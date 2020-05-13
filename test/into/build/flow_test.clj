@@ -6,6 +6,7 @@
             [com.gfredericks.test.chuck :refer [times]]
             [clojure.spec.alpha :as s]
             [clojure.tools.logging.test :refer [with-log]]
+            [clojure.java.io :as io]
             [into.docker.mock :as docker]
             [into.test.files :refer [with-temp-dir]]
             [into.build.spec :as spec]
@@ -67,39 +68,78 @@
 
 ;; ## Helpers
 
-(defn- has-target?
-  [{:keys [target]} target-name]
-  (or (= (:full-name target) target-name)
-      (= (:name target) target-name)))
+(defn- has-target-image?
+  [{:keys [target-image commit]}]
+  (and (some? commit)
+       (= (:full-name commit) (:full-name target-image))))
 
-(defn- has-artifacts?
-  [{:keys [fs]} artifacts]
-  (let [artifact-files (docker/list-contents fs "/dist")]
+(defn- has-committed-artifacts?
+  [{:keys [commit]} artifacts]
+  (when commit
+    (let [artifact-files (docker/list-contents (:fs commit) "/dist")]
+      (= (set artifact-files)
+         (set (keys artifacts))))))
+
+(defn- has-written-artifacts?
+  [{:keys [spec]} artifacts]
+  (let [{:keys [artifact-path]} spec
+        artifact-files (->> (io/file artifact-path)
+                            (file-seq)
+                            (filter #(.isFile ^java.io.File %))
+                            (map #(.getCanonicalPath %))
+                            (map #(subs % (inc (count artifact-path)))))]
     (= (set artifact-files)
        (set (keys artifacts)))))
 
+(defn- run-build-flow
+  [{:keys [^java.io.File source-path artifacts]}
+   {:keys [builder-image-name artifact-path] :as spec}]
+  (let [{:keys [client runner-container]}
+        (create-client builder-image-name artifacts)]
+    (merge
+      (-> {:spec   (cond-> spec
+                     artifact-path
+                     (assoc :artifact-path
+                            (.getCanonicalPath (io/file source-path artifact-path)))
+                     :always
+                     (assoc :source-path
+                            (.getCanonicalPath source-path)))
+           :client client}
+          (flow/run))
+      {:commit @(:commit runner-container)})))
+
 ;; ## Tests
 
-(defspec t-build-flow-with-target-image (times 20)
+(defspec t-build-flow-with-target-image (times 10)
   (prop/for-all
-    [builder-name (s/gen ::spec/builder-image-name)
-     target-name  (s/gen ::spec/target-image-name)
-     artifacts    (gen/map (s/gen ::spec/path) gen/string-ascii)]
+    [spec      (gen/hash-map
+                 :builder-image-name (s/gen ::spec/builder-image-name)
+                 :target-image-name  (s/gen ::spec/target-image-name)
+                 :profile            (gen/return "default"))
+     artifacts (gen/map (s/gen ::spec/path) gen/string-ascii)]
     (with-log
-      (with-temp-dir [target []]
-        (let [{:keys [client runner-container]}
-              (create-client builder-name artifacts)
-
-              result
-              (-> {:spec   {:builder-image-name builder-name
-                            :target-image-name  target-name
-                            :profile            "default"
-                            :source-path        (.getCanonicalPath target)}
-                   :client client}
-                  (flow/run))
-
-              target-image
-              @(:commit runner-container)]
+      (with-temp-dir [source-path []]
+        (let [result (run-build-flow
+                      {:source-path source-path
+                       :artifacts   artifacts}
+                      spec)]
           (and (not (:error result))
-               (has-target? target-image target-name)
-               (has-artifacts? target-image artifacts)))))))
+               (has-target-image? result)
+               (has-committed-artifacts? result artifacts)))))))
+
+(defspec t-build-flow-with-artifact-path (times 10)
+  (prop/for-all
+    [spec      (gen/hash-map
+                 :builder-image-name (s/gen ::spec/builder-image-name)
+                 :artifact-path      (s/gen ::spec/path)
+                 :profile            (gen/return "default"))
+     artifacts (gen/map (s/gen ::spec/path) gen/string-ascii)]
+    (with-log
+      (with-temp-dir [source-path []]
+        (let [result (run-build-flow
+                      {:source-path source-path
+                       :artifacts   artifacts}
+                      spec)]
+          (and (not (:error result))
+               (not (:commit result))
+               (has-written-artifacts? result artifacts)))))))
