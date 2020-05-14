@@ -18,11 +18,10 @@
 
 (defn run
   [data]
-  (-> (try
-        (log/debug "Cleaning up resources ...")
-        (-> data
-            (cleanup-container! :runner-container)
-            (cleanup-container! :builder-container))
-        (catch Exception e
-          (assoc data :cleanup-error e)))
-      (log/report-errors)))
+  (try
+    (log/debug "Cleaning up resources ...")
+    (-> data
+        (cleanup-container! :runner-container)
+        (cleanup-container! :builder-container))
+    (catch Exception e
+      (assoc data :cleanup-error e))))
