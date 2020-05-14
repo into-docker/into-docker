@@ -21,10 +21,12 @@
 
 (defn- pull-runner-image!
   [data]
-  (->> (get-in data [:builder-image
-                     :labels
-                     constants/runner-image-label])
-       (pull-image! data :runner-image)))
+  (if (get-in data [:spec :target-image-name])
+    (->> (get-in data [:builder-image
+                       :labels
+                       constants/runner-image-label])
+         (pull-image! data :runner-image))
+    data))
 
 (defn- set-builder-user
   [data]
