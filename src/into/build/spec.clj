@@ -79,15 +79,15 @@
                    ::cmd
                    ::entrypoint]))
 
-(s/def ::tag ::non-empty-string)
-(s/def ::user ::non-empty-string)
-(s/def ::labels (s/map-of (s/or :k keyword? :s string?) string?))
-(s/def ::cmd (s/coll-of string?))
+(s/def ::tag        ::non-empty-string)
+(s/def ::user       ::non-empty-string)
+(s/def ::labels     (s/map-of (s/or :k keyword? :s string?) string?))
+(s/def ::cmd        (s/coll-of string?))
 (s/def ::entrypoint (s/coll-of string?))
 
 (s/def ::builder-image ::image)
-(s/def ::runner-image ::image)
-(s/def ::target-image ::image)
+(s/def ::runner-image  ::image)
+(s/def ::target-image  ::image)
 
 ;; ## Env
 

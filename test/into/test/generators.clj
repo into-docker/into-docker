@@ -55,3 +55,13 @@
                                     (gen/vector segment-gen 0 5))
                                   (count filenames))]
                (map #(string/join "/" (cons %1 %2)) filenames segments))))))))
+
+(defn with-label
+  [image-gen label]
+  (gen/let [image image-gen
+            v     gen/string-alphanumeric]
+    (assoc-in image [:labels label] v)))
+
+(defn without-label
+  [image-gen label]
+  (gen/fmap #(update % :labels dissoc label) image-gen))

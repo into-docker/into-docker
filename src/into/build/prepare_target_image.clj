@@ -11,7 +11,7 @@
              entrypoint' (get labels constants/runner-entrypoint-label)]
          (cond-> (docker/->image image-name)
            :always     (assoc :cmd cmd, :entrypoint entrypoint)
-           entrypoint' (assoc :entrypoint ["sh" "-c" (str entrypoint " $@") "--"]
+           entrypoint' (assoc :entrypoint ["sh" "-c" (str entrypoint' " $@") "--"]
                               :cmd        [])
            cmd'        (assoc :cmd        ["sh" "-c" cmd'])))
        (assoc data :target-image)))
