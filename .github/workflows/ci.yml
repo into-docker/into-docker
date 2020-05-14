@@ -49,4 +49,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: run-e2e-test
-        run: sh test/e2e/test.sh
+        run: sh test/e2e/test.sh "$GITHUB_SHA"
