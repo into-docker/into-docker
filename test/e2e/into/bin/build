@@ -1,0 +1,11 @@
+#!/bin/sh
+
+if [ -e "$INTO_SOURCE_DIR/cachefile" ]; then
+    echo "Cachefile exists!"
+fi
+touch "$INTO_SOURCE_DIR/cachefile"
+
+echo "Copying sources to artifacts directory"
+cp -r $INTO_SOURCE_DIR/* $INTO_ARTIFACT_DIR
+rm -f $INTO_ARTIFACT_DIR/cachefile
+

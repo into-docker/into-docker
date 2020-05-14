@@ -1,0 +1,5 @@
+#!/bin/sh
+
+echo "Copying artifacts to /opt/app ..."
+mkdir -p /opt/app
+mv $INTO_ARTIFACT_DIR/* /opt/app
