@@ -33,8 +33,8 @@ docker build --rm -t "${BUILDER_IMAGE}" -f $WORKDIR/Dockerfile $WORKDIR
 # 2. Build the image
 set -x
 rm -f "$WORKDIR/cache.tar.gz"
-# build_and_check --cache $WORKDIR/cache.tar.gz
-# build_and_check --cache $WORKDIR/cache.tar.gz
+build_and_check --cache $WORKDIR/cache.tar.gz
+build_and_check --cache $WORKDIR/cache.tar.gz
 
 # 3. Build the artifacts
 build_artifacts_and_check
