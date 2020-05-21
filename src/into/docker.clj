@@ -58,23 +58,6 @@
    ^into.docker.DockerExec
    [this data]))
 
-(defn mkdir
-  [container path & more]
-  (->> {:cmd `["mkdir" "-p" ~path ~@more]}
-       (run-container-command container)
-       (wait-for-exec)))
-
-(defn read-file
-  ^bytes [container path]
-  (->> {:cmd ["cat" path]}
-       (run-container-command container)
-       (read-exec-stream :stdout)))
-
-(defn transfer-between-containers
-  [from-container to-container from-path to-path]
-  (with-open [in (stream-from-container from-container from-path)]
-    (stream-into-container to-container to-path in)))
-
 (defn exec-and-log
   ([container data]
    (exec-and-log container data log/report-exec))
@@ -89,6 +72,29 @@
   [container data]
   (-> (run-container-command container data)
       (wait-for-exec)))
+
+(defn mkdir
+  [container path & more]
+  (->> {:cmd `["mkdir" "-p" ~path ~@more]
+        :root? true}
+       (exec-and-log container)))
+
+(defn chown
+  [container user path & more]
+  (->> {:cmd `["chown" ~user  ~path ~@more]
+        :root? true}
+       (exec-and-log container)))
+
+(defn read-file
+  ^bytes [container path]
+  (->> {:cmd ["cat" path]}
+       (run-container-command container)
+       (read-exec-stream :stdout)))
+
+(defn transfer-between-containers
+  [from-container to-container from-path to-path]
+  (with-open [in (stream-from-container from-container from-path)]
+    (stream-into-container to-container to-path in)))
 
 ;; ## Image Record
 
