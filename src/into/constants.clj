@@ -49,4 +49,5 @@
    ".hg"
    ".hgignore"
    "Dockerfile"
-   ".dockerignore"])
+   ".dockerignore"
+   "**/.DS_Store"])
