@@ -7,12 +7,18 @@
 
 (defn- cleanup-container!
   [data container-key]
-  (if-let [container (get data container-key)]
-    (do
-      (log/debug "  Cleaning up container [%s] ..." container)
-      (docker/cleanup-container container)
-      (dissoc data container-key))
-    data))
+  (when-let [container (get data container-key)]
+    (log/debug "  Cleaning up container [%s] ..." container)
+    (docker/cleanup-container container))
+  data)
+
+(defn- cleanup-volumes!
+  [data container-key]
+  (when (get-in data [:spec :use-volumes?])
+    (when-let [container (get data container-key)]
+      (log/debug "  Cleaning up volumes used by [%s] ..." container)
+      (docker/cleanup-volumes container)))
+  data)
 
 ;; ## Flow
 
@@ -22,6 +28,7 @@
     (log/debug "Cleaning up resources ...")
     (-> data
         (cleanup-container! :runner-container)
-        (cleanup-container! :builder-container))
+        (cleanup-container! :builder-container)
+        (cleanup-volumes! :builder-container))
     (catch Exception e
       (assoc data :cleanup-error e))))

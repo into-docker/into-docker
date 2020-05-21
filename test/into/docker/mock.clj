@@ -208,6 +208,7 @@
     (->> (assoc data :fs (->MockFileSystem (atom @(:fs fs))))
          (reset! commit)))
   (cleanup-container [this])
+  (cleanup-volumes [this])
   (stream-from-container [this path]
     (->> (if (file-exists? this path)
            (file->tar-sources fs path)
@@ -254,6 +255,10 @@
   [{:keys [container]} & _]
   (as-exec-result container ""))
 
+(defn chown-script
+  [{:keys [container]} & _]
+  (as-exec-result container ""))
+
 (defn sh-script
   [{:keys [container]} & [flag cmd]]
   ;; cache scripts
@@ -276,6 +281,7 @@
     {:fs     (-> (make-file-system)
                  (add-file "cat"   `cat-script)
                  (add-file "mkdir" `mkdir-script)
+                 (add-file "chown" `chown-script)
                  (add-file "sh"    `sh-script))
      :name   (or name (str (java.util.UUID/randomUUID)))
      :commit (atom nil)}))

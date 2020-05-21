@@ -160,7 +160,8 @@
          profile (gen/return "default")}}]
   (-> (gen/hash-map
         :builder-image-name (s/gen ::spec/builder-image-name)
-        :profile            profile)
+        :profile            profile
+        :use-volumes?       (gen/return false))
       (attach-via-gen :target-image-name target-image-name)
       (attach-via-gen :ci-type ci-type)))
 

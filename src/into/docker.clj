@@ -50,6 +50,7 @@
   (run-container [this])
   (commit-container [this target-image])
   (cleanup-container [this])
+  (cleanup-volumes [this])
   (stream-from-container
    ^java.io.InputStream
    [this path])

@@ -7,7 +7,7 @@
 ;; ## Steps
 
 (defn- transfer-artifacts!
-  [{:keys [builder-container runner-container] :as data}]
+  [{:keys [builder-container runner-container spec] :as data}]
   (let [from-path (constants/path-for :artifact-directory)
         to-path (constants/path-for :working-directory)]
     (log/debug "Transferring artifacts [%s:%s -> %s:%s] ..."
@@ -15,11 +15,13 @@
                from-path
                runner-container
                to-path)
-    (docker/transfer-between-containers
-     builder-container
-     runner-container
-     from-path
-     to-path))
+    (if (:use-volumes? spec)
+      (log/debug "  Nothing to do since we're using a shared volume.")
+      (docker/transfer-between-containers
+        builder-container
+        runner-container
+        from-path
+        to-path)))
   data)
 
 ;; ## Flow

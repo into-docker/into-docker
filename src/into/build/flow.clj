@@ -5,6 +5,7 @@
              [add-default-labels :as add-default-labels]
              [add-oci-labels :as add-oci-labels]
              [add-runner-env :as add-runner-env]
+             [add-shared-volume :as add-shared-volume]
              [assemble-script :as assemble-script]
              [build-script :as build-script]
              [cleanup :as cleanup]
@@ -40,6 +41,7 @@
         (prepare-target-image/run)
         (add-default-labels/run)
         (add-oci-labels/run)
+        (add-shared-volume/run)
         (start/run)
 
         ;; --- Prepare the builder and runner

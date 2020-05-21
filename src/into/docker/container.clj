@@ -97,12 +97,22 @@
 
 (defn- invoke-stop-container
   [{:keys [containers]} container-id]
-  (throw-on-error
-   (d/invoke
-    containers
-    {:op :ContainerDelete
-     :params {:id    container-id
-              :force true}})))
+  (->> {:op :ContainerDelete
+        :params {:id    container-id
+                 :v     true
+                 :force true}}
+       (d/invoke containers)
+       (throw-on-error)))
+
+(defn- invoke-cleanup-volumes
+  [{:keys [volumes]} {vols :volumes}]
+  (let [results (doall
+                  (for [volume (distinct (vals vols))]
+                    (->> {:op :VolumeDelete
+                          :params {:name volume
+                                   :force true}}
+                         (d/invoke volumes))))]
+    (dorun (map throw-on-error results))))
 
 ;; ## Exec
 
@@ -129,6 +139,8 @@
     (invoke-commit-container clients @container-id target-image))
   (cleanup-container [this]
     (invoke-stop-container clients @container-id))
+  (cleanup-volumes [this]
+    (invoke-cleanup-volumes clients image))
   (stream-from-container [this path]
     (invoke-container-archive clients @container-id path))
   (stream-into-container [this path tar-stream]

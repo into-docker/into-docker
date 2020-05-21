@@ -56,5 +56,6 @@
         clients {:images     (docker/client {:conn conn, :category :images})
                  :containers (docker/client {:conn conn, :category :containers})
                  :commit     (docker/client {:conn conn, :category :commit})
+                 :volumes    (docker/client {:conn conn, :category :volumes})
                  :exec       (docker/client {:conn conn, :category :exec})}]
     (assoc client :conn conn, :clients clients)))

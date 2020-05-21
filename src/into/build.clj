@@ -25,16 +25,20 @@
    [nil "--ci type" "Run in CI mode, allowed values: 'github-actions'."
     :id :ci-type
     :validate [#{"github-actions"} "Unsupported CI type."]]
+   [nil, "--no-volumes" "Do not use shared volumes."
+    :id :no-volumes?
+    :default false]
    [nil "--cache path" "Use and create the specified cache file for incremental builds."
     :id :cache-file]])
 
 ;; ## Spec
 
 (defn- build-spec
-  [{:keys [target-image artifact-path profile cache-file ci-type]}
+  [{:keys [target-image artifact-path profile cache-file ci-type no-volumes?]}
    [builder-image source-path]]
   (cond-> {:builder-image-name builder-image
-           :source-path   (or source-path ".")}
+           :source-path   (or source-path ".")
+           :use-volumes?  (not no-volumes?)}
     target-image  (assoc :target-image-name target-image)
     artifact-path (assoc :artifact-path artifact-path)
     profile       (assoc :profile profile)

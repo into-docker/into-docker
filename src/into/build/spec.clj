@@ -54,7 +54,8 @@
 (s/def ::spec
   (s/keys :req-un [::source-path
                    ::builder-image-name
-                   ::profile]
+                   ::profile
+                   ::use-volumes?]
           :opt-un [::artifact-path
                    ::cache-from
                    ::cache-to
@@ -67,6 +68,7 @@
 (s/def ::target-image-name ::image-name)
 (s/def ::profile ::name)
 (s/def ::ci-type #{"github-actions", "local"})
+(s/def ::use-volumes? boolean?)
 
 ;; ## Image
 
