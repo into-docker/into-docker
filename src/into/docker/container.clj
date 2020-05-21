@@ -94,13 +94,9 @@
   (throw-on-error
    (d/invoke
     containers
-    {:op :ContainerStop
-     :params {:id container-id}}))
-  (throw-on-error
-   (d/invoke
-    containers
     {:op :ContainerDelete
-     :params {:id container-id}})))
+     :params {:id    container-id
+              :force true}})))
 
 ;; ## Exec
 
