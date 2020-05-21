@@ -30,11 +30,12 @@
        (d/invoke containers)))
 
 (defn- invoke-exec
-  [{:keys [containers]} container-id {:keys [cmd env]}]
+  [{:keys [containers]} container-id {:keys [cmd env root?]}]
   (->> {:op :ContainerExec
         :params {:id container-id
                  :execConfig {:AttachStderr true
                               :AttachStdout true
+                              :User (if root? "root")
                               :Cmd (into [] cmd)
                               :Env (into [] env)}}}
        (d/invoke containers)
