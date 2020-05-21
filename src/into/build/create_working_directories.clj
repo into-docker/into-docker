@@ -9,10 +9,9 @@
 (defn- chown-directories!
   "We need to make sure that the directories we create are readable
    by the image user (if the user is not root)."
-  [container user path-keys]
+  [container path-keys]
   (apply docker/chown
          container
-         user
          (map constants/path-for path-keys)))
 
 (defn- create-directories!
@@ -22,11 +21,16 @@
          (map constants/path-for path-keys)))
 
 (defn- create-working-directories!
-  [data container-key image-key path-keys]
+  [data container-key path-keys]
+  (when-let [container (get data container-key)]
+    (create-directories! container path-keys))
+  data)
+
+(defn- create-and-chown-working-directories!
+  [data container-key path-keys]
   (when-let [container (get data container-key)]
     (create-directories! container path-keys)
-    (when-let [user (get-in data [image-key :user])]
-      (chown-directories! container user path-keys)))
+    (chown-directories! container path-keys))
   data)
 
 ;; ## Flow
@@ -35,11 +39,10 @@
   "Create working directories (source, artifacts, cache) in containers."
   [data]
   (flow/with-flow-> data
-    (create-working-directories! :builder-container
-                                 :builder-image
-                                 [:source-directory
-                                  :artifact-directory
-                                  :cache-directory])
-    (create-working-directories! :runner-container
-                                 :runner-image
-                                 [:working-directory])))
+    (create-and-chown-working-directories!
+      :builder-container [:source-directory
+       :artifact-directory
+       :cache-directory])
+    (create-working-directories!
+      :runner-container
+      [:artifact-directory])))

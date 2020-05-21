@@ -132,6 +132,8 @@
   docker/DockerContainer
   (container-name [this]
     container-name)
+  (container-user [this]
+    (or (:user image) "root"))
   (run-container [this]
     (let [id (invoke-run-container clients container-name image)]
       (reset! container-id id)))

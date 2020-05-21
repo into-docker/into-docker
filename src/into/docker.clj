@@ -47,6 +47,7 @@
 
 (defprotocol+ DockerContainer
   (container-name [this])
+  (container-user [this])
   (run-container [this])
   (commit-container [this target-image])
   (cleanup-container [this])
@@ -81,8 +82,8 @@
        (exec-and-log container)))
 
 (defn chown
-  [container user path & more]
-  (->> {:cmd `["chown" ~user  ~path ~@more]
+  [container path & more]
+  (->> {:cmd `["chown" "-R" ~(container-user container) ~path ~@more]
         :root? true}
        (exec-and-log container)))
 

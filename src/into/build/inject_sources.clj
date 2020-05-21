@@ -25,6 +25,12 @@
      (constants/path-for :source-directory)
      in)))
 
+(defn- chown-sources
+  [{:keys [builder-container]}]
+  (docker/chown
+    builder-container
+    (constants/path-for :source-directory)))
+
 (defn- log
   [^bytes tar]
   (log/debug "Injecting TAR archive (%s) ..."
@@ -39,5 +45,6 @@
        (tar/tar-gz)
        (log)
        (inject-into-builder data))
+  (chown-sources data)
   data)
 

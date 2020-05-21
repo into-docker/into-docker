@@ -203,6 +203,8 @@
   docker/DockerContainer
   (container-name [this]
     name)
+  (container-user [this]
+    "builder")
   (run-container [this])
   (commit-container [this data]
     (->> (assoc data :fs (->MockFileSystem (atom @(:fs fs))))
