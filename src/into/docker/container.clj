@@ -35,7 +35,7 @@
         :params {:id container-id
                  :execConfig {:AttachStderr true
                               :AttachStdout true
-                              :User (if root? "root")
+                              :User (when root? "root")
                               :Cmd (into [] cmd)
                               :Env (into [] env)}}}
        (d/invoke containers)
@@ -73,15 +73,20 @@
        (throw-on-error)))
 
 (defn- invoke-run-container
-  [{:keys [containers]} container-name {:keys [full-name user]}]
+  [{:keys [containers]} container-name {:keys [full-name user volumes]}]
   (let [{:keys [Id]}
         (->> {:op :ContainerCreate
               :params {:name  container-name
                        :body {:Image full-name
                               :User  user
                               :Cmd   ["tail" "-f" "/dev/null"]
-                              :Tty   true
-                              :Init  true}}}
+                              :HostConfig
+                              {:Mounts (vec
+                                         (for [[path volume] volumes]
+                                           {:Target   path,
+                                            :Source   volume,
+                                            :Type     "volume",
+                                            :ReadOnly false}))}}}}
              (d/invoke containers)
              (throw-on-error))
         _ (->> {:op :ContainerStart
