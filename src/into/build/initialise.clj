@@ -15,4 +15,4 @@
           artifact-path
           (log/emph "Building artifacts from '%s' ..."
                     source-path))
-    data))
+    (assoc data :started-at (System/nanoTime))))

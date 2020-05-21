@@ -4,10 +4,14 @@
              [log :as log]]))
 
 (defn- log-success!
-  [{:keys [target-image] :as data}]
-  (if target-image
-    (log/success "Image [%s] has been built successfully." target-image)
-    (log/success "Artifacts have been built successfully."))
+  [{:keys [target-image started-at] :as data}]
+  (let [delta (/ (- (System/nanoTime) started-at) 1e9)]
+    (if target-image
+      (log/success "Image [%s] has been built successfully. (%.3fs)"
+                   target-image
+                   delta)
+      (log/success "Artifacts have been built successfully. (%.3fs)"
+                   delta)))
   data)
 
 (defn run
