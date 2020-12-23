@@ -10,7 +10,7 @@
                  [org.clojure/tools.logging "1.1.0"]
 
                  ;; components
-                 [lispyclouds/clj-docker-client "1.0.0-RC2"]
+                 [lispyclouds/clj-docker-client "1.0.2"]
 
                  ;; utilities
                  [org.apache.commons/commons-compress "1.20"]
@@ -23,22 +23,22 @@
 
                  ;; cleanup dependency chain
                  [riddley "0.2.0"]
-                 [org.jetbrains.kotlin/kotlin-stdlib-common "1.3.72"]]
+                 [org.jetbrains.kotlin/kotlin-stdlib-common "1.4.21"]]
   :exclusions [org.clojure/clojure]
   :java-source-paths ["src"]
   :profiles {:dev
-             {:dependencies [[org.clojure/test.check "1.0.0"]
+             {:dependencies [[org.clojure/test.check "1.1.0"]
                              [com.gfredericks/test.chuck "0.2.10"]]
               :plugins [[lein-cljfmt "0.6.7"]]
               :global-vars {*warn-on-reflection* true}}
              :kaocha
-             {:dependencies [[lambdaisland/kaocha "1.0-612"
+             {:dependencies [[lambdaisland/kaocha "1.0.732"
                               :exclusions [org.clojure/spec.alpha]]
-                             [lambdaisland/kaocha-cloverage "1.0-45"]
+                             [lambdaisland/kaocha-cloverage "1.0.75"]
                              [org.clojure/java.classpath "1.0.0"]]}
              :ci
              [:kaocha
-              {:dependencies [[lambdaisland/kaocha-cloverage "1.0-45"]
+              {:dependencies [[lambdaisland/kaocha-cloverage "1.0.75"]
                               [org.clojure/java.classpath "1.0.0"]]
                :global-vars {*warn-on-reflection* false}}]
              :uberjar
