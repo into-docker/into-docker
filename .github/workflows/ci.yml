@@ -50,3 +50,5 @@ jobs:
       - uses: actions/checkout@v2
       - name: run-e2e-test
         run: sh test/e2e/test.sh "$GITHUB_SHA"
+        env:
+          DOCKER_API_VERSION: "1.40"
