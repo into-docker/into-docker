@@ -108,7 +108,7 @@
                         cmd
                         entrypoint]
   java.lang.Object
-  (toString [this]
+  (toString [_]
     (str full-name)))
 
 (defn ->image

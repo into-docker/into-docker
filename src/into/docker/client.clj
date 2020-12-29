@@ -38,7 +38,7 @@
     (invoke-pull-image this image))
   (inspect-image [this image]
     (invoke-inspect-image this image))
-  (container [this container-name image]
+  (container [_ container-name image]
     (container/make clients container-name image)))
 
 ;; ## Constructor

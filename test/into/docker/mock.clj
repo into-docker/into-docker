@@ -48,11 +48,11 @@
 
 (defrecord MockExec [container output result]
   docker/DockerExec
-  (exec-container [this]
+  (exec-container [_]
     container)
-  (exec-stream [this]
+  (exec-stream [_]
     (as-exec-stream output))
-  (exec-result [this]
+  (exec-result [_]
     result))
 
 (defn as-exec-result
@@ -75,7 +75,7 @@
         stderr-builder (StringBuilder.)]
     (reify Object
       clojure.lang.IFn
-      (invoke [this {:keys [stream ^String line]}]
+      (invoke [_ {:keys [stream ^String line]}]
         (-> (case stream
               :stderr stderr-builder
               :stdout stdout-builder)
@@ -88,11 +88,11 @@
 ;; ## Filesystem
 
 (defprotocol FileSystem
-  (file-exists? [this path])
-  (list-files [this directory-path])
-  (add-file [this path contents])
-  (move-file [this path target-path])
-  (get-file-contents ^bytes [this path]))
+  (file-exists? [_ path])
+  (list-files [_ directory-path])
+  (add-file [_ path contents])
+  (move-file [_ path target-path])
+  (get-file-contents ^bytes [_ path]))
 
 (let [ba (class (byte-array 0))]
   (defn- as-bytes
@@ -110,9 +110,9 @@
 
 (defrecord MockFileSystem [fs]
   FileSystem
-  (file-exists? [this path]
+  (file-exists? [_ path]
     (contains? @fs path))
-  (list-files [this directory-path]
+  (list-files [_ directory-path]
     (let [prefix (if (= directory-path "/")
                    directory-path
                    (-> directory-path
@@ -134,7 +134,7 @@
                    (assoc target-path (get % path))
                    (dissoc path)))
     this)
-  (get-file-contents [this path]
+  (get-file-contents [_ path]
     (when (string/starts-with? path "/")
       (debug :get-file-contents path))
     (or (get @fs path)
@@ -187,7 +187,7 @@
 
 (defrecord MockContainer [fs name commit]
   FileSystem
-  (file-exists? [this path]
+  (file-exists? [_ path]
     (file-exists? fs path))
   (add-file [this path contents]
     (add-file fs path contents)
@@ -195,22 +195,22 @@
   (move-file [this path target-path]
     (move-file fs path target-path)
     this)
-  (list-files [this directory-path]
+  (list-files [_ directory-path]
     (list-files fs directory-path))
-  (get-file-contents [this path]
+  (get-file-contents [_ path]
     (get-file-contents fs path))
 
   docker/DockerContainer
-  (container-name [this]
+  (container-name [_]
     name)
-  (container-user [this]
+  (container-user [_]
     "builder")
-  (run-container [this])
-  (commit-container [this data]
+  (run-container [_])
+  (commit-container [_ data]
     (->> (assoc data :fs (->MockFileSystem (atom @(:fs fs))))
          (reset! commit)))
-  (cleanup-container [this])
-  (cleanup-volumes [this])
+  (cleanup-container [_])
+  (cleanup-volumes [_])
   (stream-from-container [this path]
     (->> (if (file-exists? this path)
            (file->tar-sources fs path)
@@ -244,7 +244,7 @@
                     (select-keys data [:cmd :env]))))
 
   Object
-  (toString [this]
+  (toString [_]
     name))
 
 (defn cat-script
@@ -292,10 +292,10 @@
 
 (defrecord MockClient [containers images]
   docker/DockerClient
-  (pull-image [this image])
-  (inspect-image [this image]
+  (pull-image [_ _])
+  (inspect-image [_ image]
     (get images image))
-  (container [this _ image]
+  (container [_ _ image]
     (some containers [(:full-name image)
                       (:name image)])))
 

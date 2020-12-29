@@ -118,11 +118,11 @@
 
 (deftype DockerExec [clients container data id stream]
   docker/DockerExec
-  (exec-container [this]
+  (exec-container [_]
     container)
-  (exec-stream [this]
+  (exec-stream [_]
     stream)
-  (exec-result [this]
+  (exec-result [_]
     (let [{:keys [ExitCode]} (invoke-exec-inspect clients id)]
       (assoc data :exit ExitCode))))
 
@@ -130,30 +130,30 @@
 
 (deftype DockerContainer [clients container-name image container-id]
   docker/DockerContainer
-  (container-name [this]
+  (container-name [_]
     container-name)
-  (container-user [this]
+  (container-user [_]
     (or (:user image) "root"))
-  (run-container [this]
+  (run-container [_]
     (let [id (invoke-run-container clients container-name image)]
       (reset! container-id id)))
-  (commit-container [this target-image]
+  (commit-container [_ target-image]
     (invoke-commit-container clients @container-id target-image))
-  (cleanup-container [this]
+  (cleanup-container [_]
     (invoke-stop-container clients @container-id))
-  (cleanup-volumes [this]
+  (cleanup-volumes [_]
     (invoke-cleanup-volumes clients image))
-  (stream-from-container [this path]
+  (stream-from-container [_ path]
     (invoke-container-archive clients @container-id path))
-  (stream-into-container [this path tar-stream]
+  (stream-into-container [_ path tar-stream]
     (invoke-put-container-archive clients @container-id path tar-stream))
-  (run-container-command [this data]
+  (run-container-command [_ data]
     (let [id     (invoke-exec clients @container-id data)
           stream (invoke-exec-start clients id)]
-      (->DockerExec clients this data id stream)))
+      (->DockerExec clients _ data id stream)))
 
   java.lang.Object
-  (toString [this]
+  (toString [_]
     (str (:name image))))
 
 (defn make
