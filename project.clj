@@ -38,9 +38,7 @@
                              [org.clojure/java.classpath "1.0.0"]]}
              :ci
              [:kaocha
-              {:dependencies [[lambdaisland/kaocha-cloverage "1.0.75"]
-                              [org.clojure/java.classpath "1.0.0"]]
-               :global-vars {*warn-on-reflection* false}}]
+              {:global-vars {*warn-on-reflection* false}}]
              :uberjar
              {:global-vars {*assert* false}
               :jvm-opts ["-Dclojure.compiler.direct-linking=true"
