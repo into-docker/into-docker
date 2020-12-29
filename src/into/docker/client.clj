@@ -50,12 +50,16 @@
    (map->DockerClient components)))
 
 (defn start
-  [{:keys [uri] :as client}]
+  [{:keys [uri api-version] :as client}]
   {:pre [(seq uri)]}
   (let [conn    (docker/connect {:uri uri})
-        clients {:images     (docker/client {:conn conn, :category :images})
-                 :containers (docker/client {:conn conn, :category :containers})
-                 :commit     (docker/client {:conn conn, :category :commit})
-                 :volumes    (docker/client {:conn conn, :category :volumes})
-                 :exec       (docker/client {:conn conn, :category :exec})}]
+        mkcli   #(docker/client
+                   {:conn        conn
+                    :category    %
+                    :api-version api-version})
+        clients {:images     (mkcli :images)
+                 :containers (mkcli :containers)
+                 :commit     (mkcli :commit)
+                 :volumes    (mkcli :volumes)
+                 :exec       (mkcli :exec)}]
     (assoc client :conn conn, :clients clients)))

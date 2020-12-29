@@ -98,6 +98,10 @@
   (or (System/getenv "DOCKER_HOST")
       "unix:///var/run/docker.sock"))
 
+(defn- get-docker-api-version
+  []
+  (System/getenv "DOCKER_API_VERSION"))
+
 (defn make
   "Create a function that can be called with a seq of CLI arguments.
 
@@ -121,7 +125,8 @@
             (print-missing task opts)
             (with-verbosity opts
               (if docker?
-                (let [client (-> {:uri (get-docker-uri)}
+                (let [client (-> {:uri         (get-docker-uri)
+                                  :api-version (get-docker-api-version)}
                                  (client/make)
                                  (client/start))]
                   (run (assoc opts :client client)))
