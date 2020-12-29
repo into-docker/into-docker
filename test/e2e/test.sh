@@ -27,14 +27,18 @@ build_artifacts_and_check() {
 }
 
 
-# 1. Create Builder Image
+# Create Builder Image
 docker build --rm -t "${BUILDER_IMAGE}" -f $WORKDIR/Dockerfile $WORKDIR
 
-# 2. Build the image
+# Build the image
+build_and_check
+build_and_check --no-volumes
+
+# Build the image using a cache
 set -x
 rm -f "$WORKDIR/cache.tar.gz"
 build_and_check --cache $WORKDIR/cache.tar.gz
 build_and_check --cache $WORKDIR/cache.tar.gz
 
-# 3. Build the artifacts
+# Build only the artifacts
 build_artifacts_and_check
