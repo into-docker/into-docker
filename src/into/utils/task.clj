@@ -100,7 +100,8 @@
 
 (defn- get-docker-api-version
   []
-  (System/getenv "DOCKER_API_VERSION"))
+  (some->> (System/getenv "DOCKER_API_VERSION")
+           (str "v")))
 
 (defn make
   "Create a function that can be called with a seq of CLI arguments.
