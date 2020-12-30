@@ -49,7 +49,7 @@ jobs:
             flags: "--static"
     needs: uberjar
     runs-on: "ubuntu-latest"
-    container: "oracle/graalvm-ce:20.0.0-java11"
+    container: "oracle/graalvm-ce:20.3.0-java11"
     steps:
       - name: setup-native-image
         run: gu install native-image
@@ -81,9 +81,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: setup-graalvm-ce
-        uses: DeLaGuardo/setup-graalvm@3
+        uses: DeLaGuardo/setup-graalvm@3.1
         with:
-          graalvm-version: "20.0.0.java11"
+          graalvm-version: "20.3.0.java11"
       - name: setup-native-image
         run: gu install native-image
       - name: download-uberjar
