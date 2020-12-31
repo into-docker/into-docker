@@ -160,22 +160,24 @@
 
 (defn- normalize-pattern
   [pattern]
-  (some-> pattern
-          (Paths/get (into-array String []))
-          (.normalize)
-          (str)
-          (cond-> (string/starts-with? pattern "/") (subs 1))))
+  (-> pattern
+      (Paths/get (into-array String []))
+      (.normalize)
+      (str)
+      (cond-> (string/starts-with? pattern "/") (subs 1))))
 
 (defn- compile-pattern
   [{:keys [pattern] :as data}]
-  (->> (doto (StringBuilder.)
-         (append-prefix)
-         (append-pattern
-          (normalize-pattern pattern))
-         (append-suffix))
-       (.toString)
-       (re-pattern)
-       (assoc data :pattern)))
+  (let [pattern-str (->> (doto (StringBuilder.)
+                           (append-prefix)
+                           (append-pattern
+                             (normalize-pattern pattern))
+                           (append-suffix))
+                         (.toString))]
+    (try
+      (assoc data :pattern (re-pattern pattern-str))
+      (catch IllegalArgumentException e
+        (raise-with-pattern pattern pattern e)))))
 
 (defn- as-pattern
   [pattern]
