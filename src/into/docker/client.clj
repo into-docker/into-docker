@@ -16,10 +16,11 @@
 
 (defn- invoke-pull-image
   [{{:keys [images]} :clients} image]
-  (->> {:op :ImageCreate
-        :params {:fromImage image}}
-       (docker/invoke images)
-       (throw-on-error))
+  (let [{:keys [name tag]} (proto/->image image)]
+    (->> {:op :ImageCreate
+          :params {:fromImage name, :tag tag}}
+         (docker/invoke images)
+         (throw-on-error)))
   {:image image})
 
 (defn- invoke-inspect-image
