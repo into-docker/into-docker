@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 if [ -e "$INTO_SOURCE_DIR/cachefile" ]; then
     echo "Cachefile exists!"
 fi

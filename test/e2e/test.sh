@@ -14,6 +14,7 @@ build_and_check() {
         -t "$TARGET_IMAGE" \
         "$BUILDER_IMAGE" "$WORKDIR"
     test "x$(docker run --rm "$TARGET_IMAGE")" = "xtest.sh"
+    docker rmi "$TARGET_IMAGE"
 }
 
 build_artifacts_and_check() {
