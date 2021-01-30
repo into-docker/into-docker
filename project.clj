@@ -23,7 +23,7 @@
 
                  ;; cleanup dependency chain
                  [riddley "0.2.0"]
-                 [org.jetbrains.kotlin/kotlin-stdlib-common "1.4.21"]]
+                 [org.jetbrains.kotlin/kotlin-stdlib-common "1.4.21-2"]]
   :exclusions [org.clojure/clojure]
   :java-source-paths ["src"]
   :profiles {:dev
