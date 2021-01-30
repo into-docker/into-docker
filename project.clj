@@ -11,6 +11,7 @@
 
                  ;; components
                  [lispyclouds/clj-docker-client "1.0.2"]
+                 [unixsocket-http "1.0.6"]
 
                  ;; utilities
                  [org.apache.commons/commons-compress "1.20"]
