@@ -69,6 +69,10 @@ jobs:
         with:
           name: ${{ matrix.build }}
           path: into
+      - name: run-e2e-test
+        run: sh test/e2e/test.sh "$GITHUB_SHA" "$(pwd)/into"
+        env:
+          DOCKER_API_VERSION: "1.40"
 
   create-native-image-macos:
     strategy:
@@ -101,6 +105,10 @@ jobs:
         with:
           name: ${{ matrix.build }}
           path: into
+      - name: run-e2e-test
+        run: sh test/e2e/test.sh "$GITHUB_SHA" "$(pwd)/into"
+        env:
+          DOCKER_API_VERSION: "1.40"
 
   create-release:
     needs: [create-native-image-linux, create-native-image-macos]

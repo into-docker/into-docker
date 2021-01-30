@@ -4,7 +4,7 @@ set -eu
 
 TAG="$1"
 WORKDIR=$(dirname "$0")
-BUILD="lein run -m into.main build"
+BUILD=${2:-"lein run -m into.main build"}
 BUILDER_IMAGE="into-docker-e2e-test:$TAG"
 TARGET_IMAGE="into-docker-e2e-target:$TAG"
 
