@@ -49,7 +49,7 @@ jobs:
             flags: "--static"
     needs: uberjar
     runs-on: "ubuntu-latest"
-    container: "oracle/graalvm-ce:20.3.0-java11"
+    container: "ghcr.io/graalvm/graalvm-ce:20.3.0"
     steps:
       - name: setup-native-image
         run: gu install native-image
