@@ -5,7 +5,7 @@
             :url "https://opensource.org/licenses/MIT"
             :year 2020
             :key "mit"}
-  :dependencies [[org.clojure/clojure "1.10.1"]
+  :dependencies [[org.clojure/clojure "1.10.2"]
                  [org.clojure/tools.cli "1.0.194"]
                  [org.clojure/tools.logging "1.1.0"]
 
@@ -24,7 +24,7 @@
 
                  ;; cleanup dependency chain
                  [riddley "0.2.0"]
-                 [org.jetbrains.kotlin/kotlin-stdlib-common "1.4.21-2"]]
+                 [org.jetbrains.kotlin/kotlin-stdlib-common "1.4.30"]]
   :exclusions [org.clojure/clojure]
   :java-source-paths ["src"]
   :profiles {:dev
