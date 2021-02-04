@@ -111,7 +111,6 @@
       false
       (catch IllegalArgumentException e
         (let [message (.getMessage e)]
-          (prn message)
           (string/starts-with?
             message
             (str "Invalid pattern: " error-message)))))))
