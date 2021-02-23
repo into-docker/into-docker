@@ -9,7 +9,7 @@ BUILDER_IMAGE="into-docker-e2e-test:$TAG"
 TARGET_IMAGE="into-docker-e2e-target:$TAG"
 
 build_and_check() {
-    $BUILD -v \
+    $BUILD -vv \
         "$@" \
         -t "$TARGET_IMAGE" \
         "$BUILDER_IMAGE" "$WORKDIR"
@@ -20,7 +20,7 @@ build_and_check() {
 build_artifacts_and_check() {
     ARTIFACT_DIR="$WORKDIR/../../target/artifacts"
     mkdir -p "$ARTIFACT_DIR"
-    $BUILD -v \
+    $BUILD -vv \
         --write-artifacts "$ARTIFACT_DIR" \
         "$BUILDER_IMAGE" \
         "$WORKDIR"
