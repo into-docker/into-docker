@@ -4,8 +4,8 @@ class IntoDocker < Formula
   version "${HOMEBREW_VERSION}"
 
   if OS.linux?
-    url "${HOMEBREW_ASSET_URL_LINUX}"
-    sha256 "${HOMEBREW_SHA256_LINUX}"
+    url "${HOMEBREW_ASSET_URL_ALT}"
+    sha256 "${HOMEBREW_SHA256_ALT}"
   else
     url "${HOMEBREW_ASSET_URL}"
     sha256 "${HOMEBREW_SHA256}"
