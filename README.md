@@ -41,6 +41,19 @@ Check out the [whitepaper][] for more details!
   images, allowing platform users to benefit from improvements to the execution
   environment while complying with regulations and best practices.
 
+## Installation
+
+Using [Homebrew][homebrew]:
+
+```sh
+brew install into-docker/brew/into-docker
+```
+
+All releases can be found on the [Releases][releases] page.
+
+[homebrew]: https://brew.sh
+[releases]: https://github.com/into-docker/into-docker/releases
+
 ## Usage
 
 ### Run Build
