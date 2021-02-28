@@ -1,9 +1,15 @@
 class IntoDocker < Formula
   desc "Never write another Dockerfile"
   homepage "https://github.com/into-docker/into-docker"
-  version "${VERSION}"
-  url "${URL}"
-  sha256 "${HASH}"
+  version "${HOMEBREW_VERSION}"
+
+  if OS.linux?
+    url "${HOMEBREW_ASSET_URL_LINUX}"
+    sha256 "${HOMEBREW_SHA256_LINUX}"
+  else
+    url "${HOMEBREW_ASSET_URL}"
+    sha256 "${HOMEBREW_SHA256}"
+  end
 
   bottle :unneeded
 
