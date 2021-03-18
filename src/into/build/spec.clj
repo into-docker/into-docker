@@ -1,7 +1,6 @@
 (ns into.build.spec
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
-            [clojure.test.check.generators :as g]
             [clojure.string :as string]))
 
 ;; ## Generic
@@ -9,7 +8,7 @@
 (s/def ::non-empty-string
   (-> (s/and string? seq)
       (s/with-gen
-        #(gen/such-that seq g/string-alphanumeric))))
+        #(gen/such-that seq (gen/string-alphanumeric)))))
 
 (s/def ::name ::non-empty-string)
 
@@ -99,7 +98,7 @@
   (-> (s/and string? #(re-matches #".+=.*" %))
       (s/with-gen
         (fn []
-          (->> (gen/tuple g/string-alphanumeric g/string-alphanumeric)
+          (->> (gen/tuple (gen/string-alphanumeric) (gen/string-alphanumeric))
                (gen/fmap
                 (fn [k v]
                   (str k "=" v))))))))
