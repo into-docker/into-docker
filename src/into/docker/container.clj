@@ -79,7 +79,7 @@
               :params {:name  container-name
                        :body {:Image full-name
                               :User  user
-                              :Cmd   ["tail" "-f" "/dev/null"]
+                              :Entrypoint ["tail" "-f" "/dev/null"]
                               :HostConfig
                               {:Mounts (vec
                                          (for [[path volume] volumes]
