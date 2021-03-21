@@ -65,7 +65,10 @@ and supply the desired target image name and tag:
 into build -t <name:tag> <builder> [<path>]
 ```
 
-Learn how to [create your own builder image][builder-images].
+Learn how to [create your own builder image][builder-images] or check out
+[existing builder images][gh-builder-images] on Github.
+
+[gh-builder-images]: https://github.com/topics/into-docker-builder-image
 
 ### Build Profiles
 

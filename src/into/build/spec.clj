@@ -98,8 +98,7 @@
   (-> (s/and string? #(re-matches #".+=.*" %))
       (s/with-gen
         (fn []
-          (->> (gen/tuple (gen/string-alphanumeric)
-                          (gen/string-alphanumeric))
+          (->> (gen/tuple (gen/string-alphanumeric) (gen/string-alphanumeric))
                (gen/fmap
                 (fn [k v]
                   (str k "=" v))))))))

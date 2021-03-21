@@ -6,4 +6,6 @@
            peripheral.core/with-start              clojure.core/let
            peripheral.core/defcomponent            clojure.core/defrecord
            clojure.test.check.properties/for-all   clojure.core/let
-           clojure.test.check.clojure-test/defspec clojure.test/deftest}}
+           clojure.test.check.clojure-test/defspec clojure.test/deftest}
+ ;; for some reason, clj-kondo does not pick up this variable
+ :linters {:unresolved-var {:exclude [clojure.spec.gen.alpha/string-alphanumeric]}}}
