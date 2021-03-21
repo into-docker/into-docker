@@ -1,20 +1,15 @@
 name: CI
 
-on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+on: [push]
 
 jobs:
   lint-clojure:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: DeLaGuardo/clojure-lint-action@master
+      - uses: DeLaGuardo/clojure-lint-action@v1
         with:
-          clj-kondo-args: --lint src
-          check-name: clj-kondo
+          clj-kondo-args: --lint src test
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   lint-others:
@@ -28,9 +23,8 @@ jobs:
       - name: install-prettier
         run: npm install
       - name: run-prettier
-        uses: samuelmeuli/lint-action@v1
+        uses: wearerequired/lint-action@v1
         with:
-          github_token: ${{ secrets.github_token }}
           prettier: true
 
   test:
