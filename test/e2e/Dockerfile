@@ -8,3 +8,8 @@ WORKDIR /into
 ENV HOME="/into/home" LEIN_JVM_OPTS="-Duser.home=/into/home"
 RUN useradd -d "${HOME}" -m "${USER}"
 COPY into/ .
+
+# These line allow us to verify startup for images with both ENTRYPOINT and
+# CMD:
+ENTRYPOINT echo
+CMD echo
