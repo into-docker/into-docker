@@ -79,8 +79,8 @@
               :params {:name  container-name
                        :body {:Image full-name
                               :User  user
-                              :Entrypoint nil
-                              :Cmd ["tail" "-f" "/dev/null"]
+                              :Entrypoint ["tail" "-f" "/dev/null"]
+                              :Cmd nil
                               :HostConfig
                               {:Mounts (vec
                                          (for [[path volume] volumes]
