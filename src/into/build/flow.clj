@@ -18,6 +18,7 @@
              [inject-sources :as inject-sources]
              [prepare-target-image :as prepare-target-image]
              [pull :as pull]
+             [read-buildenv :as read-buildenv]
              [read-build-profile :as read-build-profile]
              [read-cache-paths :as read-cache-paths]
              [read-ignore-paths :as read-ignore-paths]
@@ -37,6 +38,7 @@
         (validate-spec/run)
 
         ;; --- Create the build environment (builder, runner, target)
+        (read-buildenv/run)
         (pull/run)
         (prepare-target-image/run)
         (add-default-labels/run)
