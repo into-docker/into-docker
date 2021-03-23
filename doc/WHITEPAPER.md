@@ -1,9 +1,9 @@
 # An approach to reusable build environments
 
-- **Version**: 1.0.0
+- **Version**: 1.0.1
 - **Authors**: Yannick Scherer
 - **Created on**: 03.05.2020
-- **Last updated on**: 03.05.2020
+- **Last updated on**: 23.05.2021
 
 ## Introduction
 
@@ -301,6 +301,26 @@ set -eu
 rm -f /usr/share/nginx/html/index.html
 mv $INTO_ARTIFACT_DIR/* /usr/share/nginx/html/
 ```
+
+### User-provided Environment Variables
+
+**Experimental: This is a preliminary assessment of a feature and might be re-
+evaluated and change.**
+
+There are valid use cases where a user would want to provide custom environment
+variables, e.g. to allow access to private artifact repositories. However, when
+providing such a mechanism, it becomes likely that build scripts themselves
+(instead of the tooling they call) will start to rely on them. This quickly
+leads to undocumented functionality - which should be avoided.
+
+Since the codebase - or the tooling it relies on - is the thing in need of those
+environment variables, there should be a way for it to communicate this fact.
+This, in turn, allows for early validation: Don't even start a build if the
+respective values are missing.
+
+This is achieved by expecting a file `.buildenv` in the source directory that is
+being built. This file will contain one line with each environment variable that
+needs to be provided to ensure a successful build.
 
 ### Caching
 
