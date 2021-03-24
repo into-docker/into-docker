@@ -113,6 +113,25 @@ into build --write-artifacts <target-path> <builder> [<path>]
 If you omit the `-t`/`--tag` flag, only the artifacts will be created, no Docker
 image.
 
+### Secrets (experimental)
+
+When using e.g. private artifact registries, passing environment variables to
+your build tooling is usually the best way to provide credentials. To do this
+with into-docker, create a file `.buildenv` in your source directory that
+contains the _names_ of the variables you want to pass.
+
+When running a build, those values will be imported from your shell's
+environment and made available to the build script:
+
+```sh
+echo "SECRET_PASSWORD" > ".buildenv"
+export SECRET_PASSWORD=12345
+into build ...
+```
+
+You can read about the mechanism (and the rationale) in the
+[WHITEPAPER][buildenv].
+
 ### Use on CI
 
 Due to the minimal-configuration approach of into-docker, it can be easily used
@@ -134,6 +153,7 @@ Check out the `into.build.ci` namespace if you want to add more environments.
 [builder-images]: doc/WHITEPAPER.md#builder-images
 [build-profiles]: doc/WHITEPAPER.md#build-profiles
 [builder-caching]: doc/WHITEPAPER.md#caching
+[buildenv]: doc/WHITEPAPER.md#user-provided-environment-variables
 
 ## License
 
