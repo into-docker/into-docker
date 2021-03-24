@@ -38,9 +38,8 @@
          envs    envs
          missing []]
     (if (seq envs)
-      (let [[env & rst] envs
-            value (System/getenv env)]
-        (if-not (string/blank? value)
+      (let [[env & rst] envs]
+        (if-let [value (System/getenv env)]
           (recur (add-builder-env data env value) rst missing)
           (recur data rst (conj missing env))))
       (fail-if-missing data missing))))
