@@ -6,12 +6,14 @@
             :year 2020
             :key "mit"}
   :dependencies [[org.clojure/clojure "1.10.3"]
-                 [org.clojure/tools.cli "1.0.194"]
+                 [org.clojure/tools.cli "1.0.206"]
                  [org.clojure/tools.logging "1.1.0"]
 
                  ;; components
-                 [lispyclouds/clj-docker-client "1.0.2"]
+                 [lispyclouds/clj-docker-client "1.0.3"]
                  [unixsocket-http "1.0.8"]
+                 [com.squareup.okhttp3/okhttp "4.9.1"]
+                 [com.squareup.okhttp3/okhttp-tls "4.9.1"]
 
                  ;; utilities
                  [org.apache.commons/commons-compress "1.20"]
@@ -24,16 +26,15 @@
 
                  ;; cleanup dependency chain
                  [riddley "0.2.0"]
-                 [org.jetbrains.kotlin/kotlin-stdlib-common "1.4.30"]]
+                 [org.jetbrains.kotlin/kotlin-stdlib-common "1.4.32"]]
   :exclusions [org.clojure/clojure]
   :java-source-paths ["src"]
   :profiles {:dev
              {:dependencies [[org.clojure/test.check "1.1.0"]
                              [com.gfredericks/test.chuck "0.2.10"]]
-              :plugins [[lein-cljfmt "0.6.7"]]
               :global-vars {*warn-on-reflection* true}}
              :kaocha
-             {:dependencies [[lambdaisland/kaocha "1.0.732"
+             {:dependencies [[lambdaisland/kaocha "1.0.829"
                               :exclusions [org.clojure/spec.alpha]]
                              [lambdaisland/kaocha-cloverage "1.0.75"]
                              [org.clojure/java.classpath "1.0.0"]]}
