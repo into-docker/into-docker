@@ -31,6 +31,10 @@ build_artifacts_and_check() {
 # Create Builder Image
 docker build --rm -t "${BUILDER_IMAGE}" -f $WORKDIR/Dockerfile $WORKDIR
 
+# Provide .buildenv
+export SECRET_USERNAME="username"
+export SECRET_PASSWORD="password"
+
 # Build the image
 build_and_check
 build_and_check --no-volumes

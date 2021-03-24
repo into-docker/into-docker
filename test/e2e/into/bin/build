@@ -2,6 +2,10 @@
 
 set -eu
 
+echo "Verifying .buildenv ..."
+echo "  SECRET_USERNAME: ${SECRET_USERNAME}"
+echo "  SECRET_PASSWORD: ${SECRET_PASSWORD}"
+
 if [ -e "$INTO_SOURCE_DIR/cachefile" ]; then
     echo "Cachefile exists!"
 fi

@@ -1,9 +1,9 @@
 # An approach to reusable build environments
 
-- **Version**: 1.0.0
+- **Version**: 1.0.1
 - **Authors**: Yannick Scherer
 - **Created on**: 03.05.2020
-- **Last updated on**: 03.05.2020
+- **Last updated on**: 24.05.2021
 
 ## Introduction
 
@@ -301,6 +301,38 @@ set -eu
 rm -f /usr/share/nginx/html/index.html
 mv $INTO_ARTIFACT_DIR/* /usr/share/nginx/html/
 ```
+
+### User-provided Environment Variables
+
+**Experimental: This is a preliminary assessment of a feature and might be re-
+evaluated and change.**
+
+There are valid use cases where a user would want to provide custom environment
+variables, e.g. to allow access to private artifact repositories. However, when
+providing such a mechanism, it becomes likely that build scripts themselves
+(instead of the tooling they call) will start to rely on them. This quickly
+leads to undocumented functionality - which should be avoided.
+
+Since the codebase - or the tooling it relies on - is the thing in need of those
+environment variables, there should be a way for it to communicate this fact.
+This, in turn, allows for early validation: Don't even start a build if the
+respective values are missing.
+
+The following mechanism is used to achieve this:
+
+1. Look for a file `.buildenv` in the source directory that is being built. If
+   there is none, there is nothing to do.
+2. Treat each line as the name of an environment variable that is required for
+   the eventual build to succeed.
+3. Read each environment variable provided this way from the build coordinator's
+   own environment. If one is missing, fail the build (blank values are
+   allowed).
+4. Provide each such environment variable to the build container when executing
+   its build script.
+
+As you can see, this mechanism imports environment variables from an _outside_
+environment into the build container. Note, however, that those will not be
+available to the runner container.
 
 ### Caching
 
