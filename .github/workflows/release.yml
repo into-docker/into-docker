@@ -131,7 +131,13 @@ jobs:
     strategy:
       matrix:
         build:
-          ["linux-amd64", "linux-amd64-static", "macos-amd64", "standalone-jar"]
+          [
+            "linux-amd64",
+            "linux-amd64-static",
+            "macos-amd64",
+            "windows-amd64",
+            "standalone-jar",
+          ]
     needs: create-release
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
@@ -159,5 +165,5 @@ jobs:
         with:
           upload_url: ${{ steps.upload_url.outputs.value }}
           asset_path: ./${{ matrix.build }}/into.zip
-          asset_name: into-${{ steps.version.outputs.value}}-${{ matrix.build }}.zip
+          asset_name: into-${{ steps.version.outputs.value }}-${{ matrix.build }}.zip
           asset_content_type: application/zip
