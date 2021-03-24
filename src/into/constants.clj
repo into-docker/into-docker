@@ -21,6 +21,11 @@
   [k]
   (get well-known-paths k))
 
+;; ## Special Files
+
+(def build-env-file
+  ".buildenv")
+
 ;; ## Variables
 
 (def source-dir-env "INTO_SOURCE_DIR")
