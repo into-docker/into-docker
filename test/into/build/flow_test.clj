@@ -171,7 +171,7 @@
   (prop/for-all
     [spec      (gen-spec {:target-image-name (s/gen ::spec/target-image-name)})
      artifacts (gen-unique-paths)
-     sources   (gen-unique-paths)]
+     sources   (gen/not-empty (gen-unique-paths))]
     (with-log
       (with-temp-dir [source-path sources]
         (let [result (run-build-flow
@@ -187,7 +187,7 @@
   (prop/for-all
     [spec      (gen-spec {})
      artifacts (gen-unique-paths)
-     sources   (gen-unique-paths)]
+     sources   (gen/not-empty (gen-unique-paths))]
     (with-log
       (with-temp-dir [source-path   sources
                       artifact-path []]
