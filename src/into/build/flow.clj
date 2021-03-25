@@ -60,14 +60,14 @@
         (collect-sources/run)
         (inject-sources/run)
         (build-script/run)
+        (write-artifacts/run)
 
         ;; --- Run assemble script
         (transfer-artifacts/run)
         (assemble-script/run)
-
-        ;; --- Generate outputs (image, artifacts, cache)
         (commit/run)
-        (write-artifacts/run)
+
+        ;; --- Finalise
         (create-cache/run))
       (cleanup/run)
       (finalise/run)))
