@@ -16,6 +16,6 @@
 
 (defn run
   [{:keys [builder-container] :as data}]
-  (log/emph "Building artifacts in [%s] ..." builder-container)
+  (log/emph "Running build in [%s] ..." builder-container)
   (execute-build! data)
   data)
