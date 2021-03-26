@@ -1,10 +1,11 @@
 (defproject into "1.1.0-RC4"
   :description "Never write another Dockerfile."
   :url "https://github.com/into-docker/into-docker"
-  :license {:name "MIT License"
-            :url "https://opensource.org/licenses/MIT"
+  :license {:name "MIT"
+            :url "https://choosealicense.com/licenses/mit"
             :year 2020
-            :key "mit"}
+            :key "mit"
+            :comment "MIT License"}
   :dependencies [[org.clojure/clojure "1.10.3"]
                  [org.clojure/tools.cli "1.0.206"]
                  [org.clojure/tools.logging "1.1.0"]
