@@ -95,9 +95,10 @@
   (->> (-> ci
            (dissoc :type)
            (assoc :created (rfc-3999-date)))
-       (map
+       (keep
         (fn [[k v]]
-          [(str "org.opencontainers.image." (name k)) v]))
+          (when v
+            [(str "org.opencontainers.image." (name k)) v])))
        (into {})
        (update-in data [:target-image :labels] merge)))
 
@@ -107,10 +108,9 @@
   "Attach VCS information for the given source directory."
   [data & [opts]]
   (if (:target-image data)
-    (if-let [ci (some-> (create-ci-information data opts)
-                        (fallback-to-local-ci-revision data opts))]
+    (let [ci (-> (create-ci-information data opts)
+                 (fallback-to-local-ci-revision data opts))]
       (flow/with-flow-> data
         (log-ci-information ci)
-        (attach-ci-information ci))
-      data)
+        (attach-ci-information ci)))
     data))

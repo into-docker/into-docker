@@ -55,5 +55,11 @@
                       "--reporter" "documentation"
                       "--plugin"   "cloverage"
                       "--codecov"
+                      "--cov-exclude-call" "into.log/info"
+                      "--cov-exclude-call" "into.log/debug"
+                      "--cov-exclude-call" "into.log/trace"
+                      "--cov-exclude-call" "into.log/warn"
+                      "--cov-exclude-call" "into.log/emph"
+                      "--cov-exclude-call" "into.log/error"
                       "--no-cov-html"]}
   :pedantic? :abort)
