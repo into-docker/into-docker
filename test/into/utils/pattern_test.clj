@@ -19,9 +19,32 @@
     (let [matcher (pattern/matcher [path])]
       (matcher path))))
 
+(defspec t-matcher-should-handle-other-separators (times 20)
+  (prop/for-all [path (s/gen ::spec/path)
+                 sep (gen/elements ["%" "\\"])]
+    (binding [pattern/file-separator (constantly sep)]
+      (let [matcher (pattern/matcher [path])
+            path'   (string/replace path "/" sep)]
+        (matcher path')))))
+
 (defspec t-matcher-should-accept-universal-wildcard (times 20)
   (prop/for-all [path (s/gen ::spec/path)]
     (let [matcher (pattern/matcher ["**"])]
+      (matcher path))))
+
+(defspec t-matcher-should-normalize-start-of-pattern (times 20)
+  (prop/for-all [path (s/gen ::spec/path)
+                 pattern (->> (gen/elements ["./" "/"])
+                              (gen/vector)
+                              (gen/fmap string/join)
+                              (gen/fmap #(str % "**")))]
+    (let [matcher (pattern/matcher [pattern])]
+      (matcher path))))
+
+(defspec t-matcher-should-normalize-pattern (times 20)
+  (prop/for-all [path (s/gen ::spec/path)]
+    (let [pattern (string/replace path "/" "/./")
+          matcher (pattern/matcher [pattern])]
       (matcher path))))
 
 (defspec t-matcher-should-accept-single-wildcard (times 20)
@@ -43,10 +66,11 @@
 
 (defspec t-matcher-should-accept-range-of-characters (times 20)
   (prop/for-all [[range-start range-end]
-                 (->> (gen/tuple gen/char-alpha gen/char-alpha)
-                      (gen/such-that
-                        (fn [[a b]]
-                          (<= (int a) (int b)))))
+                 (gen/such-that
+                   (fn [[a b]]
+                     (<= (int a) (int b)))
+                   (gen/tuple gen/char-alpha gen/char-alpha)
+                   {:max-tries 100})
                  reject?     gen/boolean
                  path        (s/gen ::spec/path)]
     (let [pattern (format "[%s%s-%s]**"

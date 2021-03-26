@@ -1,6 +1,6 @@
 (ns into.utils.pattern
   (:require [clojure.string :as string])
-  (:import [java.nio.file Paths]))
+  (:import [java.nio.file FileSystems]))
 
 ;; ## .dockerignore matching
 ;;
@@ -35,6 +35,11 @@
 ;;       lo '-' hi   matches character c for lo <= c <= hi
 ;;
 
+;; ### Patterns
+
+(def ^:dynamic file-separator
+  (memoize #(.. (FileSystems/getDefault) (getSeparator))))
+
 ;; ### Helpers
 
 (let [needs-quote? (set "\\.[]{}()*+-?^$|")]
@@ -42,7 +47,13 @@
     [c]
     (if (needs-quote? c)
       (str \\ c)
-      (str c))))
+      (str c)))
+
+  (defn- escape-regex
+    [s]
+    (if (some needs-quote? s)
+      (str "\\Q" s "\\E")
+      s)))
 
 (defn- raise
   [^String message]
@@ -141,9 +152,16 @@
   [^StringBuilder sb]
   (.append sb "(/.*)?"))
 
+(defn- normalize-pattern
+  [pattern]
+  (-> pattern
+      (string/replace #"^(\./|/)+" "")
+      (string/replace #"/\./" "/")
+      (string/replace #"/+" "/")))
+
 (defn- append-pattern
   [^StringBuilder sb pattern']
-  (loop [pattern (seq pattern')]
+  (loop [pattern (seq (normalize-pattern pattern'))]
     (when pattern
       (let [{:keys [^String regex rst]}
             (try
@@ -158,22 +176,24 @@
         (.append sb regex)
         (recur rst)))))
 
-(defn- normalize-pattern
-  [pattern]
-  (-> pattern
-      (Paths/get (into-array String []))
-      (.normalize)
-      (str)
-      (cond-> (string/starts-with? pattern "/") (subs 1))))
+(defn- adapt-file-separators
+  "The regex will be created with '/' as separator in mind. If that's not the
+   one that the system requires, this function will replace all occurences with
+   the correct one."
+  [pattern-str]
+  (let [sep (file-separator)]
+    (if (= sep "/")
+      pattern-str
+      (string/replace pattern-str "/" (escape-regex sep)))))
 
 (defn- compile-pattern
   [{:keys [pattern] :as data}]
   (let [pattern-str (->> (doto (StringBuilder.)
                            (append-prefix)
-                           (append-pattern
-                             (normalize-pattern pattern))
+                           (append-pattern pattern)
                            (append-suffix))
-                         (.toString))]
+                         (.toString)
+                         (adapt-file-separators))]
     (try
       (assoc data :pattern (re-pattern pattern-str))
       (catch IllegalArgumentException e
