@@ -55,4 +55,5 @@
    ".hgignore"
    "Dockerfile"
    ".dockerignore"
-   "**/.DS_Store"])
+   "**/.DS_Store"
+   ".buildenv"])
