@@ -42,28 +42,23 @@ jobs:
     strategy:
       matrix:
         build:
-          ["linux-amd64", "linux-amd64-static", "macos-amd64", "windows-amd64"]
+          - "linux-amd64"
+          - "linux-amd64-static"
+          - "macos-amd64"
+          - "windows-amd64"
         include:
           - build: "linux-amd64"
             os: "ubuntu-latest"
             flags: ""
-            gu: "gu"
-            artifact: "into"
           - build: "linux-amd64-static"
             os: "ubuntu-latest"
             flags: "--static"
-            gu: "gu"
-            artifact: "into"
           - build: "macos-amd64"
             os: "macos-latest"
             flags: ""
-            gu: "gu"
-            artifact: "into"
           - build: "windows-amd64"
             os: "windows-latest"
             flags: ""
-            gu: "gu.cmd"
-            artifact: "into.exe"
     needs: uberjar
     runs-on: ${{ matrix.os }}
     steps:
@@ -74,33 +69,83 @@ jobs:
         with:
           graalvm: "20.3.0"
           java: "java11"
-      - name: setup-native-image
-        run: ${{ matrix.gu }} install native-image
 
+      - name: setup-paths
+        id: paths
+        run: |
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            echo ::set-output name=gu::gu.cmd
+            echo ::set-output name=native-image::native-image.cmd
+            echo ::set-output name=artifact::into.exe
+          else
+            echo ::set-output name=gu::gu
+            echo ::set-output name=native-image::native-image
+            echo ::set-output name=artifact::into
+          fi
+        shell: bash
+
+      - name: setup-native-image
+        run: ${{ steps.paths.outputs.gu }} install native-image
       - name: setup-windows-toolchain
         uses: ilammy/msvc-dev-cmd@v1
         if: startsWith(matrix.build, 'windows-')
-
       - name: download-uberjar
         uses: actions/download-artifact@v1
         with:
           name: uberjar
       - name: native-image
-        run: native-image -jar uberjar/app.jar -H:Name=into --no-fallback --no-server ${{ matrix.flags }}
+        run: |
+          ${{ steps.paths.outputs.native-image }} -jar uberjar/app.jar \
+            -H:Name=into \
+            --no-fallback \
+            --no-server \
+            ${{ matrix.flags }}
+        shell: bash
+      - name: verify-native-image
+        run: |
+          export ARTIFACT="${{ github.workspace }}/${{ steps.paths.outputs.artifact }}"
+          chmod +x "$ARTIFACT"
+          "$ARTIFACT" --version
+        shell: bash
       - name: upload-native-image
         uses: actions/upload-artifact@v1
         with:
           name: ${{ matrix.build }}
-          path: ${{ matrix.artifact }}
+          path: ${{ steps.paths.outputs.artifact }}
 
+  test-native-image:
+    needs: [create-native-image]
+    strategy:
+      matrix:
+        build:
+          # We cannot run the actual e2e test for all binaries here since the
+          # Windows runner is not configured to be able to use Linux images, and
+          # the MacOS runner does not even have Docker. Once that changes, we can
+          # merge this whole job with the one above.
+          - "linux-amd64"
+          - "linux-amd64-static"
+        include:
+          - build: "linux-amd64"
+            os: "ubuntu-latest"
+          - build: "linux-amd64-static"
+            os: "ubuntu-latest"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: download-native-image
+        uses: actions/download-artifact@v1
+        with:
+          name: ${{ matrix.build }}
       - name: run-e2e-test
-        if: startsWith(matrix.build, 'linux-')
-        run: sh test/e2e/test.sh "$GITHUB_SHA" "$(pwd)/into build"
+        run: |
+          export ARTIFACT="${{ github.workspace }}/${{ matrix.build }}/into"
+          chmod +x "$ARTIFACT"
+          sh test/e2e/test.sh "$GITHUB_SHA" "$ARTIFACT build"
         env:
           DOCKER_API_VERSION: "1.40"
 
   create-release:
-    needs: [create-native-image]
+    needs: [test-native-image]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
