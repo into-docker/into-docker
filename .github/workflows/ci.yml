@@ -1,6 +1,9 @@
 name: CI
 
-on: [push]
+on:
+  push:
+    branches-ignore: []
+    tags-ignore: ["v*"]
 
 jobs:
   lint-clojure:
@@ -31,6 +34,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
+
       - name: run-tests
         run: lein ci
       - name: upload-code-coverage-report
@@ -42,6 +50,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
       - name: run-e2e-test
         run: sh test/e2e/test.sh "$GITHUB_SHA"
         env:
