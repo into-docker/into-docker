@@ -98,3 +98,20 @@
         IllegalStateException
         #"Operation failed:"
         (docker/cleanup-container container))))
+
+(deftest ^:docker t-exec-and-wait
+  (let [result (docker/exec-and-wait
+               container
+               {:cmd ["sh" "-c" "echo $STRING_TO_ECHO; exit 0"]
+                :env ["STRING_TO_ECHO=1234"]})]
+    (is (zero? (:exit result)))
+    #_(is (thrown-with-msg?
+          IllegalStateException
+          #"Exec in container \(busybox\) failed!"
+          (docker/wait-for-exec exec)))))
+
+(deftest ^:docker t-exec-and-wait-failure
+  (is (thrown-with-msg?
+        IllegalStateException
+        #"Exec in container \(busybox\) failed!"
+        (docker/exec-and-wait container {:cmd ["exit" "1"]}))))
