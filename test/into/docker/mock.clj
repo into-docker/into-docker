@@ -56,10 +56,12 @@
     result))
 
 (defn as-exec-result
-  [container stdout]
+  [container & [stdout]]
   (->MockExec
     container
-    [[:stdout stdout]]
+    (if stdout
+      [[:stdout stdout]]
+      [])
     {:exit 0}))
 
 (defn as-exec-error
@@ -266,12 +268,12 @@
 (defn mkdir-script
   [{:keys [container]} & args]
   (add-event container (vec (list* :mkdir args)))
-  (as-exec-result container ""))
+  (as-exec-result container))
 
 (defn chown-script
   [{:keys [container]} & args]
   (add-event container (vec (list* :chown args)))
-  (as-exec-result container ""))
+  (as-exec-result container))
 
 (defn sh-script
   [{:keys [container]} & [flag cmd]]
@@ -286,7 +288,7 @@
       (doseq [[_ to from] (re-seq #"_CPTH_='([a-z0-9/]+)'; _PTH_='([a-z0-9/]+)'" cmd)]
         (when (file-exists? container from)
           (move-file container from to)))))
-  (as-exec-result container ""))
+  (as-exec-result container))
 
 (defn container
   "Create a new mock container."
