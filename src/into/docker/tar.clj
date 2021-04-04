@@ -25,7 +25,7 @@
 (defn- add-tar-entry!
   [^TarArchiveOutputStream tar
    {:keys [source ^String path ^int length]}]
-  (log/debug "|   %s (%s) ..." path (log/as-file-size length))
+  (log/debug "| <tar>   %s (%s) ..." path (log/as-file-size length))
   (let [entry (doto (TarArchiveEntry. path)
                 (.setSize length))]
     (.putArchiveEntry tar entry)
@@ -79,7 +79,7 @@
      (doseq [^TarArchiveEntry e (tar-seq tar)
              :when (.isFile e)
              :let [path (.getName e)]]
-       (log/debug "|   %s" path)
+       (log/debug "| <untar>   %s" path)
        (write-fn path tar)))))
 
 (defn untar-seq

@@ -43,6 +43,10 @@
   (with-open [stream (exec-stream exec)]
     (streams/exec-bytes stream stream-key)))
 
+(defn read-exec-stdout
+  ^String [exec]
+  (String. (read-exec-stream :stdout exec) "UTF-8"))
+
 ;; ## Container Facade
 
 (defprotocol+ DockerContainer

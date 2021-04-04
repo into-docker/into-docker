@@ -26,7 +26,7 @@
            (contains? runner-volumes "/tmp/artifacts")
            (= builder-volumes runner-volumes)))))
 
-(defspec t-add-shared-volume-when-deactivated (times 20)
+(defspec t-add-shared-volume-does-nothing-when-disabled-or-without-target-image (times 20)
   (prop/for-all
     [spec          (gen/let [spec (s/gen ::spec/spec)]
                      (gen/elements

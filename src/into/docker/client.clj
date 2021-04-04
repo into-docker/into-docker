@@ -50,6 +50,24 @@
   ([components]
    (map->DockerClient components)))
 
+(defn- get-docker-uri
+  []
+  (or (System/getenv "DOCKER_HOST")
+      "unix:///var/run/docker.sock"))
+
+(defn- get-docker-api-version
+  []
+  (some->> (System/getenv "DOCKER_API_VERSION")
+           (str "v")))
+
+(defn make-from-env
+  []
+  (make
+    {:uri (get-docker-uri)
+     :api-version (get-docker-api-version)}))
+
+;; ## Start
+
 (defn start
   [{:keys [uri api-version] :as client}]
   {:pre [(seq uri)]}

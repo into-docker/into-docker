@@ -1,6 +1,17 @@
 (ns into.test.generators
-  (:require [clojure.test.check.generators :as gen]
+  (:require [into.build.spec :as spec]
+            [into.constants :as constants]
+            [clojure.spec.alpha :as s]
+            [clojure.test.check.generators :as gen]
             [clojure.string :as string]))
+
+;; ## Utils
+
+(defn maybe
+  [g]
+  (gen/one-of [g (gen/return nil)]))
+
+;; ## Paths
 
 (defn gen-comment
   []
@@ -55,6 +66,32 @@
                                     (gen/vector segment-gen 0 5))
                                   (count filenames))]
                (map #(string/join "/" (cons %1 %2)) filenames segments))))))))
+
+;; ## Images
+
+;; ### Spec + Builder + Runner
+
+(defn gen-spec-and-images
+  []
+  (->> (gen/let [spec    (s/gen ::spec/spec)
+                 builder (s/gen ::spec/builder-image)
+                 runner  (s/gen ::spec/runner-image)
+                 user    (maybe (s/gen ::spec/user))]
+         {:spec    (assoc spec :builder-image-name (:full-name builder))
+          :builder (-> builder
+                       (assoc-in [:labels constants/runner-image-label]
+                                 (:full-name runner))
+                       (cond->
+                         user (assoc-in [:labels constants/builder-user-label]
+                                        user)))
+          :runner  (when (:target-image-name spec)
+                     runner)
+          :user    (or user "root")})
+       (gen/such-that
+         #(not= (-> % :builder :full-name)
+                (-> % :runner :full-name)))))
+
+;; ### Label
 
 (defn with-label
   [image-gen label]

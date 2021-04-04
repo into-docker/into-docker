@@ -56,10 +56,12 @@
     result))
 
 (defn as-exec-result
-  [container stdout]
+  [container & [stdout]]
   (->MockExec
     container
-    [[:stdout stdout]]
+    (if stdout
+      [[:stdout stdout]]
+      [])
     {:exit 0}))
 
 (defn as-exec-error
@@ -168,9 +170,8 @@
    the directory `/tmp/artifacts`, the files will be prefixed with
    `artifacts/`."
   [path fs-path]
-  (let [prefix (.getParent (io/file path))
-        prefix-len (inc (count prefix))]
-    (subs fs-path prefix-len)))
+  (let [index (.lastIndexOf ^String path "/")]
+    (subs fs-path (inc index))))
 
 (defn- files->tar-sources
   [fs path]
@@ -185,7 +186,7 @@
        (map #(string/split % #"=" 2))
        (into {})))
 
-(defrecord MockContainer [fs name commit]
+(defrecord MockContainer [fs name commit events]
   FileSystem
   (file-exists? [_ path]
     (file-exists? fs path))
@@ -205,12 +206,15 @@
     name)
   (container-user [_]
     "builder")
-  (run-container [_])
+  (run-container [_]
+    (swap! events conj :run))
   (commit-container [_ data]
     (->> (assoc data :fs (->MockFileSystem (atom @(:fs fs))))
          (reset! commit)))
-  (cleanup-container [_])
-  (cleanup-volumes [_])
+  (cleanup-container [_]
+    (swap! events conj :cleanup))
+  (cleanup-volumes [_]
+    (swap! events conj :cleanup-volumes))
   (stream-from-container [this path]
     (->> (if (file-exists? this path)
            (file->tar-sources fs path)
@@ -247,6 +251,14 @@
   (toString [_]
     name))
 
+(defn add-event
+  [container evt]
+  (swap! (:events container) conj evt))
+
+(defn events
+  [container]
+  @(:events container))
+
 (defn cat-script
   [{:keys [container]} path]
   (if (file-exists? container path)
@@ -254,12 +266,14 @@
     (as-exec-error container (str "File not found: " path))))
 
 (defn mkdir-script
-  [{:keys [container]} & _]
-  (as-exec-result container ""))
+  [{:keys [container]} & args]
+  (add-event container (vec (list* :mkdir args)))
+  (as-exec-result container))
 
 (defn chown-script
-  [{:keys [container]} & _]
-  (as-exec-result container ""))
+  [{:keys [container]} & args]
+  (add-event container (vec (list* :chown args)))
+  (as-exec-result container))
 
 (defn sh-script
   [{:keys [container]} & [flag cmd]]
@@ -274,7 +288,7 @@
       (doseq [[_ to from] (re-seq #"_CPTH_='([a-z0-9/]+)'; _PTH_='([a-z0-9/]+)'" cmd)]
         (when (file-exists? container from)
           (move-file container from to)))))
-  (as-exec-result container ""))
+  (as-exec-result container))
 
 (defn container
   "Create a new mock container."
@@ -286,7 +300,13 @@
                  (add-file "chown" `chown-script)
                  (add-file "sh"    `sh-script))
      :name   (or name (str (java.util.UUID/randomUUID)))
-     :commit (atom nil)}))
+     :commit (atom nil)
+     :events (atom [])}))
+
+(defn running-container
+  [& [name]]
+  (doto (container name)
+    (docker/run-container)))
 
 ;; ## Client
 
@@ -296,8 +316,11 @@
   (inspect-image [_ image]
     (get images image))
   (container [_ _ image]
-    (some containers [(:full-name image)
-                      (:name image)])))
+    (or (some containers [(:full-name image)
+                          (:name image)])
+        (throw
+          (IllegalArgumentException.
+            (str "Could not run container for image: " image))))))
 
 (defn client
   "Create a new mock client."
@@ -309,5 +332,10 @@
   (assoc-in client [:containers image] container))
 
 (defn add-image
-  [client image data]
-  (assoc-in client [:images image] data))
+  ([client {:keys [full-name labels cmd entrypoint]}]
+   (->> {:Config {:Labels     (into {} labels)
+                  :Cmd        cmd
+                  :Entrypoint entrypoint}}
+        (add-image client full-name)))
+  ([client image data]
+   (assoc-in client [:images image] data)))

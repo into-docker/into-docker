@@ -167,7 +167,7 @@
 
 ;; ## Tests
 
-(defspec t-build-flow-with-target-image (times 10)
+(defspec ^:flow t-build-flow-with-target-image (times 10)
   (prop/for-all
     [spec      (gen-spec {:target-image-name (s/gen ::spec/target-image-name)})
      artifacts (gen-unique-paths)
@@ -183,7 +183,7 @@
                (has-target-image? result)
                (has-committed-artifacts? result artifacts)))))))
 
-(defspec t-build-flow-with-artifact-path (times 10)
+(defspec ^:flow t-build-flow-with-artifact-path (times 10)
   (prop/for-all
     [spec      (gen-spec {})
      artifacts (gen-unique-paths)
@@ -201,7 +201,7 @@
                (has-source-paths? result sources)
                (has-written-artifacts? result artifacts)))))))
 
-(defspec t-build-flow-with-target-image-and-cache (times 10)
+(defspec ^:flow t-build-flow-with-target-image-and-cache (times 10)
   (prop/for-all
     [spec      (gen-spec {:target-image-name (s/gen ::spec/target-image-name)})
      artifacts (gen-unique-paths)
