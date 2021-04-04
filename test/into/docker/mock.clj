@@ -330,5 +330,10 @@
   (assoc-in client [:containers image] container))
 
 (defn add-image
-  [client image data]
-  (assoc-in client [:images image] data))
+  ([client {:keys [full-name labels cmd entrypoint]}]
+   (->> {:Config {:Labels     (into {} labels)
+                  :Cmd        cmd
+                  :Entrypoint entrypoint}}
+        (add-image client full-name)))
+  ([client image data]
+   (assoc-in client [:images image] data)))
