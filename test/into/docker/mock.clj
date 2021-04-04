@@ -168,9 +168,8 @@
    the directory `/tmp/artifacts`, the files will be prefixed with
    `artifacts/`."
   [path fs-path]
-  (let [prefix (.getParent (io/file path))
-        prefix-len (inc (count prefix))]
-    (subs fs-path prefix-len)))
+  (let [index (.lastIndexOf ^String path "/")]
+    (subs fs-path (inc index))))
 
 (defn- files->tar-sources
   [fs path]

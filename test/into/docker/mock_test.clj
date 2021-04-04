@@ -4,6 +4,7 @@
              [generators :as gen]
              [properties :as prop]]
             [com.gfredericks.test.chuck :refer [times]]
+            [clojure.test :refer [deftest is]]
             [clojure.spec.alpha :as s]
             [into.build.spec :as spec]
             [into.docker.mock :as mock]
@@ -58,7 +59,7 @@
            (= "Working..." stderr)
            (mock/file-exists? container target-path)))))
 
-#_(deftest t-transfer-between-containers
+(deftest t-transfer-between-containers
   (let [data (.getBytes "HELLO")
         from (-> (mock/container)
                  (mock/add-file "/dir/a" data)
@@ -68,7 +69,7 @@
     (is (= #{"/target/dir/a" "/target/dir/b"}
            (mock/list-files to "/target/dir")))))
 
-#_(deftest t-read-container-file
+(deftest t-read-container-file
   (let [data "DATA"
         container (-> (mock/container)
                       (mock/add-file "/dir/file" data))]
