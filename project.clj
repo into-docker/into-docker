@@ -39,9 +39,6 @@
                               :exclusions [org.clojure/spec.alpha]]
                              [lambdaisland/kaocha-cloverage "1.0.75"]
                              [org.clojure/java.classpath "1.0.0"]]}
-             :ci
-             [:kaocha
-              {:global-vars {*warn-on-reflection* false}}]
              :uberjar
              {:global-vars {*assert* false}
               :jvm-opts ["-Dclojure.compiler.direct-linking=true"
@@ -50,16 +47,5 @@
               :aot :all}}
   :cljfmt {:indents {prop/for-all [[:block 1]]
                      defcomponent [[:block 2] [:inner 1]]}}
-  :aliases {"kaocha" ["with-profile" "+kaocha" "run" "-m" "kaocha.runner"]
-            "ci"     ["with-profile" "+ci" "run" "-m" "kaocha.runner"
-                      "--reporter" "documentation"
-                      "--plugin"   "cloverage"
-                      "--codecov"
-                      "--cov-exclude-call" "into.log/info"
-                      "--cov-exclude-call" "into.log/debug"
-                      "--cov-exclude-call" "into.log/trace"
-                      "--cov-exclude-call" "into.log/warn"
-                      "--cov-exclude-call" "into.log/emph"
-                      "--cov-exclude-call" "into.log/error"
-                      "--no-cov-html"]}
+  :aliases {"kaocha" ["with-profile" "+kaocha" "run" "-m" "kaocha.runner"]}
   :pedantic? :abort)

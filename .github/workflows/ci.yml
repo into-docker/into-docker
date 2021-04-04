@@ -40,7 +40,7 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
 
       - name: run-tests
-        run: lein ci
+        run: lein kaocha --profile ci
       - name: upload-code-coverage-report
         uses: codecov/codecov-action@v1
         with:
