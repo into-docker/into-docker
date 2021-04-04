@@ -184,7 +184,7 @@
        (map #(string/split % #"=" 2))
        (into {})))
 
-(defrecord MockContainer [fs name commit]
+(defrecord MockContainer [fs name commit events]
   FileSystem
   (file-exists? [_ path]
     (file-exists? fs path))
@@ -204,12 +204,15 @@
     name)
   (container-user [_]
     "builder")
-  (run-container [_])
+  (run-container [_]
+    (swap! events conj :run))
   (commit-container [_ data]
     (->> (assoc data :fs (->MockFileSystem (atom @(:fs fs))))
          (reset! commit)))
-  (cleanup-container [_])
-  (cleanup-volumes [_])
+  (cleanup-container [_]
+    (swap! events conj :cleanup))
+  (cleanup-volumes [_]
+    (swap! events conj :cleanup-volumes))
   (stream-from-container [this path]
     (->> (if (file-exists? this path)
            (file->tar-sources fs path)
@@ -245,6 +248,10 @@
   Object
   (toString [_]
     name))
+
+(defn events
+  [container]
+  @(:events container))
 
 (defn cat-script
   [{:keys [container]} path]
@@ -285,7 +292,13 @@
                  (add-file "chown" `chown-script)
                  (add-file "sh"    `sh-script))
      :name   (or name (str (java.util.UUID/randomUUID)))
-     :commit (atom nil)}))
+     :commit (atom nil)
+     :events (atom [])}))
+
+(defn running-container
+  [& [name]]
+  (doto (container name)
+    (docker/run-container)))
 
 ;; ## Client
 
