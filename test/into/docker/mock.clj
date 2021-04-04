@@ -249,6 +249,10 @@
   (toString [_]
     name))
 
+(defn add-event
+  [container evt]
+  (swap! (:events container) conj evt))
+
 (defn events
   [container]
   @(:events container))
@@ -260,11 +264,13 @@
     (as-exec-error container (str "File not found: " path))))
 
 (defn mkdir-script
-  [{:keys [container]} & _]
+  [{:keys [container]} & args]
+  (add-event container (vec (list* :mkdir args)))
   (as-exec-result container ""))
 
 (defn chown-script
-  [{:keys [container]} & _]
+  [{:keys [container]} & args]
+  (add-event container (vec (list* :chown args)))
   (as-exec-result container ""))
 
 (defn sh-script

@@ -40,7 +40,8 @@
   [data]
   (flow/with-flow-> data
     (create-and-chown-working-directories!
-      :builder-container [:source-directory
+      :builder-container
+      [:source-directory
        :artifact-directory
        :cache-directory])
     (create-working-directories!
