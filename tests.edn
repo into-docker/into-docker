@@ -1,10 +1,7 @@
 #kaocha/v1
-{:tests [{:id :unit,
-          :kaocha.filter/skip-meta #profile {:default [:docker :flow]
-                                             :ci      []}}
-         {:id :unit+docker
-          :kaocha.filter/skip-meta [:flow]}
-         {:id :all}]
+{:tests [{:id :unit,   :kaocha.filter/skip-meta [:docker :flow]}
+         {:id :docker, :kaocha.filter/focus-meta [:docker]}
+         {:id :flow,   :kaocha.filter/focus-meta [:flow]}]
  :reporter #profile {:default  kaocha.report/dots
                      :ci       kaocha.report/documentation}
  :plugins  #profile {:default  []
