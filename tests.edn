@@ -11,7 +11,7 @@
  {:exclude-call [into.log/info
                  into.log/debug
                  into.log/trace
-                 into.log.warn
+                 into.log/warn
                  into.log/emph
                  into.log/error]
   :codecov? #profile {:default false, :ci true}

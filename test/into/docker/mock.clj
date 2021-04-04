@@ -308,8 +308,11 @@
   (inspect-image [_ image]
     (get images image))
   (container [_ _ image]
-    (some containers [(:full-name image)
-                      (:name image)])))
+    (or (some containers [(:full-name image)
+                          (:name image)])
+        (throw
+          (IllegalArgumentException.
+            (str "Could not run container for image: " image))))))
 
 (defn client
   "Create a new mock client."
