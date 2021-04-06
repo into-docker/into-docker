@@ -41,6 +41,11 @@
     (let [matcher (pattern/matcher [pattern])]
       (matcher path))))
 
+(defspec t-matcher-should-normalize-end-of-pattern (times 20)
+  (prop/for-all [path (s/gen ::spec/path)]
+    (let [matcher (pattern/matcher [(str path "/")])]
+      (matcher path))))
+
 (defspec t-matcher-should-normalize-pattern (times 20)
   (prop/for-all [path (s/gen ::spec/path)]
     (let [pattern (string/replace path "/" "/./")

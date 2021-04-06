@@ -11,6 +11,16 @@
         (is (nil? error))
         (is (= (set sources) (set source-paths)))))))
 
+(deftest t-collect-sources-with-ignore-paths
+  (let [sources ["a/x" "a/y" "c"]]
+    (with-temp-dir [dir sources]
+      (let [{:keys [source-paths error]}
+            (collect-sources/run
+              {:spec {:source-path (.getPath dir)}
+               :ignore-paths ["a/"]})]
+        (is (nil? error))
+        (is (= #{"c"} (set source-paths)))))))
+
 (deftest t-collect-sources-fails-if-no-files
   (with-temp-dir [dir []]
     (let [{:keys [source-paths ^Exception error]}
@@ -18,7 +28,6 @@
       (is (empty? source-paths))
       (is (re-matches #"^No source files found in.*"
                       (.getMessage error))))))
-
 
 (deftest t-collect-sources-fails-if-everything-is-ignored
   (with-temp-dir [dir ["a" "aa" "aaa"]]
