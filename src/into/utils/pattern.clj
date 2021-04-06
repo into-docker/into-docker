@@ -157,7 +157,8 @@
   (-> pattern
       (string/replace #"^(\./|/)+" "")
       (string/replace #"/\./" "/")
-      (string/replace #"/+" "/")))
+      (string/replace #"/+" "/")
+      (string/replace #"/$" "")))
 
 (defn- append-pattern
   [^StringBuilder sb pattern']
