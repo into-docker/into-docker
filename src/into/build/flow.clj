@@ -2,6 +2,7 @@
   (:require [into.flow :as flow]
             [into.build
              [add-builder-env :as add-builder-env]
+             [add-cache-volume :as add-cache-volume]
              [add-default-labels :as add-default-labels]
              [add-oci-labels :as add-oci-labels]
              [add-runner-env :as add-runner-env]
@@ -11,11 +12,13 @@
              [cleanup :as cleanup]
              [collect-sources :as collect-sources]
              [commit :as commit]
-             [create-cache :as create-cache]
              [create-working-directories :as create-working-directories]
+             [export-cache-file :as export-cache-file]
              [finalise :as finalise]
              [initialise :as initialise]
+             [inject-cache-file :as inject-cache-file]
              [inject-sources :as inject-sources]
+             [prepare-cache :as prepare-cache]
              [prepare-target-image :as prepare-target-image]
              [pull :as pull]
              [read-buildenv :as read-buildenv]
@@ -44,6 +47,7 @@
         (add-default-labels/run)
         (add-oci-labels/run)
         (add-shared-volume/run)
+        (add-cache-volume/run)
         (start/run)
 
         ;; --- Prepare the builder and runner
@@ -54,6 +58,7 @@
         (add-runner-env/run)
         (create-working-directories/run)
         (transfer-assemble-script/run)
+        (inject-cache-file/run)
         (restore-cache/run)
 
         ;; --- Run build script
@@ -68,6 +73,7 @@
         (commit/run)
 
         ;; --- Finalise
-        (create-cache/run))
+        (prepare-cache/run)
+        (export-cache-file/run))
       (cleanup/run)
       (finalise/run)))

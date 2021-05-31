@@ -21,6 +21,7 @@
            :target-image-name  "test:latest"
            :source-path        "."
            :use-volumes?       true
+           :use-cache-volume?  false
            :ci-type            nil
            :cache-from         nil
            :cache-to           nil
@@ -28,6 +29,7 @@
   (testing "CLI args"
     (let [data (capture-spec "-t" "test:latest"
                              "-p" "profile-x"
+                             "--incremental"
                              "--write-artifacts" "artifacts"
                              "--ci" "github-actions"
                              "--cache" "cache"
@@ -39,10 +41,23 @@
            :target-image-name  "test:latest"
            :source-path        "./path"
            :use-volumes?       false
+           :use-cache-volume?  false
            :ci-type            "github-actions"
            :cache-from         "cache"
            :cache-to           "cache"
            :profile            "profile-x")))
+  (testing "CLI arg: '--incremental'"
+    (let [data (capture-spec "--incremental" "-t" "test:latest" "builder")]
+      (are [k v] (= v (get-in data [:spec k]))
+           :builder-image-name "builder"
+           :target-image-name  "test:latest"
+           :source-path        "."
+           :use-volumes?       true
+           :use-cache-volume?  true
+           :ci-type            nil
+           :cache-from         nil
+           :cache-to           nil
+           :profile            "default")))
   (testing "validation"
     (with-log
       (capture-spec "-t" "" "builder")
