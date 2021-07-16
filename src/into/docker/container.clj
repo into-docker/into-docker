@@ -72,6 +72,15 @@
        (d/invoke commit)
        (throw-on-error)))
 
+(defn- as-mounts
+  [volumes]
+  (vec
+    (for [{:keys [path name]} volumes]
+      {:Target   path,
+       :Source   name,
+       :Type     "volume",
+       :ReadOnly false})))
+
 (defn- invoke-run-container
   [{:keys [containers]} container-name {:keys [full-name user volumes]}]
   (let [{:keys [Id]}
@@ -81,13 +90,7 @@
                               :User  user
                               :Entrypoint ["tail" "-f" "/dev/null"]
                               :Cmd nil
-                              :HostConfig
-                              {:Mounts (vec
-                                         (for [[path volume] volumes]
-                                           {:Target   path,
-                                            :Source   volume,
-                                            :Type     "volume",
-                                            :ReadOnly false}))}}}}
+                              :HostConfig {:Mounts (as-mounts volumes)}}}}
              (d/invoke containers)
              (throw-on-error))
         _ (->> {:op :ContainerStart
@@ -108,7 +111,9 @@
 (defn- invoke-cleanup-volumes
   [{:keys [volumes]} {vols :volumes}]
   (let [results (doall
-                  (for [volume (distinct (vals vols))]
+                  (for [volume (->> (remove :retain? vols)
+                                    (map :name)
+                                    (distinct))]
                     (->> {:op :VolumeDelete
                           :params {:name volume
                                    :force true}}

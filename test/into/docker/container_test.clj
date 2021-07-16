@@ -33,7 +33,10 @@
   (fn [f]
     (binding [client (client/start base-client)]
       (let [image  (-> (docker/pull-image-record client container-image)
-                       (assoc :volumes {"/tmp/volume-ext" (str container-name "-vol")}))]
+                       (assoc :volumes
+                              [{:path "/tmp/volume-ext"
+                                :name (str container-name "-vol")
+                                :retain? false}]))]
         (binding [container (docker/container client container-name image)]
           (docker/run-container container)
           (try
@@ -104,11 +107,7 @@
                container
                {:cmd ["sh" "-c" "echo $STRING_TO_ECHO; exit 0"]
                 :env ["STRING_TO_ECHO=1234"]})]
-    (is (zero? (:exit result)))
-    #_(is (thrown-with-msg?
-          IllegalStateException
-          #"Exec in container \(busybox\) failed!"
-          (docker/wait-for-exec exec)))))
+    (is (zero? (:exit result)))))
 
 (deftest ^:docker t-exec-and-wait-failure
   (is (thrown-with-msg?

@@ -28,17 +28,27 @@
    [nil, "--no-volumes" "Do not use shared volumes."
     :id :no-volumes?
     :default false]
-   [nil "--cache path" "Use and create the specified cache file for incremental builds."
+   ["-i" "--incremental" "Run an incremental build utilising a Docker volume for caching."
+    :id :incremental?
+    :default false]
+   [nil "--cache path" "Run an incremental build utilising the given cache file."
     :id :cache-file]])
 
 ;; ## Spec
 
 (defn- build-spec
-  [{:keys [target-image artifact-path profile cache-file ci-type no-volumes?]}
+  [{:keys [target-image
+           artifact-path
+           profile
+           cache-file
+           ci-type
+           incremental?
+           no-volumes?]}
    [builder-image source-path]]
   (cond-> {:builder-image-name builder-image
-           :source-path   (or source-path ".")
-           :use-volumes?  (not no-volumes?)}
+           :source-path        (or source-path ".")
+           :use-cache-volume?  (and incremental? (not cache-file))
+           :use-volumes?       (not no-volumes?)}
     target-image  (assoc :target-image-name target-image)
     artifact-path (assoc :artifact-path artifact-path)
     profile       (assoc :profile profile)

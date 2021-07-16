@@ -8,11 +8,10 @@
 
 (defn- add-shared-volume
   [data image-key volume-name]
-  (assoc-in data
-            [image-key
-             :volumes
-             (constants/path-for :artifact-directory)]
-            volume-name))
+  (->> {:name     volume-name
+        :path     (constants/path-for :artifact-directory)
+        :retain?  false}
+       (update-in data [image-key :volumes] conj)))
 
 (defn- use-shared-volume?
   [{:keys [spec]}]

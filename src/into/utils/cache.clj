@@ -5,18 +5,8 @@
    - Export TAR from the container.
    Reverse to restore."
   (:require [clojure.string :as string]
-            [clojure.java.io :as io])
-  (:import [java.security MessageDigest]))
-
-(defn- sha1
-  "We need to create a fingerprint for cache paths that we can use
-   inside a TAR file as directory name."
-  [^String s]
-  (let [instance (MessageDigest/getInstance "SHA1")
-        ^bytes data (.getBytes s "UTF-8")]
-    (->> (.digest instance data)
-         (map #(format "%02x" %))
-         (apply str))))
+            [clojure.java.io :as io]
+            [into.utils.sha1 :refer [sha1]]))
 
 (defn- ->prepare-command
   [cache-directory path]
@@ -66,3 +56,19 @@
        (string/join "; ")
        (format "%s; true")
        (vector "sh" "-c")))
+
+;; ## Utility
+
+(defn cache-file-exists?
+  [spec]
+  (some-> spec :cache-from io/file (.isFile)))
+
+
+(defn cache-file-used?
+  [spec]
+  (some? (:cache-to spec)))
+
+(defn cache-volume-used?
+  [spec]
+  (and (:use-cache-volume? spec)
+       (:use-volumes? spec)))

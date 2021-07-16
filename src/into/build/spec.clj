@@ -55,6 +55,7 @@
   (s/keys :req-un [::source-path
                    ::builder-image-name
                    ::profile
+                   ::use-cache-volume?
                    ::use-volumes?]
           :opt-un [::artifact-path
                    ::cache-from
@@ -69,6 +70,7 @@
 (s/def ::profile ::name)
 (s/def ::ci-type #{"github-actions", "local"})
 (s/def ::use-volumes? boolean?)
+(s/def ::use-cache-volume? boolean?)
 
 ;; ## Image
 
@@ -81,13 +83,22 @@
                    ::cmd
                    ::entrypoint]))
 
+(s/def ::image-with-volumes
+  (s/merge ::image (s/keys :opt-un [::volumes])))
+
 (s/def ::tag        ::non-empty-string)
 (s/def ::user       ::non-empty-string)
 (s/def ::labels     (s/map-of (s/or :k keyword? :s string?) string?))
 (s/def ::cmd        (s/coll-of string?))
 (s/def ::entrypoint (s/coll-of string?))
+(s/def ::volumes    (s/coll-of ::volume))
+(s/def ::volume
+  (s/keys :req-un [::name
+                   ::path
+                   ::retain?]))
+(s/def ::retain? boolean?)
 
-(s/def ::builder-image ::image)
+(s/def ::builder-image ::image-with-volumes)
 (s/def ::runner-image  ::image)
 (s/def ::target-image  ::image)
 

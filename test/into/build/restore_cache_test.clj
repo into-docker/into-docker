@@ -5,6 +5,7 @@
             [into.constants :as constants]
             [into.docker :as docker]
             [into.docker.mock :as mock]
+            [into.build.inject-cache-file :as inject-cache-file]
             [into.build.restore-cache :as restore-cache]
             [into.test.files :refer [with-temp-dir]]))
 
@@ -31,6 +32,12 @@
   (doto (io/file tmp "cache.gz")
     (spit cache-file-contents)))
 
+(defn- inject-and-restore
+  [data]
+  (-> data
+      (inject-cache-file/run)
+      (restore-cache/run)))
+
 ;; ## Tests
 
 (deftest t-restore-cache
@@ -41,7 +48,7 @@
                       {:cache-from (setup-cache-file! tmp)}
                       :builder-container builder
                       :cache-paths       ["/some/file"]}
-            data'    (restore-cache/run data)]
+            data'    (inject-and-restore data)]
         (is (= data' data))
         (is (= [[:stream
                  (constants/path-for :working-directory)
@@ -57,7 +64,7 @@
                       {:cache-from (setup-cache-file! tmp)}
                       :builder-container builder
                       :cache-paths       []}
-            data'    (restore-cache/run data)]
+            data'    (inject-and-restore data)]
         (is (= data' data))
         (is (empty?  @events))))))
 
@@ -67,7 +74,7 @@
           data     {:spec              {}
                     :builder-container builder
                     :cache-paths       ["/some/file"]}
-          data'    (restore-cache/run data)]
+          data'    (inject-and-restore data)]
       (is (= data' data))
       (is (empty?  @events)))))
 
@@ -79,7 +86,7 @@
                                                         (.delete))}
                       :builder-container builder
                       :cache-paths       ["/some/file"]}
-            data'    (restore-cache/run data)]
+            data'    (inject-and-restore data)]
         (is (= data' data))
         (is (empty?  @events))))))
 

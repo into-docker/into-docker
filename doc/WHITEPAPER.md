@@ -386,6 +386,18 @@ node_modules
 /into/home/.npm
 ```
 
+#### Cache Volumes
+
+**Experimental: This is a preliminary assessment of a feature and might be re-
+evaluated and change.**
+
+As an alternative to archiving/extracting the cache path, a build coordinator
+could use a Docker volume as the source/target for caching. This would limit the
+interactions with the cache to moving files.
+
+There should be a significant speed-up when this approach is available,
+for example, when running builds on non-CI machines, e.g. locally.
+
 ### Source Exclusions
 
 A file located at `/into/ignore` will be used as the basis for
