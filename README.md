@@ -98,6 +98,14 @@ into build -t <name:tag> --cache <path> <builder>
 Subsequent builds will use the archive (if it exists) to seed the builder
 container.
 
+Alternatively, you can rely on a Docker volume for caching. This is an
+**experimental** feature and most useful for iterating on builds locally. Note
+that you'll be responsible yourself for cleaning up the volume.
+
+```sh
+into build -t <name:tag> --incremental <builder>
+```
+
 Learn how to [add caching to your builder image][builder-caching].
 
 ### Build Artifacts
