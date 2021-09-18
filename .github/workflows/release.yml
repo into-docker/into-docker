@@ -67,7 +67,7 @@ jobs:
       - name: setup-graalvm-ce
         uses: DeLaGuardo/setup-graalvm@4.0
         with:
-          graalvm: "20.3.0"
+          graalvm: "21.2.0"
           java: "java11"
 
       - name: setup-paths
