@@ -12,7 +12,7 @@
 
                  ;; components
                  [lispyclouds/clj-docker-client "1.0.3"]
-                 [unixsocket-http "1.0.8"]
+                 [unixsocket-http "1.0.10"]
                  [com.squareup.okhttp3/okhttp "4.9.1"]
                  [com.squareup.okhttp3/okhttp-tls "4.9.1"]
 
