@@ -8,9 +8,31 @@ on:
       - "v*"
 
 jobs:
+  configure:
+    runs-on: ubuntu-latest
+    outputs:
+      graalvm-version: ${{ steps.setup.outputs.graalvm-version }}
+      java-version: ${{ steps.setup.outputs.java-version }}
+    steps:
+      - name: setup-configuration
+        id: setup
+        run: |
+          echo ::set-output name=graalvm-version::21.2.0
+          echo ::set-output name=java-version::java11
+
   uberjar:
+    needs: configure
     runs-on: ubuntu-latest
     steps:
+      # We need to compile using the GraalVM JDK, not the default one. This
+      # (hopefully) ensures compatibility, as wel as an explicit choice of
+      # Java version.
+      - name: setup-graalvm-ce
+        uses: DeLaGuardo/setup-graalvm@4.0
+        with:
+          graalvm: ${{ needs.configure.outputs.graalvm-version }}
+          java: ${{ needs.configure.outputs.java-version }}
+
       - uses: actions/checkout@v2
       - name: install-dependencies
         run: lein deps
@@ -59,7 +81,7 @@ jobs:
           - build: "windows-amd64"
             os: "windows-latest"
             flags: ""
-    needs: uberjar
+    needs: [uberjar, configure]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -67,8 +89,8 @@ jobs:
       - name: setup-graalvm-ce
         uses: DeLaGuardo/setup-graalvm@4.0
         with:
-          graalvm: "21.2.0"
-          java: "java11"
+          graalvm: ${{ needs.configure.outputs.graalvm-version }}
+          java: ${{ needs.configure.outputs.java-version }}
 
       - name: setup-paths
         id: paths
