@@ -2,9 +2,23 @@
   "Docker client implementation based on clj-docker-client"
   (:require [into.docker :as proto]
             [into.docker.container :as container]
-            [clj-docker-client.core :as docker]))
+            [into.docker.progress :as progress]
+            [clj-docker-client.core :as docker]
+            [clojure.java.io :as io]
+            [jsonista.core :as json]))
 
 ;; ## Helpers
+
+(defn- from-json
+  [s]
+  (json/read-value s json/keyword-keys-object-mapper))
+
+(defn- report-pull-progress
+  [^java.io.InputStream in]
+  (let [printer (progress/progress-printer)]
+    (with-open [rdr (io/reader in)]
+      (doseq [data (map from-json (line-seq rdr))]
+        (printer data)))))
 
 (defn- throw-on-error
   [{:keys [message] :as result}]
@@ -17,10 +31,17 @@
 (defn- invoke-pull-image
   [{{:keys [images]} :clients} image]
   (let [{:keys [name tag]} (proto/->image image)]
-    (->> {:op :ImageCreate
-          :params {:fromImage name, :tag tag}}
-         (docker/invoke images)
-         (throw-on-error)))
+    (try
+      (->> {:op :ImageCreate
+            :params {:fromImage name, :tag tag}
+            :throw-exception? true
+            :throw-entire-message? true
+            :as :stream}
+           (docker/invoke images)
+           (report-pull-progress))
+      (catch Exception e
+        (throw-on-error
+          (-> e ex-data :body from-json)))))
   {:image image})
 
 (defn- invoke-inspect-image
