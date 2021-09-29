@@ -93,3 +93,9 @@
   `(let [opts# ~opts]
      (set-verbosity! (:options opts#))
      ~@body))
+
+(defn has-level?
+  [level]
+  (.isGreaterOrEqual
+    (-> level name (.toUpperCase) (Level/valueOf))
+    (.getLevel (root-logger))))
