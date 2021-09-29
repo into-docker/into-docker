@@ -1,6 +1,8 @@
 (ns into.log
   (:require [clojure.tools.logging :as log]
-            [jansi-clj.core :as jansi]))
+            [jansi-clj.core :as jansi])
+  (:import [org.slf4j LoggerFactory]
+           [ch.qos.logback.classic Level Logger]))
 
 ;; ## Log
 
@@ -62,3 +64,32 @@
             value  (/ v (Math/pow unit exp))
             prefix (.charAt prefixes (dec exp))]
         (format "%.1f%siB" value prefix)))))
+
+;; ## Verbosity
+
+(defn root-logger
+  ^Logger []
+  (LoggerFactory/getLogger "root"))
+
+(defonce ^:private current-log-level
+  (atom "INFO"))
+
+(defn set-log-level!
+  [^String value]
+  (when (not= @current-log-level value)
+    (let [^Level level (-> value
+                           (.toUpperCase)
+                           (Level/valueOf))]
+      (.setLevel (root-logger) level))))
+
+(defn set-verbosity!
+  [{:keys [^long verbosity]}]
+  (cond (= 0 verbosity) (set-log-level! "INFO")
+        (= 1 verbosity) (set-log-level! "DEBUG")
+        :else (set-log-level! "TRACE")))
+
+(defmacro with-verbosity
+  [opts & body]
+  `(let [opts# ~opts]
+     (set-verbosity! (:options opts#))
+     ~@body))
