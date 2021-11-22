@@ -1,11 +1,10 @@
 (ns into.utils.task
   (:require [into.docker.client :as client]
+            [into.log :refer [with-verbosity]]
             [jansi-clj.core :as jansi]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [clojure.tools.cli :as cli])
-  (:import [org.slf4j LoggerFactory]
-           [ch.qos.logback.classic Level Logger]))
+            [clojure.tools.cli :as cli]))
 
 ;; ## Default Options
 
@@ -15,35 +14,6 @@
     :default 0
     :update-fn inc]
    ["-h" "--help" "Show help"]])
-
-;; ## Verbosity
-
-(defn- root-logger
-  ^Logger []
-  (LoggerFactory/getLogger "root"))
-
-(defonce ^:private current-log-level
-  (atom "INFO"))
-
-(defn- set-log-level!
-  [^String value]
-  (when (not= @current-log-level value)
-    (let [^Level level (-> value
-                           (.toUpperCase)
-                           (Level/valueOf))]
-      (.setLevel (root-logger) level))))
-
-(defn- set-verbosity!
-  [{:keys [^long verbosity]}]
-  (cond (= 0 verbosity) (set-log-level! "INFO")
-        (= 1 verbosity) (set-log-level! "DEBUG")
-        :else (set-log-level! "TRACE")))
-
-(defmacro ^:private with-verbosity
-  [opts & body]
-  `(let [opts# ~opts]
-     (set-verbosity! (:options opts#))
-     ~@body))
 
 ;; ## Helpers
 
