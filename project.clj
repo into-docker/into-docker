@@ -12,9 +12,9 @@
 
                  ;; components
                  [lispyclouds/clj-docker-client "1.0.3"]
-                 [unixsocket-http "1.0.10"]
-                 [com.squareup.okhttp3/okhttp "4.9.1"]
-                 [com.squareup.okhttp3/okhttp-tls "4.9.1"]
+                 [unixsocket-http "1.0.11"]
+                 [com.squareup.okhttp3/okhttp "4.9.3"]
+                 [com.squareup.okhttp3/okhttp-tls "4.9.3"]
 
                  ;; utilities
                  [org.apache.commons/commons-compress "1.20"]
@@ -27,7 +27,7 @@
 
                  ;; cleanup dependency chain
                  [riddley "0.2.0"]
-                 [org.jetbrains.kotlin/kotlin-stdlib-common "1.4.32"]]
+                 [org.jetbrains.kotlin/kotlin-stdlib-common "1.6.0"]]
   :exclusions [org.clojure/clojure]
   :java-source-paths ["src"]
   :profiles {:dev
