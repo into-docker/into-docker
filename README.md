@@ -18,6 +18,10 @@ Check out the [whitepaper][] for more details!
 
 [whitepaper]: doc/WHITEPAPER.md
 
+## Demo
+
+[![asciicast](https://asciinema.org/a/450632.svg)](https://asciinema.org/a/450632)
+
 ## Goals
 
 - **Minimum-configuration builds**: Rather than providing infinite ways to
