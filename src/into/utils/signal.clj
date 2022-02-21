@@ -13,7 +13,7 @@
     (Signal/handle
      (Signal. "INT")
      (reify SignalHandler
-       (handle [this signal]
+       (handle [_this _signal]
          (dosync
           (when-not @handled?
             (ref-set handled? true)
