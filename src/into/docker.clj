@@ -143,6 +143,7 @@
 ;; ## Client Facade
 
 (defprotocol+ DockerClient
+  (with-platform [this platform])
   (pull-image [this image-name])
   (inspect-image [this image-name])
   (container

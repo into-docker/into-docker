@@ -158,6 +158,21 @@ fill image labels.
 
 Check out the `into.build.ci` namespace if you want to add more environments.
 
+### Platforms
+
+If you're [targeting multiple platforms][docker-arch] or platforms different
+from your build machine, you can use the `--platform` CLI options:
+
+```sh
+into build -t <name:tag> --platform linux/arm64 [--force-platform] <builder>
+```
+
+By default, this will only impact the target image - the build itself will be
+run on your host's platform. If you want to use the same platform across all
+build steps (which can be necessary to ensure binary compatibility), just add
+the `--force-platform` flag. (Check out the [documentation][platforms] for the
+rationale.)
+
 [di]: https://codefresh.io/docker-tutorial/not-ignore-dockerignore-2/
 [oci]: https://github.com/opencontainers/image-spec/blob/master/annotations.md
 [s2i]: https://github.com/openshift/source-to-image
@@ -166,6 +181,8 @@ Check out the `into.build.ci` namespace if you want to add more environments.
 [build-profiles]: doc/WHITEPAPER.md#build-profiles
 [builder-caching]: doc/WHITEPAPER.md#caching
 [buildenv]: doc/WHITEPAPER.md#user-provided-environment-variables
+[platforms]: doc/WHITEPAPER.md#platforms
+[docker-arch]: https://docs.docker.com/desktop/multi-arch/
 
 ## License
 

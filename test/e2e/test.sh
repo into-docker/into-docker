@@ -9,6 +9,7 @@ BUILDER_IMAGE="into-docker-e2e-test:$TAG"
 TARGET_IMAGE="into-docker-e2e-target:$TAG"
 
 build_and_check() {
+    echo ">>>> $BUILD $@ <<<<"
     $BUILD -v \
         "$@" \
         -t "$TARGET_IMAGE" \
@@ -39,8 +40,10 @@ export SECRET_PASSWORD="password"
 build_and_check
 build_and_check --no-volumes
 
+# Build the image for another platform
+build_and_check --platform linux/arm64
+
 # Build the image using a cache
-set -x
 rm -f "$WORKDIR/cache.tar.gz"
 build_and_check --cache $WORKDIR/cache.tar.gz
 build_and_check --cache $WORKDIR/cache.tar.gz

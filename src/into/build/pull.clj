@@ -8,25 +8,30 @@
 ;; ## Steps
 
 (defn- pull-image!
-  [{:keys [client] :as data} target-key image-name]
+  [{:keys [client] :as data} target-key platform image-name]
   (log/debug "  Pulling image [%s] ..." image-name)
-  (if-let [image (docker/pull-image-record client image-name)]
+  (when-let [p (or platform (:platform client))]
+    (log/debug "    Platform: %s" p))
+  (if-let [image (-> client
+                     (cond-> platform (docker/with-platform platform))
+                     (docker/pull-image-record image-name))]
     (assoc data target-key image)
     (flow/fail data (str "Image not found: " image-name))))
 
 (defn- pull-builder-image!
-  [data]
-  (->> (get-in data [:spec :builder-image-name])
-       (pull-image! data :builder-image)))
+  [{:keys [spec] :as data}]
+  (let [{:keys [builder-image-name builder-platform]} spec]
+    (pull-image! data :builder-image builder-platform builder-image-name)))
 
 (defn- pull-runner-image!
-  [data]
-  (if (get-in data [:spec :target-image-name])
-    (->> (get-in data [:builder-image
-                       :labels
-                       constants/runner-image-label])
-         (pull-image! data :runner-image))
-    data))
+  [{:keys [spec] :as data}]
+  (let [{:keys [target-image-name runner-platform]} spec]
+    (if target-image-name
+      (->> (get-in data [:builder-image
+                         :labels
+                         constants/runner-image-label])
+           (pull-image! data :runner-image runner-platform))
+      data)))
 
 (defn- set-builder-user
   [data]

@@ -494,6 +494,17 @@ BUILD_COMMAND=npm run build
 Note how both `INSTALL_COMMAND` and `BUILD_COMMAND` have to be repeated in the
 second profile since there is no notion of inheritance or overriding.
 
+### Platforms
+
+Sometimes it's beneficial to specify the platform of the created image, e.g.
+when build and deployment machines differ. However, such builds can be slow, and
+thus any optimisation will be appreciated.
+
+Specifically, if the build provides artifacts that can run on any platform
+(e.g. Java JARs, or plain sources for NodeJS), only the runner container must
+adhere to the desired platform, meaning the builder container will not be
+impacted by any performance hits.
+
 ## Outlook
 
 ### Builder Image Inspection

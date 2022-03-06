@@ -16,7 +16,7 @@
 
 (defn- print-layer-progress
   [id {:keys [status progress]}]
-  (println "[into]   " (str (char 27) "[K" (format "%s %-11s %s" id status progress))))
+  (println "[into]    " (str (char 27) "[K" (format "%s %-11s %s" id status progress))))
 
 (defn progress-printer
   "Create a stateful function that prints a progress report. It takes layer
