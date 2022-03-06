@@ -10,6 +10,8 @@
 (defn- pull-image!
   [{:keys [client] :as data} target-key platform image-name]
   (log/debug "  Pulling image [%s] ..." image-name)
+  (when-let [p (or platform (:platform client))]
+    (log/debug "    Platform: %s" p))
   (if-let [image (-> client
                      (cond-> platform (docker/with-platform platform))
                      (docker/pull-image-record image-name))]
