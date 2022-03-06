@@ -43,7 +43,7 @@
   (prop/for-all
     [entry (gen/hash-map
              :stream (gen/elements [:stdout :stderr])
-             :line   gen/string-ascii)]
+             :line   (gen/fmap #(.replace ^String % "\\" "") gen/string-ascii))]
     (with-log
       (log/report-exec entry)
       (logged? 'into.log :info
