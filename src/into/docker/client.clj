@@ -5,6 +5,7 @@
             [into.docker.progress :as progress]
             [clj-docker-client.core :as docker]
             [clojure.java.io :as io]
+            [clojure.string :as string]
             [jsonista.core :as json]))
 
 ;; ## Helpers
@@ -29,11 +30,13 @@
     result))
 
 (defn- invoke-pull-image
-  [{{:keys [images]} :clients} image]
+  [{{:keys [images]} :clients, platform :platform} image]
   (let [{:keys [name tag]} (proto/->image image)]
     (try
       (->> {:op :ImageCreate
-            :params {:fromImage name, :tag tag}
+            :params {:fromImage name
+                     :tag       tag
+                     :platform  platform}
             :throw-exception? true
             :throw-entire-message? true
             :as :stream}
@@ -44,17 +47,24 @@
           (-> e ex-data :body from-json)))))
   {:image image})
 
-(defn- invoke-inspect-image
-  [{{:keys [images]} :clients} image]
-  (let [result (->> {:op :ImageInspect
-                     :params {:name image}}
-                    (docker/invoke images))]
-    (when-not (:message result)
-      result)))
+(letfn [(matches-platform? [platform os architecture]
+          (or (not platform)
+              (string/starts-with? platform (str os "/" architecture))))]
+  (defn- invoke-inspect-image
+    [{{:keys [images]} :clients, platform :platform} image]
+    (let [{:keys [full-name]} (proto/->image image)
+          {:keys [RepoTags Os Architecture message] :as result}
+          (->> {:op :ImageInspect
+                :params {:name full-name}}
+               (docker/invoke images))]
+      (when-not message
+        (when (contains? (set RepoTags) full-name)
+          (when (matches-platform? platform Os Architecture)
+            result))))))
 
 ;; ## Component
 
-(defrecord DockerClient [uri conn clients]
+(defrecord DockerClient [platform uri conn clients]
   proto/DockerClient
   (pull-image [this image]
     (invoke-pull-image this image))
@@ -71,6 +81,10 @@
   ([components]
    (map->DockerClient components)))
 
+(defn- get-docker-default-platform
+  []
+  (System/getenv "DOCKER_DEFAULT_PLATFORM"))
+
 (defn- get-docker-uri
   []
   (or (System/getenv "DOCKER_HOST")
@@ -84,7 +98,8 @@
 (defn make-from-env
   []
   (make
-    {:uri (get-docker-uri)
+    {:platform    (get-docker-default-platform)
+     :uri         (get-docker-uri)
      :api-version (get-docker-api-version)}))
 
 ;; ## Start
