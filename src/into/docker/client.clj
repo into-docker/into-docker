@@ -66,6 +66,8 @@
 
 (defrecord DockerClient [platform uri conn clients]
   proto/DockerClient
+  (with-platform [this platform]
+    (assoc this :platform platform))
   (pull-image [this image]
     (invoke-pull-image this image))
   (inspect-image [this image]

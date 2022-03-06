@@ -312,6 +312,8 @@
 
 (defrecord MockClient [containers images]
   docker/DockerClient
+  (with-platform [this _]
+    this)
   (pull-image [_ _])
   (inspect-image [_ image]
     (get images image))
