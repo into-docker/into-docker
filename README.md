@@ -144,20 +144,6 @@ into build ...
 You can read about the mechanism (and the rationale) in the
 [WHITEPAPER][buildenv].
 
-### Use on CI
-
-Due to the minimal-configuration approach of into-docker, it can be easily used
-on the CI environment of your choice. Check out the following pre-packaged build
-steps:
-
-- [Github Actions](https://github.com/marketplace/actions/into-docker)
-
-Use the `--ci` flag to direct the CLI tool to use CI-specific assumptions when
-building images. This allows you, for example, to use environment variables to
-fill image labels.
-
-Check out the `into.build.ci` namespace if you want to add more environments.
-
 ### Platforms
 
 If you're [targeting multiple platforms][docker-arch] or platforms different
@@ -183,6 +169,20 @@ rationale.)
 [buildenv]: doc/WHITEPAPER.md#user-provided-environment-variables
 [platforms]: doc/WHITEPAPER.md#platforms
 [docker-arch]: https://docs.docker.com/desktop/multi-arch/
+
+## Usage on CI
+
+Due to the minimal-configuration approach of into-docker, it can be easily used
+on the CI environment of your choice. Check out the following pre-packaged build
+steps:
+
+- [Github Actions](https://github.com/marketplace/actions/into-docker)
+
+Use the `--ci` flag to direct the CLI tool to use CI-specific assumptions when
+building images. This allows you, for example, to use environment variables to
+fill image labels.
+
+Check out the `into.build.ci` namespace if you want to add more environments.
 
 ## License
 
