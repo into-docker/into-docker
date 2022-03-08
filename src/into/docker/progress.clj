@@ -18,12 +18,16 @@
   [id {:keys [status progress]}]
   (println "[into]    " (str (char 27) "[K" (format "%s %-11s %s" id status progress))))
 
+(defn- on-ci?
+  []
+  (= (System/getenv "CI") "true"))
+
 (defn progress-printer
   "Create a stateful function that prints a progress report. It takes layer
    progress information as returned e.g. by `ImageCreate`, containing `:status`,
    `:id`, `:progress` keys."
   []
-  (if (log/has-level? :info)
+  (if (and (log/has-level? :info) (not (on-ci?)))
     (let [state (volatile! {:reset 0, :written 0, :layers {}})]
       (fn [layer]
         (when (:progress layer)
