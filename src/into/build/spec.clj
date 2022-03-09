@@ -70,6 +70,7 @@
 (s/def ::target-image-name ::image-name)
 (s/def ::profile ::name)
 (s/def ::ci-type #{"github-actions", "local"})
+(s/def ::platform string?)
 (s/def ::use-volumes? boolean?)
 (s/def ::use-cache-volume? boolean?)
 
