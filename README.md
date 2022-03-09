@@ -150,14 +150,13 @@ If you're [targeting multiple platforms][docker-arch] or platforms different
 from your build machine, you can use the `--platform` CLI options:
 
 ```sh
-into build -t <name:tag> --platform linux/arm64 [--force-platform] <builder>
+into build -t <name:tag> --platform linux/arm64 <builder>
 ```
 
 By default, this will only impact the target image - the build itself will be
-run on your host's platform. If you want to use the same platform across all
-build steps (which can be necessary to ensure binary compatibility), just add
-the `--force-platform` flag. (Check out the [documentation][platforms] for the
-rationale.)
+run on your host's platform. You can use the environment variable
+`DOCKER_DEFAULT_PLATFORM` to adapt the builder container's platform. Check out
+the [WHITEPAPER][platforms] for more insights.
 
 [di]: https://codefresh.io/docker-tutorial/not-ignore-dockerignore-2/
 [oci]: https://github.com/opencontainers/image-spec/blob/master/annotations.md

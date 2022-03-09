@@ -34,9 +34,7 @@
    [nil "--cache path" "Run an incremental build utilising the given cache file."
     :id :cache-file]
    [nil, "--platform platform" "Set platform for runner container and resulting image."
-    :id :platform]
-   [nil "--force-platform" "Use platform for all containers to ensure compatibility."
-    :id :force-platform?]])
+    :id :platform]])
 
 ;; ## Spec
 
@@ -48,7 +46,6 @@
            ci-type
            incremental?
            platform
-           force-platform?
            no-volumes?]}
    [builder-image source-path]]
   (cond-> {:builder-image-name builder-image
@@ -59,9 +56,7 @@
     artifact-path (assoc :artifact-path artifact-path)
     profile       (assoc :profile profile)
     ci-type       (assoc :ci-type ci-type)
-    platform      (cond->
-                   force-platform? (assoc :builder-platform platform)
-                   :always         (assoc :runner-platform platform))
+    platform      (assoc :platform platform)
     cache-file    (merge {:cache-from cache-file, :cache-to cache-file})))
 
 ;; ## Run
