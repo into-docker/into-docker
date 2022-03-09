@@ -1,9 +1,9 @@
 # An approach to reusable build environments
 
-- **Version**: 1.0.1
+- **Version**: 1.0.2
 - **Authors**: Yannick Scherer
 - **Created on**: 03.05.2020
-- **Last updated on**: 24.05.2021
+- **Last updated on**: 09.05.2022
 
 ## Introduction
 

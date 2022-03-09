@@ -61,8 +61,7 @@
                    ::cache-from
                    ::cache-to
                    ::ci-type
-                   ::builder-platform
-                   ::runner-platform
+                   ::platform
                    ::target-image-name]))
 
 (s/def ::source-path ::path)
@@ -70,8 +69,6 @@
 (s/def ::builder-image-name ::image-name)
 (s/def ::target-image-name ::image-name)
 (s/def ::profile ::name)
-(s/def ::builder-platform string?)
-(s/def ::runner-platform string?)
 (s/def ::ci-type #{"github-actions", "local"})
 (s/def ::use-volumes? boolean?)
 (s/def ::use-cache-volume? boolean?)
