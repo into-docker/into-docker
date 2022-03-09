@@ -106,6 +106,20 @@
 
 ;; ## Start
 
+(defn- attach-default-platform
+  [{{:keys [system]} :clients, platform :platform, :as client}]
+  (or (when-not platform
+        (when-let [{:keys [Arch Os]}
+                   (some->> (docker/invoke system {:op :SystemVersion})
+                            (throw-on-error)
+                            (:Components)
+                            (filter (comp #{"Engine"} :Name))
+                            (first)
+                            (:Details))]
+          (when (and Arch Os)
+            (assoc client :platform (str Os "/" Arch)))))
+      client))
+
 (defn start
   [{:keys [uri api-version] :as client}]
   {:pre [(seq uri)]}
@@ -118,5 +132,8 @@
                  :containers (mkcli :containers)
                  :commit     (mkcli :commit)
                  :volumes    (mkcli :volumes)
+                 :system     (mkcli :version)
                  :exec       (mkcli :exec)}]
-    (assoc client :conn conn, :clients clients)))
+    (-> client
+        (assoc :conn conn, :clients clients)
+        (attach-default-platform))))
