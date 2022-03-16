@@ -6,7 +6,8 @@
             [clj-docker-client.core :as docker]
             [clojure.java.io :as io]
             [clojure.string :as string]
-            [jsonista.core :as json]))
+            [jsonista.core :as json])
+  (:import (java.net ConnectException SocketException)))
 
 ;; ## Helpers
 
@@ -106,19 +107,33 @@
 
 ;; ## Start
 
+(defn- throw-connect-exception!
+  [{:keys [uri]} ^Throwable cause]
+  (throw
+    (Exception.
+      (format "Could not connect to docker at [%s]. Is the engine running?"
+              uri)
+      cause)))
+
 (defn- attach-default-platform
   [{{:keys [system]} :clients, platform :platform, :as client}]
-  (or (when-not platform
-        (when-let [{:keys [Arch Os]}
-                   (some->> (docker/invoke system {:op :SystemVersion})
-                            (throw-on-error)
-                            (:Components)
-                            (filter (comp #{"Engine"} :Name))
-                            (first)
-                            (:Details))]
-          (when (and Arch Os)
-            (assoc client :platform (str Os "/" Arch)))))
-      client))
+  (try
+    (or (when-not platform
+          (when-let [{:keys [Arch Os]}
+                     (some->> {:op :SystemVersion, :throw-exception? true}
+                              (docker/invoke system)
+                              (throw-on-error)
+                              (:Components)
+                              (filter (comp #{"Engine"} :Name))
+                              (first)
+                              (:Details))]
+            (when (and Arch Os)
+              (assoc client :platform (str Os "/" Arch)))))
+        client)
+    (catch ConnectException ex
+      (throw-connect-exception! client ex))
+    (catch SocketException ex
+      (throw-connect-exception! client ex))))
 
 (defn start
   [{:keys [uri api-version] :as client}]

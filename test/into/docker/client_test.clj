@@ -33,3 +33,25 @@
       (is (satisfies?
             docker/DockerContainer
             (docker/container client "test-container" existing-image))))))
+
+(deftest ^:docker t-client-platforms
+  (testing "use platform if set explicitly"
+    (let [client (assoc base-client :platform "novelty/architecture64")]
+      (is (= "novelty/architecture64" (:platform (client/start client))))))
+  (testing "fetch engine platform if none given"
+    (let [client (assoc base-client :platform nil)]
+      (is (string? (:platform (client/start client)))))))
+
+(deftest ^:docker t-client-connection-failure
+  (testing "missing unix socket"
+    (let [client (assoc base-client :uri "unix:///tmp/unknown-socket.sock")]
+      (is (thrown-with-msg?
+            Exception
+            #"Could not connect to docker"
+            (client/start client)))))
+  (testing "unavailable port"
+    (let [client (assoc base-client :uri "tcp://localhost:12346")]
+      (is (thrown-with-msg?
+            Exception
+            #"Could not connect to docker"
+            (client/start client))))))
