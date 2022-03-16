@@ -8,24 +8,43 @@ BUILD=${2:-"lein run -m into.main build"}
 BUILDER_IMAGE="into-docker-e2e-test:$TAG"
 TARGET_IMAGE="into-docker-e2e-target:$TAG"
 
+start_group() {
+    if [ "x$CI" = "xtrue" ]; then
+        echo "::group::$@"
+    fi
+}
+
+end_group() {
+    if [ "x$CI" = "xtrue" ]; then
+        echo "::endgroup::"
+    fi
+}
+
+start_group_and_build() {
+    start_group "$BUILD $@"
+    $BUILD "$@"
+}
+
 build_and_check() {
-    echo ">>>> $BUILD $@ <<<<"
-    $BUILD -v \
+    start_group_and_build -v \
         "$@" \
         -t "$TARGET_IMAGE" \
         "$BUILDER_IMAGE" "$WORKDIR"
     test "x$(docker run --rm "$TARGET_IMAGE")" = "xtest.sh"
     docker rmi "$TARGET_IMAGE"
+    end_group
+
 }
 
 build_artifacts_and_check() {
     ARTIFACT_DIR="$WORKDIR/../../target/artifacts"
     mkdir -p "$ARTIFACT_DIR"
-    $BUILD -v \
+    start_group_and_build -v \
         --write-artifacts "$ARTIFACT_DIR" \
         "$BUILDER_IMAGE" \
         "$WORKDIR"
     test "x$(ls "$ARTIFACT_DIR")" = "xtest.sh"
+    end_group
 }
 
 
