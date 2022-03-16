@@ -60,6 +60,10 @@ All releases can be found on the [Releases][releases] page.
 
 ## Usage
 
+Make sure to have [docker engine][docker-engine] running on your machine!
+
+[docker-engine]: https://docs.docker.com/engine/install/
+
 ### Run Build
 
 To build local sources using an into-docker builder image use the `build` command
