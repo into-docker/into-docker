@@ -19,8 +19,8 @@
 
 ;; ## Lifecycle
 
-(def ^:dynamic client)
-(def ^:dynamic container)
+(def ^:dynamic client nil)
+(def ^:dynamic container nil)
 
 (defmacro silently
   [form]

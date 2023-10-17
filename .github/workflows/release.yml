@@ -11,14 +11,14 @@ jobs:
   configure:
     runs-on: ubuntu-latest
     outputs:
-      graalvm-version: ${{ steps.setup.outputs.graalvm-version }}
+      graalvm-distribution: ${{ steps.setup.outputs.graalvm-distribution }}
       java-version: ${{ steps.setup.outputs.java-version }}
     steps:
-      - name: setup-configuration
+      - name: setup
         id: setup
         run: |
-          echo ::set-output name=graalvm-version::21.2.0
-          echo ::set-output name=java-version::java11
+          echo "graalvm-distribution=graalvm-community" >> "$GITHUB_OUTPUT"
+          echo "java-version=21" >> "$GITHUB_OUTPUT"
 
   uberjar:
     needs: configure
@@ -27,11 +27,12 @@ jobs:
       # We need to compile using the GraalVM JDK, not the default one. This
       # (hopefully) ensures compatibility, as wel as an explicit choice of
       # Java version.
-      - name: setup-graalvm-ce
-        uses: DeLaGuardo/setup-graalvm@4.0
+      #
+      - name: setup-graalvm
+        uses: graalvm/setup-graalvm@v1
         with:
-          graalvm: ${{ needs.configure.outputs.graalvm-version }}
-          java: ${{ needs.configure.outputs.java-version }}
+          distribution: ${{ needs.configure.outputs.graalvm-distribution }}
+          java-version: ${{ needs.configure.outputs.java-version }}
 
       - uses: actions/checkout@v2
       - name: install-dependencies
@@ -86,28 +87,24 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: setup-graalvm-ce
-        uses: DeLaGuardo/setup-graalvm@4.0
+      - name: setup-graalvm
+        uses: graalvm/setup-graalvm@v1
         with:
-          graalvm: ${{ needs.configure.outputs.graalvm-version }}
-          java: ${{ needs.configure.outputs.java-version }}
+          distribution: ${{ needs.configure.outputs.graalvm-distribution }}
+          java-version: ${{ needs.configure.outputs.java-version }}
 
-      - name: setup-paths
+      - name: setup-tool-paths
         id: paths
         run: |
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            echo ::set-output name=gu::gu.cmd
-            echo ::set-output name=native-image::native-image.cmd
-            echo ::set-output name=artifact::into.exe
+            echo "NATIVE_IMAGE=native-image.cmd" >> "$GITHUB_ENV"
+            echo "ARTIFACT_NAME=into.exe" >> "$GITHUB_ENV"
           else
-            echo ::set-output name=gu::gu
-            echo ::set-output name=native-image::native-image
-            echo ::set-output name=artifact::into
+            echo "NATIVE_IMAGE=native-image" >> "$GITHUB_ENV"
+            echo "ARTIFACT_NAME=into" >> "$GITHUB_ENV"
           fi
         shell: bash
 
-      - name: setup-native-image
-        run: ${{ steps.paths.outputs.gu }} install native-image
       - name: setup-windows-toolchain
         uses: ilammy/msvc-dev-cmd@v1
         if: startsWith(matrix.build, 'windows-')
@@ -117,15 +114,14 @@ jobs:
           name: uberjar
       - name: native-image
         run: |
-          ${{ steps.paths.outputs.native-image }} -jar uberjar/app.jar \
-            -H:Name=into \
+          ${{ env.NATIVE_IMAGE }} -jar uberjar/app.jar \
+            -o into \
             --no-fallback \
-            --no-server \
             ${{ matrix.flags }}
         shell: bash
       - name: verify-native-image
         run: |
-          export ARTIFACT="${{ github.workspace }}/${{ steps.paths.outputs.artifact }}"
+          export ARTIFACT="${{ github.workspace }}/${{ env.ARTIFACT_NAME }}"
           chmod +x "$ARTIFACT"
           "$ARTIFACT" --version
         shell: bash
@@ -133,7 +129,7 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: ${{ matrix.build }}
-          path: ${{ steps.paths.outputs.artifact }}
+          path: ${{ env.ARTIFACT_NAME }}
 
   test-native-image:
     needs: [create-native-image]
