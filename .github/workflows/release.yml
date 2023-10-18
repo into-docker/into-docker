@@ -167,29 +167,25 @@ jobs:
     needs: [test-native-image]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
+    outputs:
+      upload-url: ${{ steps.create-release.outputs.upload_url }}
+      version: ${{ steps.export-version.outputs.version }}
     steps:
       - name: export-version
-        id: version
-        run: echo ::set-output name=value::${GITHUB_REF/refs\/tags\/v/}
+        id: export-version
+        run: echo "version=${GITHUB_REF/refs\/tags\/v/}" >> "$GITHUB_OUTPUT"
       - name: create-release
-        id: create_release
+        id: create-release
         uses: actions/create-release@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Version ${{ steps.version.outputs.value }}
+          release_name: Version ${{ steps.export-version.outputs.version }}
           body: |
-            Version ${{ steps.version.outputs.value }}
+            Version ${{ steps.export-version.outputs.version }}
           draft: true
           prerelease: false
-      - name: store-upload-url
-        run: echo "${{ steps.create_release.outputs.upload_url }}" > upload_url.txt
-      - name: upload-release-data
-        uses: actions/upload-artifact@v1
-        with:
-          name: release
-          path: upload_url.txt
 
   upload-native-release-artifact:
     strategy:
@@ -202,7 +198,7 @@ jobs:
             "windows-amd64",
             "standalone-jar",
           ]
-    needs: create-release
+    needs: [create-release]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
@@ -210,12 +206,6 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: release
-      - name: export-version
-        id: version
-        run: echo ::set-output name=value::${GITHUB_REF/refs\/tags\/v/}
-      - name: export-upload-url
-        id: upload_url
-        run: echo ::set-output name=value::$(cat release/upload_url.txt)
       - name: download-native-image
         uses: actions/download-artifact@v1
         with:
@@ -227,7 +217,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.upload_url.outputs.value }}
+          upload_url: ${{ needs.create-release.outputs.upload-url }}
           asset_path: ./${{ matrix.build }}/into.zip
-          asset_name: into-${{ steps.version.outputs.value }}-${{ matrix.build }}.zip
+          asset_name: into-${{ needs.create-release.outputs.version }}-${{ matrix.build }}.zip
           asset_content_type: application/zip
