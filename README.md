@@ -192,7 +192,7 @@ Check out the `into.build.ci` namespace if you want to add more environments.
 ```
 MIT License
 
-Copyright (c) 2020-2021 Yannick Scherer
+Copyright (c) 2020-2023 Yannick Scherer
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
