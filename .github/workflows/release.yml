@@ -203,10 +203,6 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
-      - name: fetch-release-data
-        uses: actions/download-artifact@v1
-        with:
-          name: release
       - name: download-native-image
         uses: actions/download-artifact@v1
         with:
