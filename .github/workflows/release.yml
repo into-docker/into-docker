@@ -116,6 +116,7 @@ jobs:
         run: |
           ${{ env.NATIVE_IMAGE }} -jar uberjar/app.jar \
             -o into \
+            -march=compatibility \
             --no-fallback \
             ${{ matrix.flags }}
         shell: bash
