@@ -9,7 +9,7 @@ jobs:
   lint-clojure:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: DeLaGuardo/clojure-lint-action@master
         with:
           clj-kondo-args: --lint src test
@@ -18,7 +18,7 @@ jobs:
   lint-others:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: setup-node
         uses: actions/setup-node@v1
         with:
@@ -33,7 +33,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions/cache@v2
         with:
           path: ~/.m2/repository
@@ -51,7 +51,7 @@ jobs:
   e2e-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: docker/setup-qemu-action@v1
       - uses: actions/cache@v2
         with:

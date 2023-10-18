@@ -34,7 +34,7 @@ jobs:
           distribution: ${{ needs.configure.outputs.graalvm-distribution }}
           java-version: ${{ needs.configure.outputs.java-version }}
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: install-dependencies
         run: lein deps
       - name: Run tests
@@ -85,7 +85,7 @@ jobs:
     needs: [uberjar, configure]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: setup-graalvm
         uses: graalvm/setup-graalvm@v1
@@ -149,7 +149,7 @@ jobs:
             os: "ubuntu-latest"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: docker/setup-qemu-action@v1
       - name: download-native-image
         uses: actions/download-artifact@v1
